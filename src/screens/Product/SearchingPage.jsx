@@ -97,14 +97,14 @@ export default function Component() {
               <Text style={styles.productName}>{product.name}</Text>
               <Text style={styles.productCategory}>Shoes</Text>
               <Text style={styles.productPrice}>{product.price}</Text>
-              <TouchableOpacity
-                style={styles.addToCartButton}
-                onPress={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <Text style={styles.addToCartText}>ADD TO CART</Text>
-              </TouchableOpacity>
+              <TouchableOpacity 
+      style={styles.addToCartButton} 
+      onPress={(e) => {
+        e.stopPropagation();
+        navigation.navigate("Cart"); 
+      }}>
+      <Text style={styles.addToCartText}>ADD TO CART</Text>
+    </TouchableOpacity>
             </TouchableOpacity>
           ))}
         </View>
@@ -147,7 +147,6 @@ export default function Component() {
         </View>
       </Modal>
 
-      <BottomNavigation />
     </View>
   );
 }

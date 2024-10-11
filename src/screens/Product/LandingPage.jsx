@@ -20,12 +20,12 @@ import {
   faMicrophone,
   faVolleyballBall,
 } from "@fortawesome/free-solid-svg-icons";
-import { useNavigation } from '@react-navigation/native';
-import BottomNavigation from '../../components/BottomNavigation';
+import { useNavigation } from "@react-navigation/native";
+import BottomNavigation from "../../components/BottomNavigation";
 import logoImage from "../../screens/Logo/2sport_logo.png";
 import demoProduct from "../../../assets/images/product_demo.jpg";
 
-export default function Component() {
+export default function LandingPage() {
   const navigation = useNavigation();
   const categories = [
     { icon: faMusic, name: "Vũ" },
@@ -112,36 +112,36 @@ export default function Component() {
         </View>
 
         <View style={styles.productGrid}>
-  {products.map((product, index) => (
-    <TouchableOpacity
-      key={index}
-      style={styles.productCard}
-      onPress={() => navigation.navigate("ProductDetail")} 
-    >
-      <Image source={product.image} style={styles.productImage} />
-      <FontAwesomeIcon
-        icon={faHeart}
-        size={16}
-        color="#FF6B6B"
-        style={styles.wishlistIcon}
-      />
-      <Text style={styles.productName}>{product.name}</Text>
-      <Text style={styles.productCategory}>Shoes</Text>
-      <Text style={styles.productPrice}>{product.price}</Text>
-      <TouchableOpacity
-        style={styles.addToCartButton}
-        onPress={(e) => {
-          e.stopPropagation(); 
-        }}
-      >
-        <Text style={styles.addToCartText}>ADD TO CART</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
-  ))}
-</View>
-
+          {products.map((product, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.productCard}
+              onPress={() => navigation.navigate("ProductDetail")}
+            >
+              <Image source={product.image} style={styles.productImage} />
+              <FontAwesomeIcon
+                icon={faHeart}
+                size={16}
+                color="#FF6B6B"
+                style={styles.wishlistIcon}
+              />
+              <Text style={styles.productName}>{product.name}</Text>
+              <Text style={styles.productCategory}>Shoes</Text>
+              <Text style={styles.productPrice}>{product.price}</Text>
+              <TouchableOpacity
+                style={styles.addToCartButton}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  navigation.navigate("Cart"); // Navigate to the Cart page after adding the item to the cart
+                }}
+              >
+                <Text style={styles.addToCartText}>ADD TO CART</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
-      <BottomNavigation />
+      {/* <BottomNavigation /> */}
 
       {/* <View style={styles.bottomNav}>
         <FontAwesomeIcon icon={faHome} size={24} color="#4A90E2" />

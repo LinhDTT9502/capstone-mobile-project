@@ -37,7 +37,7 @@ const LoginScreen = () => {
       // }
 
       // Temporarily navigating to LandingPage directly
-      navigation.navigate("LandingPage");
+      navigation.navigate("HomeController");
     } catch (error) {
       console.error("Login error:", error.message);
       const errorMessage = "Unable to connect to the server. Please check your network and try again.";

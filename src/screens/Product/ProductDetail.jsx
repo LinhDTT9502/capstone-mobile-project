@@ -52,7 +52,6 @@ export default function ProductDetail({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <BottomNavigation />
     </View>
   );
 }
