@@ -6,6 +6,7 @@ import ProductDetail from '../screens/Product/ProductDetail';
 import Cart from '../screens/Product/Cart';
 import Checkout from '../screens/Product/Checkout';
 import PaymentDetail from '../screens/Product/PaymentDetail';
+import Account from '../screens/Product/Account';
 import BottomNavigation from '../components/BottomNavigation';
 
 export default function HomeController() {
@@ -21,6 +22,8 @@ export default function HomeController() {
         return <ProductDetail />;
       case 'Cart':
         return <Cart />;
+      case 'Account':
+        return <Account />;
       case 'Checkout':
         return <Checkout />;
       case 'PaymentDetail':

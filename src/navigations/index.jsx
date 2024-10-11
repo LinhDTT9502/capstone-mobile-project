@@ -11,6 +11,7 @@ import ProductDetail from '../screens/Product/ProductDetail';
 import Checkout from '../screens/Product/Checkout';
 import Cart from '../screens/Product/Cart';
 import PaymentDetail from '../screens/Product/PaymentDetail';
+import EditProfile from '../screens/Product/EditProfile';
 
 const Stack = createStackNavigator();
 
@@ -28,6 +29,8 @@ export default function MainContainer() {
       <Stack.Screen name="Checkout" component={Checkout} />
       <Stack.Screen name="Cart" component={Cart} />
       <Stack.Screen name="PaymentDetail" component={PaymentDetail} />
+      <Stack.Screen name="EditProfile" component={EditProfile} />
+
     </Stack.Navigator>
   );
 }
