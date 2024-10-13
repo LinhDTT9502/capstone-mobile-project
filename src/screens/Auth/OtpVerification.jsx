@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const ForgotPasswordScreen = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
+const VerifyOTPScreen = () => {
+  const [otp, setOtp] = useState('');
   const navigation = useNavigation();
 
-  const handleContinue = () => {
-    // Handle email verification logic
-    navigation.navigate('OtpVerification');
+  const handleVerify = () => {
+    // Handle OTP verification logic
+    navigation.navigate('ResetPassword');
   };
 
   return (
@@ -25,25 +24,23 @@ const ForgotPasswordScreen = () => {
       </View>
 
       {/* Title and inputs */}
-      <Text style={styles.title}>Forgot Password?</Text>
-      <Text style={styles.subtitle}>Please enter your email to reset the password</Text>
+      <Text style={styles.title}>Check your mail</Text>
+      <Text style={styles.subtitle}>
+        We just sent an OTP to your registered email address
+      </Text>
 
       <TextInput
         style={styles.input}
-        placeholder="User name"
-        value={username}
-        onChangeText={setUsername}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
+        placeholder="Enter OTP"
+        value={otp}
+        onChangeText={setOtp}
+        keyboardType="numeric"
+        maxLength={4}
       />
 
-      {/* Continue button */}
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueButtonText}>Continue</Text>
+      {/* Verify button */}
+      <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
+        <Text style={styles.verifyButtonText}>Verify OTP</Text>
       </TouchableOpacity>
     </View>
   );
@@ -88,19 +85,20 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 15,
     marginBottom: 20,
+    textAlign: 'center',
   },
-  continueButton: {
+  verifyButton: {
     backgroundColor: '#FFA500',
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 25,
   },
-  continueButtonText: {
+  verifyButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
 });
 
-export default ForgotPasswordScreen;
+export default VerifyOTPScreen;

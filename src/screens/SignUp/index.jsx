@@ -12,10 +12,9 @@ const SignUpScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Top background shapes */}
-      <View style={styles.topShapes}>
-        {/* Optional: Add background shapes as images */}
-      </View>
+      {/* Background Shapes */}
+      <View style={styles.shape1} />
+      <View style={styles.shape2} />
 
       {/* Sign Up text */}
       <Text style={styles.title}>Sign Up</Text>
@@ -94,13 +93,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFF',
   },
-  topShapes: {
+  shape1: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    backgroundColor: '#FFF', // Add background shapes
+    width: 250,
+    height: 250,
+    backgroundColor: '#FFA500',
+    borderRadius: 125,
+    top: -100,
+    right: -50,
+    opacity: 0.5,
+  },
+  shape2: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    backgroundColor: '#FFA500',
+    borderRadius: 150,
+    bottom: -150,
+    left: -50,
+    opacity: 0.7,
   },
   title: {
     fontSize: 30,

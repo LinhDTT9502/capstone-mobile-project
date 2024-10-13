@@ -1,12 +1,28 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faHeart, faExchangeAlt, faBox, faUserEdit, faKey, faBuilding, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '@react-navigation/native';
 
 export default function Account() {
   const navigation = useNavigation();
+  const [passwordRequested, setPasswordRequested] = useState(false);
+  const handleChangePassword = () => {
+    Alert.alert(
+      'Check your email',
+      'Please check your email for a reset link.',
+      [
+        {
+          text: 'OK',
+          onPress: () => setPasswordRequested(true), 
+        },
+      ],
+    );
+  };
 
+  if (passwordRequested) {
+    navigation.navigate('AccountResetPassword'); 
+  }
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -40,7 +56,7 @@ export default function Account() {
           <FontAwesomeIcon icon={faUserEdit} size={16} color="#999" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('MyOrders')}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('MyOrder')}>
           <FontAwesomeIcon icon={faBox} size={20} color="#FF9900" />
           <Text style={styles.settingText}>My Orders</Text>
           <FontAwesomeIcon icon={faUserEdit} size={16} color="#999" />
@@ -56,15 +72,9 @@ export default function Account() {
           <FontAwesomeIcon icon={faUserEdit} size={16} color="#999" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('ChangePassword')}>
+        <TouchableOpacity style={styles.settingItem} onPress={handleChangePassword}>
           <FontAwesomeIcon icon={faKey} size={20} color="#4CAF50" />
           <Text style={styles.settingText}>Change Password</Text>
-          <FontAwesomeIcon icon={faUserEdit} size={16} color="#999" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('ChangeToBusiness')}>
-          <FontAwesomeIcon icon={faBuilding} size={20} color="#FF5722" />
-          <Text style={styles.settingText}>Change to Business account</Text>
           <FontAwesomeIcon icon={faUserEdit} size={16} color="#999" />
         </TouchableOpacity>
 

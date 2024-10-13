@@ -12,6 +12,10 @@ import Checkout from '../screens/Product/Checkout';
 import Cart from '../screens/Product/Cart';
 import PaymentDetail from '../screens/Product/PaymentDetail';
 import EditProfile from '../screens/Product/EditProfile';
+import OtpVerificationScreen from '../screens/Auth/OtpVerification';
+import ResetPasswordScreen from '../screens/Auth/ResetPassword';
+import MyOrderScreen from '../screens/Product/MyOrderScreen';
+import AccountResetPassword from '../screens/Product/AccountResetPassword';
 
 const Stack = createStackNavigator();
 
@@ -23,6 +27,8 @@ export default function MainContainer() {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="SignUp" component={SignUpScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="HomeController" component={HomeController} /> 
 
       <Stack.Screen name="ProductDetail" component={ProductDetail} />
@@ -30,6 +36,8 @@ export default function MainContainer() {
       <Stack.Screen name="Cart" component={Cart} />
       <Stack.Screen name="PaymentDetail" component={PaymentDetail} />
       <Stack.Screen name="EditProfile" component={EditProfile} />
+      <Stack.Screen name="MyOrder" component={MyOrderScreen} />
+      <Stack.Screen name="AccountResetPassword" component={AccountResetPassword} />
 
     </Stack.Navigator>
   );

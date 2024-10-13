@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
   faSearch,
   faShoppingCart,
-  faHome,
+  faBell,
   faHeart,
   faUser,
   faMusic,
@@ -22,11 +22,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigation } from "@react-navigation/native";
 import BottomNavigation from "../../components/BottomNavigation";
+import NotificationComponent from "../../components/NotificationsComponent"; 
 import logoImage from "../../screens/Logo/2sport_logo.png";
 import demoProduct from "../../../assets/images/product_demo.jpg";
 
 export default function LandingPage() {
   const navigation = useNavigation();
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const categories = [
     { icon: faMusic, name: "Vũ" },
     { icon: faBasketballBall, name: "Quả bóng rổ" },
@@ -46,6 +49,7 @@ export default function LandingPage() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image source={logoImage} style={styles.logoImage} />
+
         <View style={styles.searchContainer}>
           <FontAwesomeIcon icon={faSearch} size={16} color="#999" />
           <TextInput
@@ -53,9 +57,23 @@ export default function LandingPage() {
             placeholder="Find something..."
           />
         </View>
-        <FontAwesomeIcon icon={faShoppingCart} size={20} color="#333" />
+
+        {/* Notification Icon */}
+        <TouchableOpacity onPress={() => setShowNotifications(!showNotifications)}>
+          <FontAwesomeIcon icon={faBell} size={20} color="#333" />
+        </TouchableOpacity>
+
+        {/* Cart Icon */}
+        <TouchableOpacity onPress={() => navigation.navigate("Cart")}>
+          <FontAwesomeIcon icon={faShoppingCart} size={20} color="#333" />
+        </TouchableOpacity>
       </View>
 
+      {showNotifications && (
+        <NotificationComponent onClose={() => setShowNotifications(false)} />
+      )}
+
+      {/* Rest of the content */}
       <ScrollView style={styles.content}>
         <Text style={styles.sectionTitle}>Category</Text>
         <ScrollView
@@ -77,6 +95,7 @@ export default function LandingPage() {
           ))}
         </ScrollView>
 
+        {/* Banner */}
         <View style={styles.banner}>
           <Text style={styles.bannerTitle}>PLAY MORE,</Text>
           <Text style={styles.bannerTitle}>PAY LESS</Text>
@@ -86,6 +105,7 @@ export default function LandingPage() {
           </Text>
         </View>
 
+        {/* Brands */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -102,6 +122,7 @@ export default function LandingPage() {
           ))}
         </ScrollView>
 
+        {/* Best Seller Section */}
         <View style={styles.bestSellerHeader}>
           <Text style={styles.sectionTitle}>Best seller</Text>
           <TouchableOpacity
@@ -111,6 +132,7 @@ export default function LandingPage() {
           </TouchableOpacity>
         </View>
 
+        {/* Product Grid */}
         <View style={styles.productGrid}>
           {products.map((product, index) => (
             <TouchableOpacity
@@ -132,7 +154,7 @@ export default function LandingPage() {
                 style={styles.addToCartButton}
                 onPress={(e) => {
                   e.stopPropagation();
-                  navigation.navigate("Cart"); // Navigate to the Cart page after adding the item to the cart
+                  navigation.navigate("Cart");
                 }}
               >
                 <Text style={styles.addToCartText}>ADD TO CART</Text>
@@ -141,17 +163,9 @@ export default function LandingPage() {
           ))}
         </View>
       </ScrollView>
-      {/* <BottomNavigation /> */}
 
-      {/* <View style={styles.bottomNav}>
-        <FontAwesomeIcon icon={faHome} size={24} color="#4A90E2" />
-        <FontAwesomeIcon icon={faSearch} size={24} color="#999" />
-        <View style={styles.cartIconContainer}>
-          <FontAwesomeIcon icon={faShoppingCart} size={24} color="#FFF" />
-        </View>
-        <FontAwesomeIcon icon={faHeart} size={24} color="#999" />
-        <FontAwesomeIcon icon={faUser} size={24} color="#999" />
-      </View> */}
+      {/* Bottom Navigation */}
+      {/* <BottomNavigation /> */}
     </View>
   );
 }
@@ -300,22 +314,5 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 12,
     fontWeight: "bold",
-  },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-  },
-  cartIconContainer: {
-    backgroundColor: "#4A90E2",
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

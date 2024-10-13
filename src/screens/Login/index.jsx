@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  Image,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -11,7 +10,6 @@ import {
 } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import { signIn } from "../../api/apiAuth";
 import { useNavigation } from "@react-navigation/native";
 
 const LoginScreen = () => {
@@ -24,24 +22,9 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      // Commented out API call for temporary use
-      // console.log('Attempting to log in with:', { username, password });
-      // const response = await signIn(username, password);
-      // console.log('Response received:', response);
-
-      // if (response.status === 200) {
-      //   Alert.alert("Success", "You have successfully logged in!");
-      //   navigation.navigate("LandingPage");
-      // } else {
-      //   throw new Error("Unexpected response status");
-      // }
-
-      // Temporarily navigating to LandingPage directly
       navigation.navigate("HomeController");
     } catch (error) {
-      console.error("Login error:", error.message);
-      const errorMessage = "Unable to connect to the server. Please check your network and try again.";
-      Alert.alert("Error", errorMessage);
+      Alert.alert("Error", "Unable to connect to the server. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -53,60 +36,78 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Title */}
-      <Text style={styles.title}>Log in to Goods Exchange</Text>
-      <Text style={styles.subtitle}>
-        Welcome back! Sign in using your account to continue
-      </Text>
+      {/* Background shapes */}
+      <View style={styles.shape1} />
+      <View style={styles.shape2} />
 
-      {/* Google sign-in */}
-      <TouchableOpacity style={styles.googleButton}>
-        <Image
-          source={require("../../../assets/images/googleicon.png")}
-          style={styles.googleIcon}
-        />
-      </TouchableOpacity>
+      {/* Login form */}
+      <View style={styles.formContainer}>
+        <Text style={styles.title}>Log in to Goods Exchange</Text>
+        <Text style={styles.subtitle}>
+          Welcome back! Sign in using your social account or email to continue
+        </Text>
 
-      {/* Username input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-      />
+        {/* Google sign-in */}
+        <TouchableOpacity style={styles.googleButton}>
+          <View style={styles.googleIconWrapper}>
+            <Text style={styles.googleIconText}>G</Text>
+          </View>
+        </TouchableOpacity>
 
-      {/* Password input */}
-      <View style={styles.passwordContainer}>
+        {/* Username input */}
         <TextInput
           style={styles.input}
-          placeholder="Password"
-          secureTextEntry={secureTextEntry}
-          value={password}
-          onChangeText={setPassword}
+          placeholder="Phone, email, or username"
+          value={username}
+          onChangeText={setUsername}
         />
-        <TouchableOpacity
-          onPress={togglePasswordVisibility}
-          style={styles.eyeIcon}
-        >
-          <FontAwesomeIcon
-            icon={secureTextEntry ? faEyeSlash : faEye}
-            size={20}
-          />
-        </TouchableOpacity>
-      </View>
 
-      {/* Login button */}
-      <TouchableOpacity
-        style={styles.loginButton}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator size="small" color="#FFF" />
-        ) : (
-          <Text style={styles.loginButtonText}>Log In</Text>
-        )}
-      </TouchableOpacity>
+        {/* Password input */}
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry={secureTextEntry}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            onPress={togglePasswordVisibility}
+            style={styles.eyeIcon}
+          >
+            <FontAwesomeIcon
+              icon={secureTextEntry ? faEyeSlash : faEye}
+              size={20}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Forgot Password */}
+        <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+          <Text style={styles.forgotPassword}>Forgot password?</Text>
+        </TouchableOpacity>
+
+        {/* Login button */}
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <Text style={styles.loginButtonText}>Log In</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Register */}
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Don’t have an account yet?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
+            <Text style={styles.registerLink}>Register now</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
@@ -115,20 +116,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    padding: 20,
     backgroundColor: "#FFF",
   },
+  formContainer: {
+    paddingHorizontal: 20,
+  },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 5,
+    color: "#333",
   },
   subtitle: {
     textAlign: "center",
     fontSize: 14,
     color: "#888",
-    marginBottom: 30,
+    marginBottom: 20,
+  },
+  googleButton: {
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  googleIconWrapper: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#FFA500",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  googleIconText: {
+    color: "#FFF",
+    fontSize: 30,
+    fontWeight: "bold",
   },
   input: {
     height: 50,
@@ -137,15 +158,22 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 15,
     marginBottom: 15,
+    fontSize: 16,
   },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 10,
   },
   eyeIcon: {
     position: "absolute",
-    right: 10,
+    right: 15,
+  },
+  forgotPassword: {
+    color: "#FFA500",
+    textAlign: "right",
+    marginBottom: 20,
+    fontSize: 14,
   },
   loginButton: {
     backgroundColor: "#FFA500",
@@ -153,11 +181,48 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 25,
+    marginBottom: 20,
   },
   loginButtonText: {
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  registerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  registerText: {
+    color: "#888",
+    fontSize: 14,
+  },
+  registerLink: {
+    color: "#FFA500",
+    marginLeft: 5,
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+  // CSS for abstract background shapes
+  shape1: {
+    position: "absolute",
+    width: 250,
+    height: 250,
+    backgroundColor: "#FFA500",
+    borderRadius: 125,
+    top: -100,
+    right: -50,
+    opacity: 0.5,
+  },
+  shape2: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    backgroundColor: "#FFA500",
+    borderRadius: 150,
+    bottom: -150,
+    left: -50,
+    opacity: 0.7,
   },
 });
 
