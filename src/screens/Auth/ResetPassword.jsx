@@ -22,12 +22,11 @@ const ResetPasswordScreen = () => {
   };
 
   const handleContinue = () => {
-    // Handle password reset logic
     if (newPassword === confirmPassword) {
-      Alert.alert('Success', 'Your password has been reset!');
+      Alert.alert('Thành công', 'Mật khẩu của bạn đã được đặt lại!');
       navigation.navigate('Login'); // Navigate back to the login screen
     } else {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert('Lỗi', 'Mật khẩu không khớp');
     }
   };
 
@@ -44,15 +43,15 @@ const ResetPasswordScreen = () => {
       </View>
 
       {/* Title and inputs */}
-      <Text style={styles.title}>Reset your password</Text>
+      <Text style={styles.title}>Đặt lại mật khẩu của bạn</Text>
       <Text style={styles.subtitle}>
-        Here’s a tip: Use a combination of numbers, uppercase, lowercase, and special characters.
+        Mẹo: Sử dụng kết hợp số, chữ in hoa, chữ thường và ký tự đặc biệt.
       </Text>
 
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.input}
-          placeholder="New password"
+          placeholder="Mật khẩu mới"
           secureTextEntry={secureTextEntry}
           value={newPassword}
           onChangeText={setNewPassword}
@@ -65,7 +64,7 @@ const ResetPasswordScreen = () => {
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Confirm new password"
+          placeholder="Xác nhận mật khẩu mới"
           secureTextEntry={secureTextEntry}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
@@ -77,11 +76,12 @@ const ResetPasswordScreen = () => {
 
       {/* Continue button */}
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueButtonText}>Continue</Text>
+        <Text style={styles.continueButtonText}>Tiếp tục</Text>
       </TouchableOpacity>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

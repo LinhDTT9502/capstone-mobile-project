@@ -31,7 +31,7 @@ export default function Component() {
   const toggleInlineFilter = () =>
     setInlineFilterVisible(!isInlineFilterVisible);
 
-  const filters = ["New", "Ho Chi Minh"];
+  const filters = ["Mới", "Ho Chi Minh"];
   const products = Array(6).fill({
     name: "Nike Air Max 270 React ENG",
     price: "$19.5",
@@ -46,7 +46,7 @@ export default function Component() {
           <FontAwesomeIcon icon={faSearch} size={16} color="#999" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Find something..."
+            placeholder="Tìm kiếm..."
           />
         </View>
         <TouchableOpacity onPress={toggleFilterModal}>
@@ -67,7 +67,6 @@ export default function Component() {
         </TouchableOpacity>
       </View>
 
-      {/* Inline Filter Options */}
       {isInlineFilterVisible && (
         <View style={styles.inlineFilterContainer}>
           {filters.map((filter, index) => (
@@ -78,7 +77,6 @@ export default function Component() {
         </View>
       )}
 
-      {/* Product Grid */}
       <ScrollView style={styles.content}>
         <View style={styles.productGrid}>
           {products.map((product, index) => (
@@ -95,22 +93,21 @@ export default function Component() {
                 style={styles.wishlistIcon}
               />
               <Text style={styles.productName}>{product.name}</Text>
-              <Text style={styles.productCategory}>Shoes</Text>
+              <Text style={styles.productCategory}>Giày</Text>
               <Text style={styles.productPrice}>{product.price}</Text>
               <TouchableOpacity 
-      style={styles.addToCartButton} 
-      onPress={(e) => {
-        e.stopPropagation();
-        navigation.navigate("Cart"); 
-      }}>
-      <Text style={styles.addToCartText}>ADD TO CART</Text>
-    </TouchableOpacity>
+                style={styles.addToCartButton} 
+                onPress={(e) => {
+                  e.stopPropagation();
+                  navigation.navigate("Cart"); 
+                }}>
+                <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
+              </TouchableOpacity>
             </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
 
-      {/* Filter Popup Modal */}
       <Modal
         visible={isFilterModalVisible}
         animationType="slide"
@@ -125,31 +122,31 @@ export default function Component() {
             >
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Filter Search</Text>
+            <Text style={styles.modalTitle}>Lọc tìm kiếm</Text>
 
-            <Text style={styles.filterSectionTitle}>Condition</Text>
+            <Text style={styles.filterSectionTitle}>Điều kiện</Text>
             <View style={styles.filterOptions}>
               <TouchableOpacity style={styles.filterOption}>
-                <Text style={styles.filterOptionText}>New</Text>
+                <Text style={styles.filterOptionText}>Mới</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.filterOption}>
-                <Text style={styles.filterOptionText}>Old</Text>
+                <Text style={styles.filterOptionText}>Cũ</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.filterOption}>
-                <Text style={styles.filterOptionText}>Not Specified</Text>
+                <Text style={styles.filterOptionText}>Không xác định</Text>
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity style={styles.applyButton}>
-              <Text style={styles.applyButtonText}>APPLY</Text>
+              <Text style={styles.applyButtonText}>Áp dụng</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   // Existing styles

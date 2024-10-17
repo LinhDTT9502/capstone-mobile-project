@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,14 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-} from "react-native";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import { useNavigation } from "@react-navigation/native";
+} from 'react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { useNavigation } from '@react-navigation/native';
 
 const LoginScreen = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
@@ -22,9 +22,14 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      navigation.navigate("HomeController");
+      // Assume signIn API is called
+      if (username && password) {
+        navigation.navigate('HomeController');
+      } else {
+        Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
+      }
     } catch (error) {
-      Alert.alert("Error", "Unable to connect to the server. Please try again.");
+      Alert.alert('Lỗi', 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -42,22 +47,15 @@ const LoginScreen = () => {
 
       {/* Login form */}
       <View style={styles.formContainer}>
-        <Text style={styles.title}>Log in to Goods Exchange</Text>
+        <Text style={styles.title}>Đăng nhập vào Goods Exchange</Text>
         <Text style={styles.subtitle}>
-          Welcome back! Sign in using your social account or email to continue
+          Chào mừng bạn trở lại! Đăng nhập bằng tài khoản xã hội hoặc email để tiếp tục
         </Text>
-
-        {/* Google sign-in */}
-        <TouchableOpacity style={styles.googleButton}>
-          <View style={styles.googleIconWrapper}>
-            <Text style={styles.googleIconText}>G</Text>
-          </View>
-        </TouchableOpacity>
 
         {/* Username input */}
         <TextInput
           style={styles.input}
-          placeholder="Phone, email, or username"
+          placeholder="Số điện thoại, email hoặc tên người dùng"
           value={username}
           onChangeText={setUsername}
         />
@@ -66,25 +64,19 @@ const LoginScreen = () => {
         <View style={styles.passwordContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Password"
+            placeholder="Mật khẩu"
             secureTextEntry={secureTextEntry}
             value={password}
             onChangeText={setPassword}
           />
-          <TouchableOpacity
-            onPress={togglePasswordVisibility}
-            style={styles.eyeIcon}
-          >
-            <FontAwesomeIcon
-              icon={secureTextEntry ? faEyeSlash : faEye}
-              size={20}
-            />
+          <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
+            <FontAwesomeIcon icon={secureTextEntry ? faEyeSlash : faEye} size={20} />
           </TouchableOpacity>
         </View>
 
         {/* Forgot Password */}
-        <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
-          <Text style={styles.forgotPassword}>Forgot password?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
         </TouchableOpacity>
 
         {/* Login button */}
@@ -96,21 +88,22 @@ const LoginScreen = () => {
           {loading ? (
             <ActivityIndicator size="small" color="#FFF" />
           ) : (
-            <Text style={styles.loginButtonText}>Log In</Text>
+            <Text style={styles.loginButtonText}>Đăng nhập</Text>
           )}
         </TouchableOpacity>
 
         {/* Register */}
         <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Don’t have an account yet?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-            <Text style={styles.registerLink}>Register now</Text>
+          <Text style={styles.registerText}>Bạn chưa có tài khoản?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <Text style={styles.registerLink}>Đăng ký ngay</Text>
           </TouchableOpacity>
         </View>
       </View>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

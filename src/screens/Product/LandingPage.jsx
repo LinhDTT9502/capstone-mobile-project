@@ -4,41 +4,57 @@ import {
   Text,
   ScrollView,
   Image,
-  TextInput,
   TouchableOpacity,
+  Modal,
+  FlatList,
   StyleSheet,
 } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
-  faSearch,
+  faUser,
   faShoppingCart,
   faBell,
   faHeart,
-  faUser,
   faMusic,
   faBasketballBall,
   faMicrophone,
   faVolleyballBall,
+  faBars,
+  faChevronDown,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigation } from "@react-navigation/native";
-import BottomNavigation from "../../components/BottomNavigation";
-import NotificationComponent from "../../components/NotificationsComponent"; 
+import NotificationComponent from "../../components/NotificationsComponent";
 import logoImage from "../../screens/Logo/2sport_logo.png";
 import demoProduct from "../../../assets/images/product_demo.jpg";
+import Swiper from "react-native-swiper";
 
 export default function LandingPage() {
   const navigation = useNavigation();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
+  const menuOptions = [
+    { name: "Trang chủ" },
+    { name: "Sản phẩm", dropdown: true },
+    { name: "Giới thiệu" },
+    { name: "Liên hệ" },
+  ];
 
   const categories = [
-    { icon: faMusic, name: "Vũ" },
-    { icon: faBasketballBall, name: "Quả bóng rổ" },
-    { icon: faMicrophone, name: "Vật chất lỏng" },
-    { icon: faVolleyballBall, name: "Quả bóng" },
+    { icon: faMusic, name: "Âm nhạc" },
+    { icon: faBasketballBall, name: "Bóng rổ" },
+    { icon: faMicrophone, name: "Microphone" },
+    { icon: faVolleyballBall, name: "Bóng chuyền" },
+  ];
+
+  const moreCategories = [
+    { icon: faHeart, name: "Bóng đá" },
+    { icon: faUser, name: "Bóng chuyền" },
+    { icon: faShoppingCart, name: "Dụng cụ tập gym" },
   ];
 
   const brands = ["adidas", "nike", "new-balance", "bmx", "yonex"];
-
   const products = Array(4).fill({
     name: "Nike Air Max 270 React ENG",
     price: "$19.5",
@@ -48,69 +64,111 @@ export default function LandingPage() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
+          <FontAwesomeIcon icon={faBars} size={24} color="#fff" />
+        </TouchableOpacity>
+
         <Image source={logoImage} style={styles.logoImage} />
 
-        <View style={styles.searchContainer}>
-          <FontAwesomeIcon icon={faSearch} size={16} color="#999" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Find something..."
-          />
+        <View style={styles.rightIcons}>
+          <TouchableOpacity onPress={() => setShowNotifications(!showNotifications)}>
+            <FontAwesomeIcon icon={faBell} size={20} color="#fff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate("Cart")}>
+            <FontAwesomeIcon icon={faShoppingCart} size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
-
-        {/* Notification Icon */}
-        <TouchableOpacity onPress={() => setShowNotifications(!showNotifications)}>
-          <FontAwesomeIcon icon={faBell} size={20} color="#333" />
-        </TouchableOpacity>
-
-        {/* Cart Icon */}
-        <TouchableOpacity onPress={() => navigation.navigate("Cart")}>
-          <FontAwesomeIcon icon={faShoppingCart} size={20} color="#333" />
-        </TouchableOpacity>
       </View>
+
+      {showMenu && (
+        <View style={styles.menuContainer}>
+          {menuOptions.map((option, index) => (
+            <TouchableOpacity key={index} style={styles.menuItem}>
+              <Text style={styles.menuItemText}>{option.name}</Text>
+              {option.dropdown && (
+                <FontAwesomeIcon icon={faChevronDown} size={16} color="#fff" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {showNotifications && (
         <NotificationComponent onClose={() => setShowNotifications(false)} />
       )}
 
-      {/* Rest of the content */}
       <ScrollView style={styles.content}>
-        <Text style={styles.sectionTitle}>Category</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoryContainer}
-        >
+        <Text style={styles.sectionTitle}>Danh mục</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
           {categories.map((category, index) => (
             <View key={index} style={styles.categoryItem}>
               <View style={styles.categoryIcon}>
-                <FontAwesomeIcon
-                  icon={category.icon}
-                  size={24}
-                  color="#4A90E2"
-                />
+                <FontAwesomeIcon icon={category.icon} size={24} color="#4A90E2" />
               </View>
               <Text style={styles.categoryName}>{category.name}</Text>
             </View>
           ))}
+
+          <TouchableOpacity style={styles.seeMoreButton} onPress={() => setShowModal(true)}>
+            <Text style={styles.seeMoreText}>Xem thêm</Text>
+          </TouchableOpacity>
         </ScrollView>
 
-        {/* Banner */}
-        <View style={styles.banner}>
-          <Text style={styles.bannerTitle}>PLAY MORE,</Text>
-          <Text style={styles.bannerTitle}>PAY LESS</Text>
-          <Text style={styles.bannerSubtitle}>
-            Welcome to our Ultimate Destination for Gently Used Sporting
-            Excellence - Where the Game Never Ends, and the Savings Are Endless!
-          </Text>
-        </View>
+        <Modal visible={showModal} transparent={true} animationType="slide" onRequestClose={() => setShowModal(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Nhiều danh mục khác</Text>
+              <FlatList
+                data={moreCategories}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={styles.modalItem}>
+                    <FontAwesomeIcon icon={item.icon} size={24} color="#4A90E2" />
+                    <Text style={styles.modalItemText}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowModal(false)}
+              >
+                <Text style={styles.modalCloseButtonText}>Đóng</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
-        {/* Brands */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.brandContainer}
+        <Swiper
+          style={styles.wrapper}
+          showsButtons={false}
+          autoplay={true}
+          autoplayTimeout={3}
+          dot={<View style={styles.dot} />}
+          activeDot={<View style={styles.activeDot} />}
+          loop={true}
         >
+          <View style={styles.slide}>
+            <Image
+              source={{ uri: "https://sporthouse.vn/upload_images/images/banner%20KM(1).jpg" }}
+              style={styles.sliderImage}
+            />
+          </View>
+          <View style={styles.slide}>
+            <Image
+              source={{ uri: "https://thietkehaithanh.com/wp-content/uploads/2021/11/banner-giay-thietkehaithanh-800x304.jpg" }}
+              style={styles.sliderImage}
+            />
+          </View>
+          <View style={styles.slide}>
+            <Image
+              source={{ uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZEJzEPbuVrCyMZzH3925ylhxW_t2DqErYOQ&s" }}
+              style={styles.sliderImage}
+            />
+          </View>
+        </Swiper>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.brandContainer}>
           {brands.map((brand, index) => (
             <Image
               key={index}
@@ -122,17 +180,13 @@ export default function LandingPage() {
           ))}
         </ScrollView>
 
-        {/* Best Seller Section */}
         <View style={styles.bestSellerHeader}>
-          <Text style={styles.sectionTitle}>Best seller</Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("SearchingPage")}
-          >
-            <Text style={styles.seeMore}>See More</Text>
+          <Text style={styles.sectionTitle}>Bán chạy nhất</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("HomeController", { screen: "SearchingPage" })}>
+            <Text style={styles.seeMore}>Xem thêm</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Product Grid */}
         <View style={styles.productGrid}>
           {products.map((product, index) => (
             <TouchableOpacity
@@ -141,14 +195,9 @@ export default function LandingPage() {
               onPress={() => navigation.navigate("ProductDetail")}
             >
               <Image source={product.image} style={styles.productImage} />
-              <FontAwesomeIcon
-                icon={faHeart}
-                size={16}
-                color="#FF6B6B"
-                style={styles.wishlistIcon}
-              />
+              <FontAwesomeIcon icon={faHeart} size={16} color="#FF6B6B" style={styles.wishlistIcon} />
               <Text style={styles.productName}>{product.name}</Text>
-              <Text style={styles.productCategory}>Shoes</Text>
+              <Text style={styles.productCategory}>Giày</Text>
               <Text style={styles.productPrice}>{product.price}</Text>
               <TouchableOpacity
                 style={styles.addToCartButton}
@@ -157,18 +206,19 @@ export default function LandingPage() {
                   navigation.navigate("Cart");
                 }}
               >
-                <Text style={styles.addToCartText}>ADD TO CART</Text>
+                <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
               </TouchableOpacity>
             </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      {/* <BottomNavigation /> */}
     </View>
   );
 }
+
+
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -178,37 +228,43 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
-    backgroundColor: "#FFF",
+    backgroundColor: "#333",
   },
   logoImage: {
     width: 100,
     height: 40,
     resizeMode: "contain",
-    marginRight: 16,
   },
-  searchContainer: {
-    flex: 1,
+  rightIcons: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0F0F0",
-    borderRadius: 8,
-    padding: 8,
-    marginRight: 16,
   },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
+  menuContainer: {
+    backgroundColor: "#333",
+    padding: 10,
+  },
+  menuItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#555",
+  },
+  menuItemText: {
+    color: "#fff",
+    fontSize: 16,
   },
   content: {
     flex: 1,
+    padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginVertical: 16,
-    marginLeft: 16,
   },
   categoryContainer: {
     paddingLeft: 16,
@@ -230,21 +286,83 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
   },
-  banner: {
-    backgroundColor: "#E6F0FF",
+  seeMoreButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginVertical: 10,
+  },
+  seeMoreText: {
+    color: "#4A90E2",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "#FFF",
+    borderRadius: 8,
     padding: 16,
-    margin: 16,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  modalItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  modalItemText: {
+    marginLeft: 10,
+    fontSize: 16,
+  },
+  modalCloseButton: {
+    marginTop: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: "#4A90E2",
     borderRadius: 8,
   },
-  bannerTitle: {
-    fontSize: 24,
+  modalCloseButtonText: {
+    color: "#FFF",
     fontWeight: "bold",
-    color: "#4A90E2",
   },
-  bannerSubtitle: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 8,
+  wrapper: {
+    height: 200,
+    marginTop: 10,
+  },
+  slide: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E6F0FF",
+  },
+  sliderImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  dot: {
+    backgroundColor: "#999",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    margin: 3,
+  },
+  activeDot: {
+    backgroundColor: "#4A90E2",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    margin: 3,
   },
   brandContainer: {
     paddingLeft: 16,
@@ -260,10 +378,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingRight: 16,
-  },
-  seeMore: {
-    color: "#4A90E2",
-    fontSize: 14,
   },
   productGrid: {
     flexDirection: "row",

@@ -24,14 +24,12 @@ const VerifyOTPScreen = () => {
       </View>
 
       {/* Title and inputs */}
-      <Text style={styles.title}>Check your mail</Text>
-      <Text style={styles.subtitle}>
-        We just sent an OTP to your registered email address
-      </Text>
+      <Text style={styles.title}>Kiểm tra email của bạn</Text>
+      <Text style={styles.subtitle}>Chúng tôi vừa gửi mã OTP đến email đã đăng ký của bạn</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Enter OTP"
+        placeholder="Nhập OTP"
         value={otp}
         onChangeText={setOtp}
         keyboardType="numeric"
@@ -40,11 +38,12 @@ const VerifyOTPScreen = () => {
 
       {/* Verify button */}
       <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
-        <Text style={styles.verifyButtonText}>Verify OTP</Text>
+        <Text style={styles.verifyButtonText}>Xác minh OTP</Text>
       </TouchableOpacity>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

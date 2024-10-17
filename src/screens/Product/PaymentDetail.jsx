@@ -1,17 +1,19 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faArrowLeft, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
-import BottomNavigation from "../../components/BottomNavigation";
+import { useNavigation } from "@react-navigation/native";
 
-export default function PaymentDetail({ navigation }) {
+export default function PaymentDetail() {
+  const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <FontAwesomeIcon icon={faArrowLeft} size={20} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title}>Payment Details</Text>
+        <Text style={styles.title}>Chi tiết thanh toán</Text>
       </View>
 
       <View style={styles.content}>
@@ -21,24 +23,24 @@ export default function PaymentDetail({ navigation }) {
           color="#FF9900"
           style={styles.icon}
         />
-        <Text style={styles.successMessage}>Payment done successfully.</Text>
-        <Text style={styles.paymentTotal}>2.000.000 VND</Text>
+        <Text style={styles.successMessage}>Thanh toán thành công.</Text>
+        <Text style={styles.paymentTotal}>Tổng tiền: 2.000.000 VND</Text>
 
         <View style={styles.detailsSection}>
-          <Text style={styles.detailLabel}>Date</Text>
-          <Text style={styles.detailValue}>24 April 2024</Text>
-          <Text style={styles.detailLabel}>Order</Text>
+          <Text style={styles.detailLabel}>Ngày</Text>
+          <Text style={styles.detailValue}>24 Tháng 4, 2024</Text>
+          <Text style={styles.detailLabel}>Đơn hàng</Text>
           <Text style={styles.detailValue}>1.500.000 VND</Text>
-          <Text style={styles.detailLabel}>Shipping</Text>
+          <Text style={styles.detailLabel}>Phí vận chuyển</Text>
           <Text style={styles.detailValue}>500.000 VND</Text>
-          <Text style={styles.detailLabel}>Total</Text>
+          <Text style={styles.detailLabel}>Tổng cộng</Text>
           <Text style={styles.detailValue}>2.000.000 VND</Text>
         </View>
       </View>
-
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

@@ -25,12 +25,12 @@ const ForgotPasswordScreen = () => {
       </View>
 
       {/* Title and inputs */}
-      <Text style={styles.title}>Forgot Password?</Text>
-      <Text style={styles.subtitle}>Please enter your email to reset the password</Text>
+      <Text style={styles.title}>Quên mật khẩu?</Text>
+      <Text style={styles.subtitle}>Vui lòng nhập email của bạn để đặt lại mật khẩu</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="User name"
+        placeholder="Tên đăng nhập"
         value={username}
         onChangeText={setUsername}
       />
@@ -43,11 +43,12 @@ const ForgotPasswordScreen = () => {
 
       {/* Continue button */}
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueButtonText}>Continue</Text>
+        <Text style={styles.continueButtonText}>Tiếp tục</Text>
       </TouchableOpacity>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

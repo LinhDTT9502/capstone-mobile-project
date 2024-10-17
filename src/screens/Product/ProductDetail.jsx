@@ -8,31 +8,77 @@ import {
   Modal,
   TextInput,
   Alert,
+  ScrollView,
 } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faArrowLeft, faHeart, faCheckSquare, faSquare } from "@fortawesome/free-solid-svg-icons"; // Add check icons
-import demoProduct from "../../../assets/images/product_demo.jpg"; // Ensure this path is correct
+import {
+  faArrowLeft,
+  faHeart,
+  faCheckSquare,
+  faSquare,
+  faPlus,
+  faMinus,
+} from "@fortawesome/free-solid-svg-icons";
+import demoProduct from "../../../assets/images/product_demo.jpg";
+import { useNavigation } from "@react-navigation/native";
 
-export default function ProductDetail({ navigation }) {
+export default function ProductDetail() {
+  const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [isAgreed, setIsAgreed] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [side, setSide] = useState("M");
 
-  const handleRentProduct = () => {
+  const handleAddToCart = () => {
     if (!startDate || !endDate) {
-      Alert.alert('Error', 'Please select rental dates.');
+      Alert.alert("Vui lòng chọn ngày thuê.");
       return;
     }
 
     if (!isAgreed) {
-      Alert.alert('Error', 'You must agree to the terms before proceeding.');
+      Alert.alert("Bạn phải đồng ý với điều khoản trước khi tiếp tục.");
       return;
     }
 
-    Alert.alert('Success', 'Product rented successfully!');
+    Alert.alert("Thuê sản phẩm đã được thêm vào giỏ hàng!");
+
+    const rentalItem = {
+      productName: "Nike Air Max 270 React ENG",
+      startDate,
+      endDate,
+      quantity,
+      side,
+      type: "rent",
+    };
+
     setModalVisible(false);
-    navigation.navigate('PaymentDetail');
+  };
+
+  const handleBuyNow = () => {
+    if (!startDate || !endDate) {
+      Alert.alert("Vui lòng chọn ngày thuê.");
+      return;
+    }
+
+    if (!isAgreed) {
+      Alert.alert("Bạn phải đồng ý với điều khoản trước khi tiếp tục.");
+      return;
+    }
+
+    Alert.alert("Đang chuyển đến trang thanh toán...");
+
+    const rentalItem = {
+      productName: "Nike Air Max 270 React ENG",
+      startDate,
+      endDate,
+      quantity,
+      side,
+      type: "rent",
+    };
+
+    navigation.navigate("Cart", { rentalItem });
   };
 
   return (
@@ -41,23 +87,56 @@ export default function ProductDetail({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <FontAwesomeIcon icon={faArrowLeft} size={20} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title}>Product Details</Text>
+        <Text style={styles.title}>Chi tiết sản phẩm</Text>
         <FontAwesomeIcon icon={faHeart} size={20} color="#FF6B6B" />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content}>
         <Image source={demoProduct} style={styles.productImage} />
-        <Text style={styles.productName}>Do One Thing Every Morning To Make Your Day</Text>
+        <Text style={styles.productName}>Nike Air Max 270 React ENG</Text>
         <Text style={styles.productTag}>For exchange</Text>
 
-        <Text style={styles.sectionTitle}>Specification</Text>
-        <Text style={styles.specificationText}>Condition: New</Text>
+        <Text style={styles.sectionTitle}>Thông số kỹ thuật</Text>
+        <Text style={styles.specificationText}>Tình trạng: Mới</Text>
         <Text style={styles.specificationText}>
-          Description: The Nike Air Max 270 React ENG combines a full-length React foam
+          Mô tả: The Nike Air Max 270 React ENG combines a full-length React
+          foam
         </Text>
-        <Text style={styles.specificationText}>Location: 123 ABC Street</Text>
+        <Text style={styles.specificationText}>Vị trí: 123 ABC Street</Text>
 
-        <Text style={styles.sectionTitle}>Uploaded by:</Text>
+        {/* Quantity and Side Selection */}
+        <View style={styles.selectorContainer}>
+          <View style={styles.quantityContainer}>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
+            >
+              <FontAwesomeIcon icon={faMinus} />
+            </TouchableOpacity>
+            <Text style={styles.quantityText}>{quantity}</Text>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => setQuantity(quantity + 1)}
+            >
+              <FontAwesomeIcon icon={faPlus} />
+            </TouchableOpacity>
+          </View>
+{/* 
+          <View style={styles.sideSelector}>
+            <Text style={styles.selectorLabel}>Chọn Size:</Text>
+            <TouchableOpacity onPress={() => setSide("M")} style={[styles.sideButton, side === "M" && styles.activeSide]}>
+              <Text>M</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setSide("L")} style={[styles.sideButton, side === "L" && styles.activeSide]}>
+              <Text>L</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setSide("XL")} style={[styles.sideButton, side === "XL" && styles.activeSide]}>
+              <Text>XL</Text>
+            </TouchableOpacity>
+          </View> */}
+        </View>
+
+        <Text style={styles.sectionTitle}>Được đăng bởi:</Text>
         <View style={styles.uploaderContainer}>
           <Image
             source={{ uri: "https://via.placeholder.com/40" }}
@@ -65,21 +144,43 @@ export default function ProductDetail({ navigation }) {
           />
           <View style={styles.uploaderInfo}>
             <Text style={styles.uploaderName}>James Lawson</Text>
-            <Text style={styles.publishedDate}>Published by: 21/02/2024</Text>
+            <Text style={styles.publishedDate}>Được đăng: 21/02/2024</Text>
             <Text>⭐️⭐️⭐️⭐️☆</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.addToCartButton}>
-          <Text style={styles.addToCartText}>Add to cart</Text>
+        {/* Comments and Reviews Section */}
+        <Text style={styles.sectionTitle}>Đánh giá & Nhận xét</Text>
+        <View style={styles.commentContainer}>
+          <Text style={styles.commentUser}>Trần Văn A:</Text>
+          <Text style={styles.commentText}>
+            Giày rất đẹp và thoải mái. Dịch vụ nhanh chóng.
+          </Text>
+          <Text style={styles.commentDate}>24/02/2024</Text>
+        </View>
+        <View style={styles.commentContainer}>
+          <Text style={styles.commentUser}>Nguyễn Thị B:</Text>
+          <Text style={styles.commentText}>
+            Rất hài lòng với chất lượng sản phẩm!
+          </Text>
+          <Text style={styles.commentDate}>22/02/2024</Text>
+        </View>
+      </ScrollView>
+
+      {/* Bottom Navigation for Add to Cart and Rent */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => Alert.alert("Sản phẩm đã được thêm vào giỏ hàng!")}
+        >
+          <Text style={styles.navButtonText}>Thêm vào giỏ hàng</Text>
         </TouchableOpacity>
 
-        {/* Rent Product Button */}
         <TouchableOpacity
-          style={styles.rentButton}
+          style={styles.navButton}
           onPress={() => setModalVisible(true)}
         >
-          <Text style={styles.rentButtonText}>Rent Product</Text>
+          <Text style={styles.navButtonText}>Thuê sản phẩm</Text>
         </TouchableOpacity>
       </View>
 
@@ -92,53 +193,50 @@ export default function ProductDetail({ navigation }) {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Rent this Product</Text>
+            <Text style={styles.modalTitle}>Thuê sản phẩm này</Text>
 
-            {/* Date Inputs */}
             <TextInput
               style={styles.dateInput}
-              placeholder="Start Date (DD/MM/YYYY)"
+              placeholder="Ngày bắt đầu (DD/MM/YYYY)"
               value={startDate}
               onChangeText={setStartDate}
             />
             <TextInput
               style={styles.dateInput}
-              placeholder="End Date (DD/MM/YYYY)"
+              placeholder="Ngày kết thúc (DD/MM/YYYY)"
               value={endDate}
               onChangeText={setEndDate}
             />
 
-            {/* Agreement Checkbox */}
             <View style={styles.checkboxContainer}>
               <TouchableOpacity
                 onPress={() => setIsAgreed(!isAgreed)}
                 style={styles.checkbox}
               >
                 <FontAwesomeIcon
-                  icon={isAgreed ? faCheckSquare : faSquare} // Toggle between check and uncheck icons
+                  icon={isAgreed ? faCheckSquare : faSquare}
                   size={24}
                   color={isAgreed ? "#4CAF50" : "#333"}
                 />
               </TouchableOpacity>
               <Text style={styles.checkboxLabel}>
-                I agree to the rental terms and conditions.
+                Tôi đồng ý với các điều khoản thuê sản phẩm.
               </Text>
             </View>
 
-            {/* Submit Button */}
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleRentProduct}
-            >
-              <Text style={styles.submitButtonText}>Proceed to Payment</Text>
+            <TouchableOpacity style={styles.submitButton} onPress={handleAddToCart}>
+              <Text style={styles.submitButtonText}>Thêm vào giỏ hàng</Text>
             </TouchableOpacity>
 
-            {/* Cancel Button */}
+            <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
+              <Text style={styles.buyNowButtonText}>Mua ngay</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>Hủy</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -150,7 +248,7 @@ export default function ProductDetail({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 30,
+    paddingTop:30,
     backgroundColor: "#FFF",
   },
   header: {
@@ -158,7 +256,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
-    backgroundColor: "#FFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0E0",
   },
@@ -232,36 +329,99 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
   },
-  addToCartButton: {
+
+  // Selector container for quantity and size
+  selectorContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  quantityContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  quantityButton: {
+    backgroundColor: "#E6F0FF",
+    padding: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  quantityText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    paddingHorizontal: 12,
+  },
+  sideSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  selectorLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginRight: 10,
+  },
+  sideButton: {
+    backgroundColor: "#E6F0FF",
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginHorizontal: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  activeSide: {
+    backgroundColor: "#4CAF50",
+  },
+
+  // Comment and Review Section
+  commentContainer: {
+    padding: 10,
+    backgroundColor: "#F9F9F9",
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  commentUser: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  commentText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 4,
+  },
+  commentDate: {
+    fontSize: 12,
+    color: "#999",
+  },
+
+  // Bottom navigation for actions
+  bottomNav: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+    backgroundColor: "#FFF",
+  },
+  navButton: {
+    flex: 1,
     backgroundColor: "#FF9900",
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 24,
-    width: "90%",
-    alignSelf: "center",
+    marginHorizontal: 8,
   },
-  addToCartText: {
+  navButtonText: {
     color: "#FFF",
     fontSize: 18,
     fontWeight: "bold",
   },
-  rentButton: {
-    backgroundColor: "#4A90E2",
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-    width: "90%",
-    alignSelf: "center",
-  },
-  rentButtonText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
+
+  // Modal styles for renting products
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -310,6 +470,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  buyNowButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 14,
+    borderRadius: 8,
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  buyNowButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   cancelButton: {
     backgroundColor: "#FFF",
     paddingVertical: 10,
@@ -325,3 +498,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+

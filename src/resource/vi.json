@@ -1,0 +1,192 @@
+{
+    "forgot_password": {
+      "title": "Quên mật khẩu?",
+      "subtitle": "Vui lòng nhập email của bạn để đặt lại mật khẩu",
+      "username_placeholder": "Tên đăng nhập",
+      "email_placeholder": "Email",
+      "continue": "Tiếp tục"
+    },
+    "otp_verification": {
+        "title": "Kiểm tra email của bạn",
+        "subtitle": "Chúng tôi vừa gửi mã OTP đến email đã đăng ký của bạn",
+        "placeholder": "Nhập OTP",
+        "verify_button": "Xác minh OTP"
+      },
+      "reset_password": {
+    "title": "Đặt lại mật khẩu của bạn",
+    "subtitle": "Mẹo: Sử dụng kết hợp số, chữ in hoa, chữ thường và ký tự đặc biệt.",
+    "new_password": "Mật khẩu mới",
+    "confirm_new_password": "Xác nhận mật khẩu mới",
+    "continue": "Tiếp tục",
+    "success": "Thành công",
+    "password_reset": "Mật khẩu của bạn đã được đặt lại!",
+    "error": "Lỗi",
+    "password_mismatch": "Mật khẩu không khớp"
+  },
+  "login": {
+    "title": "Đăng nhập vào Goods Exchange",
+    "subtitle": "Chào mừng bạn trở lại! Đăng nhập bằng tài khoản xã hội hoặc email để tiếp tục",
+    "placeholder_username": "Số điện thoại, email hoặc tên người dùng",
+    "placeholder_password": "Mật khẩu",
+    "forgot_password": "Quên mật khẩu?",
+    "login_button": "Đăng nhập",
+    "no_account": "Bạn chưa có tài khoản?",
+    "register_now": "Đăng ký ngay",
+    "failed": "Đăng nhập thất bại",
+    "invalid_credentials": "Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.",
+    "missing_credentials": "Vui lòng nhập tên đăng nhập và mật khẩu."
+  },
+  "account": {
+    "settings": "Cài đặt",
+    "favorite_items": "Danh sách yêu thích",
+    "my_orders": "Đơn hàng của tôi",
+    "language": "Ngôn ngữ",
+    "edit_profile": "Chỉnh sửa hồ sơ",
+    "change_password": "Thay đổi mật khẩu",
+    "logout": "Đăng xuất",
+    "logout_success": "Đăng xuất thành công!",
+    "logout_failed": "Có lỗi xảy ra khi đăng xuất.",
+    "signout_error": "Không thể đăng xuất. Vui lòng thử lại.",
+    "language_modal": {
+      "title": "Chọn ngôn ngữ",
+      "close": "Đóng",
+      "english": "Tiếng Anh",
+      "vietnamese": "Tiếng Việt"
+    }
+  },
+  "account.reset_password": {
+    "title": "Đặt lại mật khẩu của bạn",
+    "old_password": "Mật khẩu cũ",
+    "new_password": "Mật khẩu mới",
+    "confirm_new_password": "Xác nhận mật khẩu mới",
+    "continue": "Tiếp tục",
+    "success": "Thành công",
+    "password_reset": "Mật khẩu của bạn đã được đặt lại!",
+    "error": "Lỗi",
+    "password_mismatch": "Mật khẩu không khớp"
+  },
+  "cart": {
+    "title": "Giỏ hàng của bạn",
+    "items": "Sản phẩm",
+    "shipping": "Vận chuyển",
+    "import_charges": "Phí nhập khẩu",
+    "total": "Tổng cộng",
+    "next": "Tiếp theo"
+  },
+  "user_profile": {
+    "user_profile": "Thông tin người dùng",
+    "username": "Tên người dùng",
+    "fullname": "Họ và tên",
+    "birthDate": "Ngày sinh",
+    "phone": "Số điện thoại",
+    "email": "Email",
+    "save_changes": "Hoàn thành chỉnh sửa"
+  },
+  "landing_page": {
+    "menu": {
+      "home": "Trang chủ",
+      "products": "Sản phẩm",
+      "about": "Giới thiệu",
+      "contact": "Liên hệ"
+    },
+    "categories": {
+      "music": "Vũ",
+      "basketball": "Quả bóng rổ",
+      "microphone": "Vật chất lỏng",
+      "volleyball": "Quả bóng",
+      "soccer": "Bóng đá",
+      "gym_equipment": "Dụng cụ tập gym"
+    },
+    "category": {
+      "title": "Danh mục",
+      "see_more": "Xem thêm",
+      "more_categories": "Nhiều danh mục khác"
+    },
+    "best_seller": {
+      "title": "Bán chạy nhất"
+    },
+    "product": {
+      "add_to_cart": "THÊM VÀO GIỎ HÀNG",
+      "category": "Giày"
+    },
+    "common": {
+      "see_more": "Xem thêm",
+      "close": "Đóng"
+    }
+  },
+  "my_orders": {
+    "title": "Đơn hàng của tôi",
+    "find_placeholder": "Tìm kiếm",
+    "order_number": "Số đơn hàng",
+    "order_at": "Ngày đặt hàng",
+    "order_status": "Trạng thái đơn hàng",
+    "shipped": "Đã giao",
+    "cancelled": "Đã hủy",
+    "items_purchased": "{{count}} sản phẩm đã mua",
+    "price": "Giá",
+    "pagination": {
+      "prev": "<",
+      "next": ">"
+    }
+  },
+  "payment_detail": {
+    "title": "Chi tiết thanh toán",
+    "success_message": "Thanh toán thành công.",
+    "total_amount": "{{amount}} VND",
+    "date": "Ngày",
+    "order": "Đơn hàng",
+    "shipping": "Vận chuyển",
+    "total": "Tổng cộng"
+  },
+  "product_detail": {
+    "title": "Chi tiết sản phẩm",
+    "add_to_cart": "Thêm vào giỏ hàng",
+    "rent_product": "Thuê sản phẩm",
+    "rent_modal_title": "Thuê sản phẩm này",
+    "start_date_placeholder": "Ngày bắt đầu (DD/MM/YYYY)",
+    "end_date_placeholder": "Ngày kết thúc (DD/MM/YYYY)",
+    "agree_terms": "Tôi đồng ý với các điều khoản thuê sản phẩm.",
+    "proceed_to_payment": "Tiếp tục thanh toán",
+    "cancel": "Hủy",
+    "error_rent_dates": "Vui lòng chọn ngày thuê.",
+    "error_agreement": "Bạn phải đồng ý với điều khoản trước khi tiếp tục.",
+    "success_rent": "Thuê sản phẩm thành công!"
+  },
+  "component": {
+    "search_placeholder": "Tìm kiếm...",
+    "filter_search": "Lọc tìm kiếm",
+    "condition": "Điều kiện",
+    "new": "Mới",
+    "old": "Cũ",
+    "not_specified": "Không xác định",
+    "apply": "ÁP DỤNG",
+    "category": "Giày",
+    "add_to_cart": "THÊM VÀO GIỎ HÀNG"
+  },
+  "signup": {
+    "title": "Đăng ký",
+    "subtitle": "Tạo tài khoản mới",
+    "full_name": "Họ và tên",
+    "username": "Tên đăng nhập",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "confirm_password": "Xác nhận mật khẩu",
+    "create_account": "Tạo tài khoản",
+    "already_have_account": "Đã có tài khoản? Đăng nhập",
+    "password_mismatch_error": "Mật khẩu không khớp!",
+    "account_created_success": "Tài khoản đã được tạo thành công!",
+    "error": "Lỗi",
+    "unable_to_create_account": "Không thể tạo tài khoản. Vui lòng thử lại."
+  },
+  "checkout": {
+    "title": "Thanh toán",
+    "order": "Đơn hàng",
+    "shipping": "Phí vận chuyển",
+    "total": "Tổng cộng",
+    "address": "Địa chỉ giao hàng",
+    "payment": "Phương thức thanh toán",
+    "cash": "Tiền mặt",
+    "continue": "Tiếp tục"
+  }
+  }
+  
