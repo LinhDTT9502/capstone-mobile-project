@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useNavigation } from '@react-navigation/native';
+import { signUp } from '../../api/apiAuth';
 
 const SignUpScreen = () => {
   const [fullName, setFullName] = useState('');
@@ -21,21 +22,47 @@ const SignUpScreen = () => {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
+  // Email validation regex
+  const validateEmail = (email) => {
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
+  };
+
   const handleSignUp = async () => {
+    // Validate input fields
+    if (!fullName || !username || !email || !password || !confirmPassword) {
+      Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin!');
+      return;
+    }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      Alert.alert('Lỗi', 'Email không hợp lệ!');
+      return;
+    }
+
+    // Validate password match
     if (password !== confirmPassword) {
       Alert.alert('Lỗi', 'Mật khẩu không khớp!');
       return;
     }
 
     setLoading(true);
+
     try {
-      // Handle sign-up logic
+      const userData = { fullName, username, email, password };
+      // Call sign-up API
+      await signUp(userData);
       Alert.alert('Thành công', 'Tài khoản đã được tạo thành công!');
-      navigation.navigate('Login');
+      navigation.navigate('Login'); 
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể tạo tài khoản. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
+      if (error.response) {
+        Alert.alert('Lỗi', `Lỗi từ máy chủ: ${error.response.data.message || 'Vui lòng thử lại sau.'}`);
+      } else if (error.request) {
+        Alert.alert('Lỗi', 'Không thể kết nối đến máy chủ.');
+      } else {
+        Alert.alert('Lỗi', `Có lỗi xảy ra: ${error.message}`);
+      }
     }
   };
 
@@ -71,28 +98,26 @@ const SignUpScreen = () => {
 
       <View style={styles.passwordContainer}>
         <TextInput
-          style={styles.input}
+          style={styles.passwordInput}
           placeholder="Mật khẩu"
           secureTextEntry={secureTextEntry}
           value={password}
           onChangeText={setPassword}
         />
-        <TouchableOpacity onPress={() => setSecureTextEntry(!secureTextEntry)}>
+        <TouchableOpacity onPress={() => setSecureTextEntry(!secureTextEntry)} style={styles.eyeIconContainer}>
           <Text style={styles.eyeIcon}>👁️</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.passwordContainer}>
         <TextInput
-          style={styles.input}
+          style={styles.passwordInput}
           placeholder="Xác nhận mật khẩu"
           secureTextEntry={confirmSecureTextEntry}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
         />
-        <TouchableOpacity
-          onPress={() => setConfirmSecureTextEntry(!confirmSecureTextEntry)}
-        >
+        <TouchableOpacity onPress={() => setConfirmSecureTextEntry(!confirmSecureTextEntry)} style={styles.eyeIconContainer}>
           <Text style={styles.eyeIcon}>👁️</Text>
         </TouchableOpacity>
       </View>
@@ -115,8 +140,6 @@ const SignUpScreen = () => {
     </View>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -169,10 +192,25 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
+    borderColor: "#E0E0E0",
+    borderWidth: 1,
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    height: 50,
+  },
+  passwordInput: {
+    flex: 1,
+    // paddingLeft: 10,
+    fontSize: 16,
+    height: 50,
+  },
+  eyeIconContainer: {
+    justifyContent: 'center',
+    paddingHorizontal: 10,
   },
   eyeIcon: {
     fontSize: 20,
-    paddingRight: 10,
     color: "#888",
   },
   signupButton: {

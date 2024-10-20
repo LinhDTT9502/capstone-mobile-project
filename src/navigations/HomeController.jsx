@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import LandingPage from '../screens/Product/LandingPage';
-import SearchingPage from '../screens/Product/SearchingPage';
-import ProductDetail from '../screens/Product/ProductDetail';
-import Cart from '../screens/Product/Cart';
-import Checkout from '../screens/Product/Checkout';
-import PaymentDetail from '../screens/Product/PaymentDetail';
-import Account from '../screens/Product/Account';
+import LandingPage from '../screens/HomeScreen/index';
+import SearchingPage from '../screens/ProductList';
+import ProductDetail from '../screens/ProductDetail/index';
+import Cart from '../screens/CartList';
+import Checkout from '../screens/HomeScreen/Checkout';
+import PaymentDetail from '../screens/HomeScreen/PaymentDetail';
+import Account from '../screens/Profile';
 import BottomNavigation from '../components/BottomNavigation';
 
 export default function HomeController() {

@@ -24,11 +24,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigation } from "@react-navigation/native";
 import NotificationComponent from "../../components/NotificationsComponent";
-import logoImage from "../../screens/Logo/2sport_logo.png";
+import logoImage from "../Logo/2sport_logo.png";
 import demoProduct from "../../../assets/images/product_demo.jpg";
 import Swiper from "react-native-swiper";
+import Ionicons from '@expo/vector-icons/Ionicons';
+import Header from '../../layouts/Header';
 
-export default function LandingPage() {
+export default function HomePage() {
   const navigation = useNavigation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -37,9 +39,11 @@ export default function LandingPage() {
   const menuOptions = [
     { name: "Trang chủ" },
     { name: "Sản phẩm", dropdown: true },
-    { name: "Giới thiệu" },
+    { name: "Giới thiệu", screen: "Introduction" }, // Changed to Giới thiệu
     { name: "Liên hệ" },
   ];
+  
+  
 
   const categories = [
     { icon: faMusic, name: "Âm nhạc" },
@@ -63,7 +67,7 @@ export default function LandingPage() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
           <FontAwesomeIcon icon={faBars} size={24} color="#fff" />
         </TouchableOpacity>
@@ -79,24 +83,33 @@ export default function LandingPage() {
             <FontAwesomeIcon icon={faShoppingCart} size={20} color="#fff" />
           </TouchableOpacity>
         </View>
-      </View>
+      </View> */}
 
-      {showMenu && (
+      {/* {showMenu && (
         <View style={styles.menuContainer}>
           {menuOptions.map((option, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem}>
-              <Text style={styles.menuItemText}>{option.name}</Text>
-              {option.dropdown && (
-                <FontAwesomeIcon icon={faChevronDown} size={16} color="#fff" />
-              )}
-            </TouchableOpacity>
+            <TouchableOpacity
+            key={index}
+            style={styles.menuItem}
+            onPress={() => {
+              if (option.screen) {
+                navigation.navigate(option.screen); // Navigate to the screen defined in menuOptions
+              }
+            }}
+          >
+            <Text style={styles.menuItemText}>{option.name}</Text>
+            {option.dropdown && <Ionicons name="chevron-down" size={16} color="#fff" />}
+          </TouchableOpacity>
           ))}
         </View>
-      )}
+      )} */}
 
-      {showNotifications && (
+      {/* {showNotifications && (
         <NotificationComponent onClose={() => setShowNotifications(false)} />
-      )}
+      )} */}
+
+<Header />
+
 
       <ScrollView style={styles.content}>
         <Text style={styles.sectionTitle}>Danh mục</Text>

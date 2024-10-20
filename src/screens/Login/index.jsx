@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // To store and check token
 
 const LoginScreen = () => {
   const [username, setUsername] = useState('');
@@ -19,11 +20,29 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+        if (token) {
+          navigation.navigate('HomeController');
+        }
+      } catch (error) {
+        console.error('Error checking login status:', error);
+      }
+    };
+
+    checkLoggedIn();
+  }, [navigation]);
+
   const handleLogin = async () => {
     setLoading(true);
     try {
-      // Assume signIn API is called
+      // Assume signIn API is called and returns a token
       if (username && password) {
+        const token = 'dummyAuthToken';
+        await AsyncStorage.setItem('authToken', token); 
         navigation.navigate('HomeController');
       } else {
         Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
@@ -63,14 +82,14 @@ const LoginScreen = () => {
         {/* Password input */}
         <View style={styles.passwordContainer}>
           <TextInput
-            style={styles.input}
+            style={styles.passwordInput}
             placeholder="Mật khẩu"
             secureTextEntry={secureTextEntry}
             value={password}
             onChangeText={setPassword}
           />
-          <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
-            <FontAwesomeIcon icon={secureTextEntry ? faEyeSlash : faEye} size={20} />
+          <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIconContainer}>
+            <FontAwesomeIcon icon={secureTextEntry ? faEyeSlash : faEye} size={20} style={styles.eyeIcon} />
           </TouchableOpacity>
         </View>
 
@@ -104,8 +123,8 @@ const LoginScreen = () => {
   );
 };
 
-
 const styles = StyleSheet.create({
+  // Add your styles here
   container: {
     flex: 1,
     justifyContent: "center",
@@ -127,23 +146,6 @@ const styles = StyleSheet.create({
     color: "#888",
     marginBottom: 20,
   },
-  googleButton: {
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-  googleIconWrapper: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#FFA500",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  googleIconText: {
-    color: "#FFF",
-    fontSize: 30,
-    fontWeight: "bold",
-  },
   input: {
     height: 50,
     borderColor: "#E0E0E0",
@@ -154,13 +156,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#E0E0E0',
+    borderWidth: 1,
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    height: 50,
+  },
+  passwordInput: {
+    flex: 1,
+    height: 50,
+    fontSize: 16,
+  },
+  eyeIconContainer: {
+    justifyContent: 'center',
+    paddingHorizontal: 10,
   },
   eyeIcon: {
-    position: "absolute",
-    right: 15,
+    color: '#888',
   },
   forgotPassword: {
     color: "#FFA500",
@@ -195,8 +210,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
-
-  // CSS for abstract background shapes
   shape1: {
     position: "absolute",
     width: 250,
@@ -220,3 +233,4 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+  
