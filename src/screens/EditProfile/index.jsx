@@ -1,187 +1,202 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Image,
-  TouchableOpacity,
-  StyleSheet
-} from "react-native";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import {
-  faArrowLeft,
-  faPencilAlt,
-  faCamera,
-} from "@fortawesome/free-solid-svg-icons";
+import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { updateProfile } from "../../api/apiUser";
 
 export default function EditProfile() {
   const navigation = useNavigation();
-  const [username, setUsername] = useState("Maint_123");
-  const [fullName, setFullName] = useState("Maint_123");
-  const [dob, setDob] = useState("01/01/2001");
-  const [phoneNumber, setPhoneNumber] = useState("*****02");
-  const [email, setEmail] = useState("M******3@gmail.com");
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    UserName: "Maint_123",
+    FullName: "Maint_123",
+    Email: "M******3@gmail.com",
+    Phone: "*****02",
+    BirthDate: "2001-01-01"
+  });
+  const [initialData, setInitialData] = useState(formData);
+
+  const handleEditClick = () => setIsEditing(true);
+
+  const handleSaveClick = () => {
+    if (JSON.stringify(formData) === JSON.stringify(initialData)) {
+      Alert.alert("No changes", "No changes to save");
+      return;
+    }
+    updateProfile(formData.UserName, formData)
+      .then(() => {
+        setIsEditing(false);
+        Alert.alert("Success", "Profile updated successfully");
+        setInitialData(formData);
+      })
+      .catch((err) => {
+        console.error("Error updating profile:", err);
+        Alert.alert("Error", "Failed to save changes");
+      });
+  };
+
+  const handleCancelClick = () => {
+    setFormData(initialData);
+    setIsEditing(false);
+  };
+
+  const handleChange = (name, value) => setFormData({ ...formData, [name]: value });
+
+  const renderInput = (label, name, icon) => (
+    <View style={styles.inputContainer}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.inputWrapper}>
+        <FontAwesome name={icon} size={20} color="#4A90E2" style={styles.inputIcon} />
+        <TextInput
+          style={styles.input}
+          value={formData[name]}
+          onChangeText={(value) => handleChange(name, value)}
+          editable={isEditing}
+        />
+      </View>
+    </View>
+  );
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <FontAwesomeIcon icon={faArrowLeft} size={20} color="#333" />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <FontAwesome name="arrow-left" size={24} color="#4A90E2" />
         </TouchableOpacity>
         <Text style={styles.title}>Thông tin người dùng</Text>
       </View>
 
       <View style={styles.profileSection}>
-        <View style={styles.imageWrapper}>
-          <Image
-            source={{ uri: "https://via.placeholder.com/100" }}
-            style={styles.profileImage}
-          />
-          <TouchableOpacity style={styles.cameraIconWrapper}>
-            <FontAwesomeIcon icon={faCamera} size={16} color="#FFF" />
+        <Image source={{ uri: "https://via.placeholder.com/150" }} style={styles.profileImage} />
+        <TouchableOpacity style={styles.cameraIconWrapper}>
+          <FontAwesome name="camera" size={20} color="#FFF" />
+        </TouchableOpacity>
+      </View>
+
+      {renderInput("Tên đăng nhập", "UserName", "user")}
+      {renderInput("Họ và tên", "FullName", "user")}
+      {renderInput("Email", "Email", "envelope")}
+      {renderInput("Số điện thoại", "Phone", "phone")}
+      {renderInput("Ngày sinh", "BirthDate", "calendar")}
+
+      {isEditing ? (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveClick}>
+            <Text style={styles.buttonText}>Lưu thay đổi</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cancelButton} onPress={handleCancelClick}>
+            <Text style={styles.buttonText}>Hủy</Text>
           </TouchableOpacity>
         </View>
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Tên đăng nhập</Text>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            value={username}
-            onChangeText={setUsername}
-            editable
-          />
-          <FontAwesomeIcon icon={faPencilAlt} size={16} color="#999" />
-        </View>
-
-        <Text style={styles.label}>Họ và tên</Text>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            value={fullName}
-            onChangeText={setFullName}
-            editable
-          />
-          <FontAwesomeIcon icon={faPencilAlt} size={16} color="#999" />
-        </View>
-
-        <Text style={styles.label}>Ngày sinh</Text>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            value={dob}
-            onChangeText={setDob}
-            editable
-          />
-          <FontAwesomeIcon icon={faPencilAlt} size={16} color="#999" />
-        </View>
-
-        <Text style={styles.label}>Số điện thoại</Text>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            editable
-          />
-          <FontAwesomeIcon icon={faPencilAlt} size={16} color="#999" />
-        </View>
-
-        <Text style={styles.label}>Email</Text>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            editable
-          />
-          <FontAwesomeIcon icon={faPencilAlt} size={16} color="#999" />
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.saveButton}>
-        <Text style={styles.saveButtonText}>Hoàn thành chỉnh sửa</Text>
-      </TouchableOpacity>
-    </View>
+      ) : (
+        <TouchableOpacity style={styles.editButton} onPress={handleEditClick}>
+          <Text style={styles.buttonText}>Chỉnh sửa</Text>
+        </TouchableOpacity>
+      )}
+    </ScrollView>
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 30,
     flex: 1,
-    backgroundColor: "#FFF",
+    paddingTop: 30,
+    backgroundColor: "#F5F7FA",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    backgroundColor: "#FFF",
+    elevation: 2,
+  },
+  backButton: {
+    padding: 8,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#333",
+    marginLeft: 16,
   },
   profileSection: {
     alignItems: "center",
-    marginVertical: 20,
-  },
-  imageWrapper: {
-    position: "relative",
+    marginVertical: 24,
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: "#4A90E2",
   },
   cameraIconWrapper: {
     position: "absolute",
     bottom: 0,
-    right: 0,
-    backgroundColor: "#FF9900",
-    borderRadius: 15,
-    padding: 4,
+    right: "35%",
+    backgroundColor: "#4A90E2",
+    borderRadius: 20,
+    padding: 8,
   },
   inputContainer: {
     marginHorizontal: 16,
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
     color: "#666",
-    marginBottom: 4,
-    marginTop: 16,
+    marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-    paddingVertical: 4,
-    marginBottom: 12,
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    elevation: 2,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: "#333",
-    padding: 4,
+    paddingVertical: 12,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginHorizontal: 16,
+    marginTop: 24,
   },
   saveButton: {
-    backgroundColor: "#FF9900",
+    flex: 1,
+    backgroundColor: "#4A90E2",
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
-    justifyContent: "center",
-    margin: 20,
+    marginRight: 8,
   },
-  saveButtonText: {
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "#FF6B6B",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  editButton: {
+    backgroundColor: "#4A90E2",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginTop: 24,
+  },
+  buttonText: {
     color: "#FFF",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
   },
 });
