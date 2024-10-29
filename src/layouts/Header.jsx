@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
-import { Animated, View, Text, TouchableOpacity, StyleSheet, Dimensions, Modal, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; 
-import { useNavigation } from '@react-navigation/native';
+import React, { useState } from "react";
+import {
+  Animated,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Modal,
+  Image,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
-const logoImage = require('../screens/Logo/2sport_logo.png'); 
+const logoImage = require("../screens/Logo/2sport_logo.png");
 
 export default function Header() {
   const navigation = useNavigation();
@@ -36,7 +45,7 @@ export default function Header() {
   );
 
   return (
-<View style={styles.header}>
+    <View style={styles.header}>
       <TouchableOpacity onPress={toggleMenu} style={styles.menuButton}>
         <Ionicons name="menu-outline" size={24} color="#333" />
       </TouchableOpacity>
@@ -63,29 +72,56 @@ export default function Header() {
           activeOpacity={1}
           onPressOut={toggleMenu}
         >
-          <Animated.View style={[styles.menuContent, { transform: [{ translateX: menuAnimation }] }]}>
-          <MenuItem title="Trang chủ" onPress={() => { toggleMenu(); navigation.navigate('HomeController'); }} />
-          <MenuItem title="Sản phẩm" onPress={() => { toggleMenu(); navigation.navigate('ProductList'); }}/>
-            <MenuItem title="Về chúng tôi" onPress={() => { toggleMenu(); navigation.navigate('Introduction');}} />
-            <MenuItem title="Liên hệ" onPress={() => { toggleMenu(); navigation.navigate('ContactUs');}} />
+          <Animated.View
+            style={[
+              styles.menuContent,
+              { transform: [{ translateX: menuAnimation }] },
+            ]}
+          >
+            <MenuItem
+              title="Trang chủ"
+              onPress={() => {
+                toggleMenu();
+                navigation.navigate("HomeController");
+              }}
+            />
+            <MenuItem
+              title="Sản phẩm"
+              onPress={() => {
+                toggleMenu();
+                navigation.navigate('ProductList', { initialScreen: 'HomeController' });               }}
+            />
+            <MenuItem
+              title="Về chúng tôi"
+              onPress={() => {
+                toggleMenu();
+                navigation.navigate("Introduction");
+              }}
+            />
+            <MenuItem
+              title="Liên hệ"
+              onPress={() => {
+                toggleMenu();
+                navigation.navigate("ContactUs");
+              }}
+            />
           </Animated.View>
         </TouchableOpacity>
       </Modal>
     </View>
-
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   menuButton: {
     padding: 5,
@@ -93,19 +129,19 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   logoImage: {
     width: 100,
     height: 40,
-    resizeMode: 'contain',
-    alignSelf: 'center',
+    resizeMode: "contain",
+    alignSelf: "center",
   },
   rightIcons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     width: 80,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   iconButton: {
     padding: 5,
@@ -113,23 +149,23 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-start',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-start",
   },
   menuContent: {
     width: width * 0.7,
-    height: '100%',
-    backgroundColor: '#fff',
+    height: "100%",
+    backgroundColor: "#fff",
     paddingTop: 50,
     paddingHorizontal: 20,
   },
   menuItem: {
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   menuItemText: {
     fontSize: 18,
-    color: '#333',
+    color: "#333",
   },
 });

@@ -9,26 +9,14 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import {
-  faUser,
-  faShoppingCart,
-  faBell,
-  faHeart,
-  faMusic,
-  faBasketballBall,
-  faMicrophone,
-  faVolleyballBall,
-  faBars,
-  faChevronDown,
-} from "@fortawesome/free-solid-svg-icons";
 import { useNavigation } from "@react-navigation/native";
-import NotificationComponent from "../../components/NotificationsComponent";
-import logoImage from "../Logo/2sport_logo.png";
-import demoProduct from "../../../assets/images/product_demo.jpg";
+import { Ionicons } from "@expo/vector-icons";
+import Header from "../../layouts/Header";
 import Swiper from "react-native-swiper";
-import Ionicons from '@expo/vector-icons/Ionicons';
-import Header from '../../layouts/Header';
+import demoProduct from "../../../assets/images/product_demo.jpg";
+import ScrollingLogos from "../../components/ScrollingLogos";
+import ProductDetail from "../ProductDetail";
+import Footer from "../../components/Footer";
 
 export default function HomePage() {
   const navigation = useNavigation();
@@ -39,23 +27,21 @@ export default function HomePage() {
   const menuOptions = [
     { name: "Trang chủ" },
     { name: "Sản phẩm", dropdown: true },
-    { name: "Giới thiệu", screen: "Introduction" }, // Changed to Giới thiệu
+    { name: "Giới thiệu", screen: "Introduction" },
     { name: "Liên hệ" },
   ];
-  
-  
 
   const categories = [
-    { icon: faMusic, name: "Âm nhạc" },
-    { icon: faBasketballBall, name: "Bóng rổ" },
-    { icon: faMicrophone, name: "Microphone" },
-    { icon: faVolleyballBall, name: "Bóng chuyền" },
+    { icon: 'musical-notes', name: "Âm nhạc" },
+    { icon: 'basketball', name: "Bóng rổ" },
+    { icon: 'mic', name: "Microphone" },
+    // { icon: 'volleyball', name: "Bóng chuyền" },
   ];
 
   const moreCategories = [
-    { icon: faHeart, name: "Bóng đá" },
-    { icon: faUser, name: "Bóng chuyền" },
-    { icon: faShoppingCart, name: "Dụng cụ tập gym" },
+    { icon: 'football', name: "Bóng đá" },
+    { icon: 'person', name: "Bóng chuyền" },
+    { icon: 'barbell', name: "Dụng cụ tập gym" },
   ];
 
   const brands = ["adidas", "nike", "new-balance", "bmx", "yonex"];
@@ -67,57 +53,14 @@ export default function HomePage() {
 
   return (
     <View style={styles.container}>
-      {/* <View style={styles.header}>
-        <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
-          <FontAwesomeIcon icon={faBars} size={24} color="#fff" />
-        </TouchableOpacity>
-
-        <Image source={logoImage} style={styles.logoImage} />
-
-        <View style={styles.rightIcons}>
-          <TouchableOpacity onPress={() => setShowNotifications(!showNotifications)}>
-            <FontAwesomeIcon icon={faBell} size={20} color="#fff" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate("Cart")}>
-            <FontAwesomeIcon icon={faShoppingCart} size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View> */}
-
-      {/* {showMenu && (
-        <View style={styles.menuContainer}>
-          {menuOptions.map((option, index) => (
-            <TouchableOpacity
-            key={index}
-            style={styles.menuItem}
-            onPress={() => {
-              if (option.screen) {
-                navigation.navigate(option.screen); // Navigate to the screen defined in menuOptions
-              }
-            }}
-          >
-            <Text style={styles.menuItemText}>{option.name}</Text>
-            {option.dropdown && <Ionicons name="chevron-down" size={16} color="#fff" />}
-          </TouchableOpacity>
-          ))}
-        </View>
-      )} */}
-
-      {/* {showNotifications && (
-        <NotificationComponent onClose={() => setShowNotifications(false)} />
-      )} */}
-
-<Header />
-
-
+      <Header />
       <ScrollView style={styles.content}>
         <Text style={styles.sectionTitle}>Danh mục</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
           {categories.map((category, index) => (
             <View key={index} style={styles.categoryItem}>
               <View style={styles.categoryIcon}>
-                <FontAwesomeIcon icon={category.icon} size={24} color="#4A90E2" />
+                <Ionicons name={category.icon} size={24} color="#4A90E2" />
               </View>
               <Text style={styles.categoryName}>{category.name}</Text>
             </View>
@@ -137,7 +80,7 @@ export default function HomePage() {
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
                   <TouchableOpacity style={styles.modalItem}>
-                    <FontAwesomeIcon icon={item.icon} size={24} color="#4A90E2" />
+                    <Ionicons name={item.icon} size={24} color="#4A90E2" />
                     <Text style={styles.modalItemText}>{item.name}</Text>
                   </TouchableOpacity>
                 )}
@@ -181,12 +124,14 @@ export default function HomePage() {
           </View>
         </Swiper>
 
+        <ScrollingLogos />
+
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.brandContainer}>
           {brands.map((brand, index) => (
             <Image
               key={index}
               source={{
-                uri: `/placeholder.svg?height=50&width=50&text=${brand}`,
+                uri: `https://placeholder.svg?height=50&width=50&text=${brand}`,
               }}
               style={styles.brandLogo}
             />
@@ -194,8 +139,8 @@ export default function HomePage() {
         </ScrollView>
 
         <View style={styles.bestSellerHeader}>
-          <Text style={styles.sectionTitle}>Bán chạy nhất</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("HomeController", { screen: "SearchingPage" })}>
+          <Text style={styles.sectionTitle}>Sản phẩm mới</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("ProductList")}>
             <Text style={styles.seeMore}>Xem thêm</Text>
           </TouchableOpacity>
         </View>
@@ -208,7 +153,7 @@ export default function HomePage() {
               onPress={() => navigation.navigate("ProductDetail")}
             >
               <Image source={product.image} style={styles.productImage} />
-              <FontAwesomeIcon icon={faHeart} size={16} color="#FF6B6B" style={styles.wishlistIcon} />
+              <Ionicons name="heart" size={16} color="#FF6B6B" style={styles.wishlistIcon} />
               <Text style={styles.productName}>{product.name}</Text>
               <Text style={styles.productCategory}>Giày</Text>
               <Text style={styles.productPrice}>{product.price}</Text>
@@ -229,47 +174,11 @@ export default function HomePage() {
   );
 }
 
-
-
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 30,
     backgroundColor: "#F5F5F5",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#333",
-  },
-  logoImage: {
-    width: 100,
-    height: 40,
-    resizeMode: "contain",
-  },
-  rightIcons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  menuContainer: {
-    backgroundColor: "#333",
-    padding: 10,
-  },
-  menuItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#555",
-  },
-  menuItemText: {
-    color: "#fff",
-    fontSize: 16,
   },
   content: {
     flex: 1,
@@ -377,14 +286,27 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     margin: 3,
   },
+  logoContainer: {
+    height: 60,
+    overflow: 'hidden',
+    marginVertical: 20,
+  },
+  logoWrapper: {
+    flexDirection: 'row',
+  },
+  logo: {
+    width: 100,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  brandLogo: {
+    width: 80,
+    height: 40,
+  },
   brandContainer: {
     paddingLeft: 16,
     marginBottom: 16,
-  },
-  brandLogo: {
-    width: 50,
-    height: 50,
-    marginRight: 16,
   },
   bestSellerHeader: {
     flexDirection: "row",

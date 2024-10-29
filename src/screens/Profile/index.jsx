@@ -111,14 +111,6 @@ export default function Account() {
           <Text style={styles.sectionTitle}>Cài đặt tài khoản</Text>
           <TouchableOpacity
             style={styles.settingItem}
-            onPress={() => navigation.navigate('FavoriteItems')}
-          >
-            <Ionicons name="heart-outline" size={24} color="#FF6B6B" />
-            <Text style={styles.settingText}>Danh sách yêu thích</Text>
-            <Ionicons name="chevron-forward" size={20} color="#888" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.settingItem}
             onPress={() => setLanguageModalVisible(true)}
           >
             <Ionicons name="language-outline" size={24} color="#4A90E2" />

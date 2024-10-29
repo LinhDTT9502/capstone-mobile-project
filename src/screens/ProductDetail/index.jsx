@@ -10,15 +10,7 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import {
-  faArrowLeft,
-  faHeart,
-  faCheckSquare,
-  faSquare,
-  faPlus,
-  faMinus,
-} from "@fortawesome/free-solid-svg-icons";
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import demoProduct from "../../../assets/images/product_demo.jpg";
 import { useNavigation } from "@react-navigation/native";
 
@@ -29,66 +21,48 @@ export default function ProductDetail() {
   const [endDate, setEndDate] = useState("");
   const [isAgreed, setIsAgreed] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [side, setSide] = useState("M");
+  const [color, setColor] = useState("Red");
 
   const handleAddToCart = () => {
+    Alert.alert("Sản phẩm đã được thêm vào giỏ hàng!");
+  };
+
+  const handleBuyNow = () => {
+    Alert.alert("Đang chuyển đến trang thanh toán...");
+    navigation.navigate("Cart", { 
+      item: {
+        productName: "Nike Air Max 270 React ENG",
+        startDate,
+        endDate,
+        quantity,
+        color,
+        type: "buy",
+      },
+    });
+  };
+
+  const handleRent = () => {
     if (!startDate || !endDate) {
       Alert.alert("Vui lòng chọn ngày thuê.");
       return;
     }
-
     if (!isAgreed) {
       Alert.alert("Bạn phải đồng ý với điều khoản trước khi tiếp tục.");
       return;
     }
 
     Alert.alert("Thuê sản phẩm đã được thêm vào giỏ hàng!");
-
-    const rentalItem = {
-      productName: "Nike Air Max 270 React ENG",
-      startDate,
-      endDate,
-      quantity,
-      side,
-      type: "rent",
-    };
-
     setModalVisible(false);
-  };
-
-  const handleBuyNow = () => {
-    if (!startDate || !endDate) {
-      Alert.alert("Vui lòng chọn ngày thuê.");
-      return;
-    }
-
-    if (!isAgreed) {
-      Alert.alert("Bạn phải đồng ý với điều khoản trước khi tiếp tục.");
-      return;
-    }
-
-    Alert.alert("Đang chuyển đến trang thanh toán...");
-
-    const rentalItem = {
-      productName: "Nike Air Max 270 React ENG",
-      startDate,
-      endDate,
-      quantity,
-      side,
-      type: "rent",
-    };
-
-    navigation.navigate("Cart", { rentalItem });
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <FontAwesomeIcon icon={faArrowLeft} size={20} color="#333" />
+          <Ionicons name="arrow-back" size={20} color="#333" />
         </TouchableOpacity>
         <Text style={styles.title}>Chi tiết sản phẩm</Text>
-        <FontAwesomeIcon icon={faHeart} size={20} color="#FF6B6B" />
+        <FontAwesome name="heart" size={20} color="#FF6B6B" />
       </View>
 
       <ScrollView style={styles.content}>
@@ -99,58 +73,56 @@ export default function ProductDetail() {
         <Text style={styles.sectionTitle}>Thông số kỹ thuật</Text>
         <Text style={styles.specificationText}>Tình trạng: Mới</Text>
         <Text style={styles.specificationText}>
-          Mô tả: The Nike Air Max 270 React ENG combines a full-length React
-          foam
+          Mô tả: The Nike Air Max 270 React ENG combines a full-length React foam
         </Text>
         <Text style={styles.specificationText}>Vị trí: 123 ABC Street</Text>
 
-        {/* Quantity and Side Selection */}
+        {/* Quantity and Color Selector */}
+        <Text style={styles.selectorLabel}>Số lượng:</Text>
         <View style={styles.selectorContainer}>
           <View style={styles.quantityContainer}>
             <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
             >
-              <FontAwesomeIcon icon={faMinus} />
+              <FontAwesome name="minus" size={16} color="#333" />
             </TouchableOpacity>
             <Text style={styles.quantityText}>{quantity}</Text>
             <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => setQuantity(quantity + 1)}
             >
-              <FontAwesomeIcon icon={faPlus} />
+              <FontAwesome name="plus" size={16} color="#333" />
             </TouchableOpacity>
           </View>
-{/* 
-          <View style={styles.sideSelector}>
-            <Text style={styles.selectorLabel}>Chọn Size:</Text>
-            <TouchableOpacity onPress={() => setSide("M")} style={[styles.sideButton, side === "M" && styles.activeSide]}>
-              <Text>M</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSide("L")} style={[styles.sideButton, side === "L" && styles.activeSide]}>
-              <Text>L</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSide("XL")} style={[styles.sideButton, side === "XL" && styles.activeSide]}>
-              <Text>XL</Text>
-            </TouchableOpacity>
-          </View> */}
+
+          <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
+            <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
+          </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionTitle}>Được đăng bởi:</Text>
-        <View style={styles.uploaderContainer}>
-          <Image
-            source={{ uri: "https://via.placeholder.com/40" }}
-            style={styles.uploaderImage}
-          />
-          <View style={styles.uploaderInfo}>
-            <Text style={styles.uploaderName}>James Lawson</Text>
-            <Text style={styles.publishedDate}>Được đăng: 21/02/2024</Text>
-            <Text>⭐️⭐️⭐️⭐️☆</Text>
-          </View>
+        {/* Color Selector */}
+        <Text style={styles.selectorLabel}>Chọn màu:</Text>
+        <View style={styles.colorSelector}>
+          <TouchableOpacity
+            onPress={() => setColor("Red")}
+            style={[styles.colorButton, color === "Red" && styles.activeColor]}
+          >
+            <Text style={styles.colorText}>Đỏ</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setColor("Blue")}
+            style={[styles.colorButton, color === "Blue" && styles.activeColor]}
+          >
+            <Text style={styles.colorText}>Xanh</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Comments and Reviews Section */}
+        {/* Comments Section */}
         <Text style={styles.sectionTitle}>Đánh giá & Nhận xét</Text>
+        <Text style={styles.commentNotice}>
+          Bạn có thể bình luận. Nếu bạn đã mua sản phẩm này, bạn có thể đánh giá sản phẩm.
+        </Text>
         <View style={styles.commentContainer}>
           <Text style={styles.commentUser}>Trần Văn A:</Text>
           <Text style={styles.commentText}>
@@ -158,29 +130,15 @@ export default function ProductDetail() {
           </Text>
           <Text style={styles.commentDate}>24/02/2024</Text>
         </View>
-        <View style={styles.commentContainer}>
-          <Text style={styles.commentUser}>Nguyễn Thị B:</Text>
-          <Text style={styles.commentText}>
-            Rất hài lòng với chất lượng sản phẩm!
-          </Text>
-          <Text style={styles.commentDate}>22/02/2024</Text>
-        </View>
       </ScrollView>
 
-      {/* Bottom Navigation for Add to Cart and Rent */}
+      {/* Bottom Navigation for Buy Now and Rent */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => Alert.alert("Sản phẩm đã được thêm vào giỏ hàng!")}
-        >
-          <Text style={styles.navButtonText}>Thêm vào giỏ hàng</Text>
+        <TouchableOpacity style={styles.rentButton} onPress={() => setModalVisible(true)}>
+          <Text style={styles.rentButtonText}>Thuê sản phẩm</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => setModalVisible(true)}
-        >
-          <Text style={styles.navButtonText}>Thuê sản phẩm</Text>
+        <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
+          <Text style={styles.buyNowButtonText}>Mua Ngay</Text>
         </TouchableOpacity>
       </View>
 
@@ -189,12 +147,11 @@ export default function ProductDetail() {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(!modalVisible)}
+        onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Thuê sản phẩm này</Text>
-
             <TextInput
               style={styles.dateInput}
               placeholder="Ngày bắt đầu (DD/MM/YYYY)"
@@ -209,33 +166,16 @@ export default function ProductDetail() {
             />
 
             <View style={styles.checkboxContainer}>
-              <TouchableOpacity
-                onPress={() => setIsAgreed(!isAgreed)}
-                style={styles.checkbox}
-              >
-                <FontAwesomeIcon
-                  icon={isAgreed ? faCheckSquare : faSquare}
-                  size={24}
-                  color={isAgreed ? "#4CAF50" : "#333"}
-                />
+              <TouchableOpacity onPress={() => setIsAgreed(!isAgreed)} style={styles.checkbox}>
+                <FontAwesome name={isAgreed ? "check-square" : "square-o"} size={24} color={isAgreed ? "#4CAF50" : "#333"} />
               </TouchableOpacity>
-              <Text style={styles.checkboxLabel}>
-                Tôi đồng ý với các điều khoản thuê sản phẩm.
-              </Text>
+              <Text style={styles.checkboxLabel}>Tôi đồng ý với các điều khoản thuê sản phẩm.</Text>
             </View>
 
-            <TouchableOpacity style={styles.submitButton} onPress={handleAddToCart}>
-              <Text style={styles.submitButtonText}>Thêm vào giỏ hàng</Text>
+            <TouchableOpacity style={styles.submitButton} onPress={handleRent}>
+              <Text style={styles.submitButtonText}>Xác nhận thuê</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
-              <Text style={styles.buyNowButtonText}>Mua ngay</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setModalVisible(false)}
-            >
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.cancelButtonText}>Hủy</Text>
             </TouchableOpacity>
           </View>
@@ -248,7 +188,7 @@ export default function ProductDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop:30,
+    paddingTop: 30,
     backgroundColor: "#FFF",
   },
   header: {
@@ -303,39 +243,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     lineHeight: 20,
   },
-  uploaderContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 16,
-    backgroundColor: "#F9F9F9",
-    padding: 8,
-    borderRadius: 8,
-  },
-  uploaderImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 8,
-  },
-  uploaderInfo: {
-    flex: 1,
-  },
-  uploaderName: {
+  selectorLabel: {
+    fontSize: 16,
     fontWeight: "bold",
-    fontSize: 14,
-    color: "#333",
+    marginBottom: 8,
   },
-  publishedDate: {
-    fontSize: 12,
-    color: "#999",
-  },
-
-  // Selector container for quantity and size
   selectorContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: 20,
   },
   quantityContainer: {
     flexDirection: "row",
@@ -352,16 +268,23 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     paddingHorizontal: 12,
   },
-  sideSelector: {
+  addToCartButton: {
+    backgroundColor: "#FF9900",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+  },
+  addToCartText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  colorSelector: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 12,
   },
-  selectorLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginRight: 10,
-  },
-  sideButton: {
+  colorButton: {
     backgroundColor: "#E6F0FF",
     paddingVertical: 4,
     paddingHorizontal: 12,
@@ -370,11 +293,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  activeSide: {
+  activeColor: {
     backgroundColor: "#4CAF50",
   },
-
-  // Comment and Review Section
   commentContainer: {
     padding: 10,
     backgroundColor: "#F9F9F9",
@@ -395,38 +316,51 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
   },
-
-  // Bottom navigation for actions
+  commentNotice: {
+    fontSize: 12,
+    color: "#999",
+    marginBottom: 8,
+  },
   bottomNav: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    padding: 16,
     borderTopWidth: 1,
     borderTopColor: "#E0E0E0",
     backgroundColor: "#FFF",
   },
-  navButton: {
+  rentButton: {
+    flex: 1,
+    backgroundColor: "#4CAF50",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  rentButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  buyNowButton: {
     flex: 1,
     backgroundColor: "#FF9900",
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 8,
+    marginLeft: 8,
   },
-  navButtonText: {
+  buyNowButtonText: {
     color: "#FFF",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
   },
-
-  // Modal styles for renting products
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
     width: "80%",
@@ -453,8 +387,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+  checkbox: {
+    marginRight: 10,
+  },
   checkboxLabel: {
-    marginLeft: 10,
     fontSize: 14,
   },
   submitButton: {
@@ -466,19 +402,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   submitButtonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  buyNowButton: {
-    backgroundColor: "#4CAF50",
-    paddingVertical: 14,
-    borderRadius: 8,
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  buyNowButtonText: {
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
@@ -498,4 +421,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
