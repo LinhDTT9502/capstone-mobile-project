@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // To store and check token
+import { authenticateUser } from '@/src/services/authService';
 
 const LoginScreen = () => {
   const [username, setUsername] = useState('');
@@ -40,15 +41,19 @@ const LoginScreen = () => {
     setLoading(true);
     try {
       // Assume signIn API is called and returns a token
-      if (username && password) {
-        const token = 'dummyAuthToken';
-        await AsyncStorage.setItem('authToken', token); 
-        navigation.navigate('HomeController');
-      } else {
-        Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
-      }
+      // if (username && password) {
+      //   const token = 'dummyAuthToken';
+      //   await AsyncStorage.setItem('authToken', token); 
+      //   navigation.navigate('HomeController');
+      // } else {
+      //   Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
+      // }
+      const decoded = await authenticateUser(username, password);
+      navigation.navigate('HomeController');
     } catch (error) {
       Alert.alert('Lỗi', 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');
+      console.log(error);
+      
     } finally {
       setLoading(false);
     }
