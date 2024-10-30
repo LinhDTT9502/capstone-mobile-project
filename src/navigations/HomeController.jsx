@@ -1,8 +1,7 @@
-// HomeController.js
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import LandingPage from '../screens/HomeScreen/index';
 import ProductList from '../screens/ProductList/index';
@@ -10,6 +9,23 @@ import Cart from '../screens/CartList';
 import Account from '../screens/Profile';
 
 const Tab = createBottomTabNavigator();
+
+const TabBarIcon = ({ focused, color, size, name }) => {
+  const animatedSize = React.useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    Animated.spring(animatedSize, {
+      toValue: focused ? 1.2 : 1,
+      useNativeDriver: true,
+    }).start();
+  }, [focused]);
+
+  return (
+    <Animated.View style={{ transform: [{ scale: animatedSize }] }}>
+      <Ionicons name={name} size={size} color={color} />
+    </Animated.View>
+  );
+};
 
 export default function HomeController() {
   return (
@@ -19,25 +35,29 @@ export default function HomeController() {
           let iconName;
 
           if (route.name === 'LandingPage') {
-            iconName = 'home-outline';
+            iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'ProductList') {
-            iconName = 'search-outline';
+            iconName = focused ? 'search' : 'search-outline';
           } else if (route.name === 'Cart') {
-            iconName = 'cart-outline';
+            iconName = focused ? 'cart' : 'cart-outline';
           } else if (route.name === 'Account') {
-            iconName = 'person-outline';
+            iconName = focused ? 'person' : 'person-outline';
           }
 
-          // Enhanced icon styling with active icon effect
           return (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <Ionicons name={iconName} size={size} color={color} />
-            </View>
+            <TabBarIcon
+              focused={focused}
+              name={iconName}
+              size={size}
+              color={color}
+            />
           );
         },
         tabBarLabel: ({ focused, color }) => (
           <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>
-            {route.name === 'LandingPage' ? 'Trang chủ' : route.name === 'ProductList' ? 'Sản phẩm' : route.name === 'Cart' ? 'Giỏ hàng' : 'Tài khoản'}
+            {route.name === 'LandingPage' ? 'Trang chủ' : 
+             route.name === 'ProductList' ? 'Sản phẩm' : 
+             route.name === 'Cart' ? 'Giỏ hàng' : 'Tài khoản'}
           </Text>
         ),
         tabBarActiveTintColor: '#4A90E2',
@@ -56,30 +76,24 @@ export default function HomeController() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: 70,
-    paddingBottom: 8,
-    paddingTop: 4,
+    height: 60,
+    paddingBottom: 5,
+    paddingTop: 5,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
-    elevation: 10,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  iconContainer: {
-    padding: 10,
-    borderRadius: 20,
-  },
-  activeIconContainer: {
-    backgroundColor: '#F0F4F8',
+    shadowRadius: 3,
   },
   tabLabel: {
     fontSize: 10,
     textAlign: 'center',
     color: '#999',
     fontWeight: '500',
+    marginTop: 2,
   },
   activeTabLabel: {
     color: '#4A90E2',

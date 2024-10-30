@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,38 +10,49 @@ import {
   StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Header from "../../layouts/Header";
 import Swiper from "react-native-swiper";
 import demoProduct from "../../../assets/images/product_demo.jpg";
 import ScrollingLogos from "../../components/ScrollingLogos";
 import ProductDetail from "../ProductDetail";
-import Footer from "../../components/Footer";
+// import Footer from "../../components/Footer";
+
+// api
+import { fetchCategories } from "../../services/categoryService";
 
 export default function HomePage() {
   const navigation = useNavigation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const categoryIcons = {
+    "Âm nhạc": "musical-notes",
+    "Vợt cầu lông": "badminton",
+    "Bóng rổ": "basketball",
+    "Bóng chuyền": "volleyball",
+    "Bóng đá": "football",
+    "Dụng cụ tập gym": "barbell",
+  };
 
-  const menuOptions = [
-    { name: "Trang chủ" },
-    { name: "Sản phẩm", dropdown: true },
-    { name: "Giới thiệu", screen: "Introduction" },
-    { name: "Liên hệ" },
-  ];
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error("Failed to load categories:", error);
+      }
+    };
 
-  const categories = [
-    { icon: 'musical-notes', name: "Âm nhạc" },
-    { icon: 'basketball', name: "Bóng rổ" },
-    { icon: 'mic', name: "Microphone" },
-    // { icon: 'volleyball', name: "Bóng chuyền" },
-  ];
+    loadCategories();
+  }, []);
 
   const moreCategories = [
-    { icon: 'football', name: "Bóng đá" },
-    { icon: 'person', name: "Bóng chuyền" },
-    { icon: 'barbell', name: "Dụng cụ tập gym" },
+    { icon: "football", name: "Bóng đá" },
+    { icon: "person", name: "Bóng chuyền" },
+    { icon: "barbell", name: "Dụng cụ tập gym" },
   ];
 
   const brands = ["adidas", "nike", "new-balance", "bmx", "yonex"];
@@ -57,21 +68,35 @@ export default function HomePage() {
       <ScrollView style={styles.content}>
         <Text style={styles.sectionTitle}>Danh mục</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
-          {categories.map((category, index) => (
-            <View key={index} style={styles.categoryItem}>
-              <View style={styles.categoryIcon}>
-                <Ionicons name={category.icon} size={24} color="#4A90E2" />
-              </View>
-              <Text style={styles.categoryName}>{category.name}</Text>
-            </View>
-          ))}
+  {categories.map((category, index) => (
+    <View key={index} style={styles.categoryItem}>
+      <View style={styles.categoryIcon}>
+        {category.categoryName === "Vợt cầu lông" ? (
+          <MaterialCommunityIcons
+            name="badminton"
+            size={24}
+            color="#4A90E2"
+          />
+        ) : (
+          <MaterialCommunityIcons
+            name={categoryIcons[category.categoryName] || "badminton"}
+            size={24}
+            color="#4A90E2"
+          />
+        )}
+      </View>
+      <Text style={styles.categoryName}>{category.categoryName}</Text>
+    </View>
+  ))}
+</ScrollView>
 
-          <TouchableOpacity style={styles.seeMoreButton} onPress={() => setShowModal(true)}>
-            <Text style={styles.seeMoreText}>Xem thêm</Text>
-          </TouchableOpacity>
-        </ScrollView>
 
-        <Modal visible={showModal} transparent={true} animationType="slide" onRequestClose={() => setShowModal(false)}>
+        <Modal
+          visible={showModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowModal(false)}
+        >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Nhiều danh mục khác</Text>
@@ -106,19 +131,25 @@ export default function HomePage() {
         >
           <View style={styles.slide}>
             <Image
-              source={{ uri: "https://sporthouse.vn/upload_images/images/banner%20KM(1).jpg" }}
+              source={{
+                uri: "https://sporthouse.vn/upload_images/images/banner%20KM(1).jpg",
+              }}
               style={styles.sliderImage}
             />
           </View>
           <View style={styles.slide}>
             <Image
-              source={{ uri: "https://thietkehaithanh.com/wp-content/uploads/2021/11/banner-giay-thietkehaithanh-800x304.jpg" }}
+              source={{
+                uri: "https://thietkehaithanh.com/wp-content/uploads/2021/11/banner-giay-thietkehaithanh-800x304.jpg",
+              }}
               style={styles.sliderImage}
             />
           </View>
           <View style={styles.slide}>
             <Image
-              source={{ uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZEJzEPbuVrCyMZzH3925ylhxW_t2DqErYOQ&s" }}
+              source={{
+                uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZEJzEPbuVrCyMZzH3925ylhxW_t2DqErYOQ&s",
+              }}
               style={styles.sliderImage}
             />
           </View>
@@ -126,7 +157,11 @@ export default function HomePage() {
 
         <ScrollingLogos />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.brandContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.brandContainer}
+        >
           {brands.map((brand, index) => (
             <Image
               key={index}
@@ -153,7 +188,12 @@ export default function HomePage() {
               onPress={() => navigation.navigate("ProductDetail")}
             >
               <Image source={product.image} style={styles.productImage} />
-              <Ionicons name="heart" size={16} color="#FF6B6B" style={styles.wishlistIcon} />
+              <Ionicons
+                name="heart"
+                size={16}
+                color="#FF6B6B"
+                style={styles.wishlistIcon}
+              />
               <Text style={styles.productName}>{product.name}</Text>
               <Text style={styles.productCategory}>Giày</Text>
               <Text style={styles.productPrice}>{product.price}</Text>
@@ -288,17 +328,17 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     height: 60,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginVertical: 20,
   },
   logoWrapper: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   logo: {
     width: 100,
     height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   brandLogo: {
     width: 80,
