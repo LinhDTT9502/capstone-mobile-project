@@ -53,7 +53,10 @@ export default function Header() {
         <Image source={logoImage} style={styles.logoImage} />
       </View>
       <View style={styles.rightIcons}>
-        <TouchableOpacity style={styles.iconButton}>
+      <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => navigation.navigate("ProductList")}
+        >
           <Ionicons name="search-outline" size={24} color="#333" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton}>

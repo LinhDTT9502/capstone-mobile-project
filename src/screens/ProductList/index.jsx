@@ -26,6 +26,7 @@ export default function ProductListing() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -41,6 +42,24 @@ export default function ProductListing() {
   useEffect(() => {
     loadProducts();
   }, [currentPage]);
+
+  useEffect(() => {
+    applySearchFilter();
+  }, [searchQuery, products]);
+
+  const applySearchFilter = () => {
+    const query = removeVietnameseAccents(searchQuery.toLowerCase());
+
+    setFilteredProducts(
+      products.filter(product =>
+        removeVietnameseAccents(product.productName.toLowerCase()).includes(query)
+      )
+    );
+  };
+
+  const removeVietnameseAccents = (str) => {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  };
 
   const loadProducts = async () => {
     setLoading(true);
@@ -175,8 +194,8 @@ export default function ProductListing() {
         </ScrollView>
       )}
 
-      <FlatList
-        data={products}
+<FlatList
+        data={filteredProducts}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}

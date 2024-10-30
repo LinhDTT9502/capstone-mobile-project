@@ -11,10 +11,10 @@ import {
   ScrollView,
   SafeAreaView,
 } from "react-native";
-import { Ionicons, FontAwesome } from "@expo/vector-icons";
+import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { fetchProductById } from "../../services/productService";
-
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const COLORS = {
   primary: "#0035FF",
@@ -32,12 +32,17 @@ export default function ProductDetail() {
 
   const [product, setProduct] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() + 1)));
+  const [endDate, setEndDate] = useState(new Date(new Date().setDate(new Date().getDate() + 2)));
+
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [color, setColor] = useState("Blue");
   const [userComment, setUserComment] = useState("");
+  const [userRating, setUserRating] = useState(0);
+  const [likes, setLikes] = useState(0);
 
   useEffect(() => {
     loadProductDetails();
@@ -63,8 +68,8 @@ export default function ProductDetail() {
   };
 
   const handleAddRentToCart = () => {
-    if (!startDate || !endDate) {
-      Alert.alert("Lỗi", "Vui lòng chọn ngày thuê.");
+    if (startDate >= endDate) {
+      Alert.alert("Lỗi", "Ngày kết thúc phải sau ngày bắt đầu.");
       return;
     }
     if (!isAgreed) {
@@ -73,6 +78,27 @@ export default function ProductDetail() {
     }
     handleAddToCart("rent");
     setModalVisible(false);
+  };
+
+  const handleDateChange = (event, selectedDate, dateType) => {
+    if (dateType === 'start') {
+      setShowStartDatePicker(false);
+      if (selectedDate) setStartDate(selectedDate);
+    } else {
+      setShowEndDatePicker(false);
+      if (selectedDate) setEndDate(selectedDate);
+    }
+  };
+
+  const handleSubmitReview = () => {
+    if (userRating === 0) {
+      Alert.alert("Lỗi", "Vui lòng chọn số sao đánh giá.");
+      return;
+    }
+    // Here you would typically send the review to your backend
+    Alert.alert("Thành công", "Đánh giá của bạn đã được gửi");
+    setUserComment("");
+    setUserRating(0);
   };
 
   if (!product) return <Text>Loading...</Text>;
@@ -84,8 +110,9 @@ export default function ProductDetail() {
           <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
         </TouchableOpacity>
         <Text style={styles.title}>Chi tiết sản phẩm</Text>
-        <TouchableOpacity style={styles.heartButton}>
-          <FontAwesome name="heart-o" size={24} color={COLORS.secondary} />
+        <TouchableOpacity style={styles.likeButton} onPress={() => setLikes(likes + 1)}>
+          <AntDesign name="like2" size={24} color={COLORS.primary} />
+          <Text style={styles.likeCount}>{likes}</Text>
         </TouchableOpacity>
       </View>
 
@@ -162,10 +189,21 @@ export default function ProductDetail() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Đánh giá & Nhận xét</Text>
+          <View style={styles.ratingContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity key={star} onPress={() => setUserRating(star)}>
+                <FontAwesome
+                  name={star <= userRating ? "star" : "star-o"}
+                  size={24}
+                  color={star <= userRating ? COLORS.secondary : COLORS.dark}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
           <View style={styles.commentInputContainer}>
             <TextInput
               style={styles.commentInput}
-              placeholder="Nhập bình luận của bạn..."
+              placeholder="Nhập đánh giá của bạn..."
               value={userComment}
               onChangeText={setUserComment}
               multiline
@@ -173,9 +211,9 @@ export default function ProductDetail() {
             />
             <TouchableOpacity 
               style={styles.commentSubmitButton}
-              onPress={() => Alert.alert("Thành công", "Bình luận của bạn đã được gửi")}
+              onPress={handleSubmitReview}
             >
-              <Text style={styles.commentSubmitText}>Gửi bình luận</Text>
+              <Text style={styles.commentSubmitText}>Gửi đánh giá</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -198,8 +236,8 @@ export default function ProductDetail() {
         </TouchableOpacity>
       </View>
 
-      {/* Rental Modal */}
-      <Modal
+{/* Rental Modal */}
+<Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
@@ -208,18 +246,28 @@ export default function ProductDetail() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Thuê sản phẩm này</Text>
-            <TextInput
-              style={styles.dateInput}
-              placeholder="Ngày bắt đầu (DD/MM/YYYY)"
-              value={startDate}
-              onChangeText={setStartDate}
-            />
-            <TextInput
-              style={styles.dateInput}
-              placeholder="Ngày kết thúc (DD/MM/YYYY)"
-              value={endDate}
-              onChangeText={setEndDate}
-            />
+            <TouchableOpacity style={styles.dateInput} onPress={() => setShowStartDatePicker(true)}>
+              <Text>{startDate.toLocaleDateString()}</Text>
+            </TouchableOpacity>
+            {showStartDatePicker && (
+              <DateTimePicker
+                value={startDate}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => handleDateChange(event, selectedDate, 'start')}
+              />
+            )}
+            <TouchableOpacity style={styles.dateInput} onPress={() => setShowEndDatePicker(true)}>
+              <Text>{endDate.toLocaleDateString()}</Text>
+            </TouchableOpacity>
+            {showEndDatePicker && (
+              <DateTimePicker
+                value={endDate}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => handleDateChange(event, selectedDate, 'end')}
+              />
+            )}
             <View style={styles.checkboxContainer}>
               <TouchableOpacity onPress={() => setIsAgreed(!isAgreed)} style={styles.checkbox}>
                 <FontAwesome 
@@ -542,5 +590,20 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  likeCount: {
+    marginLeft: 4,
+    fontSize: 16,
+    color: COLORS.primary,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
 });

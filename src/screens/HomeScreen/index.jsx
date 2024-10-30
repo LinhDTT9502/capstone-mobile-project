@@ -62,6 +62,27 @@ export default function HomePage() {
     image: demoProduct,
   });
 
+  const featuredProducts = [
+    {
+      name: "Adidas Ultraboost 21",
+      price: "$180",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFUuSFCnm22cHLx3AZP-oUKSK5-5K7FSbXfw&s",
+      description: "Revolutionary running shoes with responsive cushioning.",
+    },
+    {
+      name: "Yonex Astrox 88D Pro",
+      price: "$220",
+      image: "https://static.fbshop.vn/wp-content/uploads/2024/03/Yonex-Astrox-88-S-Pro-Silver_Black-2024-PREORDER-9.jpg",
+      description: "Professional badminton racket for offensive players.",
+    },
+    {
+      name: "Nike Phantom GT Elite",
+      price: "$250",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYNp9rCy6YvnXOfIgIOYtZq5xWTMt6c-I8wA&s",
+      description: "High-performance football boots with enhanced ball control.",
+    },
+  ];
+
   return (
     <View style={styles.container}>
       <Header />
@@ -172,6 +193,29 @@ export default function HomePage() {
             />
           ))}
         </ScrollView>
+
+        {/* New Featured Products Section */}
+        <View style={styles.featuredProductsSection}>
+          <Text style={styles.sectionTitle}>Sản phẩm nổi bật</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {featuredProducts.map((product, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.featuredProductCard}
+                onPress={() => navigation.navigate("ProductDetail", { productId: index })}
+              >
+                <Image source={{ uri: product.image }} style={styles.featuredProductImage} />
+                <View style={styles.featuredProductInfo}>
+                  <Text style={styles.featuredProductName}>{product.name}</Text>
+                  <Text style={styles.featuredProductPrice}>{product.price}</Text>
+                  <Text style={styles.featuredProductDescription} numberOfLines={2}>
+                    {product.description}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
         <View style={styles.bestSellerHeader}>
           <Text style={styles.sectionTitle}>Sản phẩm mới</Text>
@@ -346,7 +390,7 @@ const styles = StyleSheet.create({
   },
   brandContainer: {
     paddingLeft: 16,
-    marginBottom: 16,
+    // marginBottom: 5,
   },
   bestSellerHeader: {
     flexDirection: "row",
@@ -403,5 +447,39 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 12,
     fontWeight: "bold",
+  },
+  featuredProductsSection: {
+    marginVertical: 20,
+  },
+  featuredProductCard: {
+    width: 280,
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+    marginRight: 16,
+    overflow: "hidden",
+    elevation: 3,
+  },
+  featuredProductImage: {
+    width: "100%",
+    height: 180,
+    resizeMode: "cover",
+  },
+  featuredProductInfo: {
+    padding: 12,
+  },
+  featuredProductName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  featuredProductPrice: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#4A90E2",
+    marginBottom: 4,
+  },
+  featuredProductDescription: {
+    fontSize: 12,
+    color: "#666",
   },
 });
