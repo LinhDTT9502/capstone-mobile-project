@@ -41,27 +41,25 @@ export default function Account() {
 
   const handleLogout = async () => {
     try {
-      const token = await AsyncStorage.getItem('authToken');
-      const refreshToken = await AsyncStorage.getItem('refreshToken');
-      const userId = await AsyncStorage.getItem('userId');
-      
-      if (!token || !refreshToken || !userId) {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
         throw new Error('Thiếu thông tin đăng xuất');
       }
-  
-      const response = await signOut({
-        token,
-        refreshToken,
-        userId: parseInt(userId),
-      });
-  
-      if (response.status === 200) {
-        await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userId']);
-        navigation.navigate('Login');
-        Alert.alert('Thành công', 'Đăng xuất thành công!');
-      } else {
-        throw new Error('Đăng xuất thất bại');
-      }
+      navigation.navigate('Login');
+      // const response = await signOut({
+      //   token,
+      //   refreshToken,
+      //   userId: parseInt(userId),
+      // });
+      await AsyncStorage.removeItem('token');
+      Alert.alert('Thành công', 'Đăng xuất thành công!');
+      // if (response.status === 200) {
+      //   await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userId']);
+      //   navigation.navigate('Login');
+      //   Alert.alert('Thành công', 'Đăng xuất thành công!');
+      // } else {
+      //   throw new Error('Đăng xuất thất bại');
+      // }
     } catch (error) {
       console.error('Logout error:', error);
       Alert.alert('Lỗi', 'Có lỗi xảy ra khi đăng xuất');

@@ -28,7 +28,7 @@ const SplashScreen = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigation.replace('Login'); // Go to login after the last step
+      navigation.navigate('HomeController');
     }
   };
 
@@ -42,7 +42,7 @@ const SplashScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text>{currentStep + 1}/3</Text>
-        <TouchableOpacity onPress={() => navigation.replace('Login')}>
+        <TouchableOpacity onPress={() => navigation.replace('HomeController')}>
           <Text>Bỏ qua</Text>
         </TouchableOpacity>
       </View>
