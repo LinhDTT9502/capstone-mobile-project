@@ -13,6 +13,8 @@ import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // To store and check token
 import { authenticateUser } from '@/src/services/authService';
+import { useSelector, useDispatch } from "react-redux";
+import { login, selectUser } from '@/src/redux/slices/authSlice';
 
 const LoginScreen = () => {
   const [username, setUsername] = useState('');
@@ -20,12 +22,14 @@ const LoginScreen = () => {
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+  const user = useSelector(selectUser)
+  const dispatch = useDispatch();
 
   // Check if user is already logged in
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
-        const token = await AsyncStorage.getItem('authToken');
+        const token = await AsyncStorage.getItem('token');
         if (token) {
           navigation.navigate('HomeController');
         }
@@ -40,15 +44,14 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      // Assume signIn API is called and returns a token
       // if (username && password) {
-      //   const token = 'dummyAuthToken';
-      //   await AsyncStorage.setItem('authToken', token); 
-      //   navigation.navigate('HomeController');
+       
+      
       // } else {
       //   Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
       // }
       const decoded = await authenticateUser(username, password);
+      dispatch(login(decoded));
       navigation.navigate('HomeController');
     } catch (error) {
       Alert.alert('Lỗi', 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');

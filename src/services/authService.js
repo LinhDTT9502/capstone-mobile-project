@@ -1,16 +1,13 @@
 import { jwtDecode } from 'jwt-decode';
-// import { login, logout } from '../redux/slices/authSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signIn } from '../api/apiAuth';
 
-
-
 export const authenticateUser = async ( username, password) => {
+  
   try {
     const response = await signIn(username, password);
     const decoded = jwtDecode(response.data.data.token);
     await AsyncStorage.setItem('token', response.data.data.token);
-    // dispatch(login(decoded));
     return decoded;
   } catch (error) {
     console.error('Login failed', error);
