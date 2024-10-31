@@ -1,163 +1,241 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // To store and check token
+import { authenticateUser } from '@/src/services/authService';
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+        if (token) {
+          navigation.navigate('HomeController');
+        }
+      } catch (error) {
+        console.error('Error checking login status:', error);
+      }
+    };
+
+    checkLoggedIn();
+  }, [navigation]);
+
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      // Assume signIn API is called and returns a token
+      // if (username && password) {
+      //   const token = 'dummyAuthToken';
+      //   await AsyncStorage.setItem('authToken', token); 
+      //   navigation.navigate('HomeController');
+      // } else {
+      //   Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
+      // }
+      const decoded = await authenticateUser(username, password);
+      navigation.navigate('HomeController');
+    } catch (error) {
+      Alert.alert('Lỗi', 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');
+      console.log(error);
+      
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const togglePasswordVisibility = () => {
+    setSecureTextEntry(!secureTextEntry);
+  };
 
   return (
     <View style={styles.container}>
-      {/* Top background shapes */}
-      <View style={styles.topShapes}>
-        {/* Use Image component if you want to add background shapes */}
-      </View>
+      {/* Background shapes */}
+      <View style={styles.shape1} />
+      <View style={styles.shape2} />
 
-      {/* Welcome text */}
-      <Text style={styles.title}>Log in to Goods Exchange</Text>
-      <Text style={styles.subtitle}>
-        Welcome back! Sign in using your social account or email to continue
-      </Text>
+      {/* Login form */}
+      <View style={styles.formContainer}>
+        <Text style={styles.title}>Đăng nhập vào Goods Exchange</Text>
+        <Text style={styles.subtitle}>
+          Chào mừng bạn trở lại! Đăng nhập bằng tài khoản xã hội hoặc email để tiếp tục
+        </Text>
 
-      {/* Google sign-in */}
-      <TouchableOpacity style={styles.googleButton}>
-        <Image source={require('../../../assets/images/googleicon.png')} style={styles.googleIcon} />
-      </TouchableOpacity>
-
-      {/* Username input */}
-      <Text style={styles.label}>User name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="username"
-        value={username}
-        onChangeText={setUsername}
-      />
-
-      {/* Password input */}
-      <Text style={styles.label}>Password</Text>
-      <View style={styles.passwordContainer}>
+        {/* Username input */}
         <TextInput
           style={styles.input}
-          placeholder="Password"
-          secureTextEntry={secureTextEntry}
-          value={password}
-          onChangeText={setPassword}
+          placeholder="Số điện thoại, email hoặc tên người dùng"
+          value={username}
+          onChangeText={setUsername}
         />
-        <TouchableOpacity onPress={() => setSecureTextEntry(!secureTextEntry)}>
-          <Text style={styles.eyeIcon}>👁️</Text>
+
+        {/* Password input */}
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Mật khẩu"
+            secureTextEntry={secureTextEntry}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIconContainer}>
+            <FontAwesomeIcon icon={secureTextEntry ? faEyeSlash : faEye} size={20} style={styles.eyeIcon} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Forgot Password */}
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
         </TouchableOpacity>
+
+        {/* Login button */}
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <Text style={styles.loginButtonText}>Đăng nhập</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Register */}
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Bạn chưa có tài khoản?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <Text style={styles.registerLink}>Đăng ký ngay</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      {/* Forgot password */}
-      <TouchableOpacity>
-        <Text  onPress={() => navigation.navigate('ForgotPassword')}>
-          Forgot Password?
-        </Text>
-      </TouchableOpacity>
-
-      {/* Login button */}
-      <TouchableOpacity style={styles.loginButton}>
-        <Text style={styles.loginButtonText}>Log In</Text>
-      </TouchableOpacity>
-
-      {/* Register link */}
-      <Text style={styles.registerText}>
-        Don’t have an account yet?{' '}
-        <Text style={styles.registerLink} onPress={() => navigation.navigate('SignUp')}>Register now</Text>
-      </Text>
-
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  // Add your styles here
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    justifyContent: 'center',
-    backgroundColor: '#FFF',
+    justifyContent: "center",
+    backgroundColor: "#FFF",
   },
-  topShapes: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    backgroundColor: '#FFF', // Add background shapes here
+  formContainer: {
+    paddingHorizontal: 20,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 10,
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 5,
+    color: "#333",
   },
   subtitle: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 14,
-    color: '#888',
-    marginBottom: 30,
-  },
-  googleButton: {
-    alignSelf: 'center',
-    backgroundColor: '#FFA500',
-    padding: 10,
-    borderRadius: 50,
+    color: "#888",
     marginBottom: 20,
-  },
-  googleIcon: {
-    width: 40,
-    height: 40,
-  },
-  label: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 5,
-    marginLeft: 10,
   },
   input: {
     height: 50,
+    borderColor: "#E0E0E0",
+    borderWidth: 1,
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    fontSize: 16,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderColor: '#E0E0E0',
     borderWidth: 1,
     borderRadius: 25,
     paddingHorizontal: 15,
     marginBottom: 15,
+    height: 50,
   },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  passwordInput: {
+    flex: 1,
+    height: 50,
+    fontSize: 16,
+  },
+  eyeIconContainer: {
+    justifyContent: 'center',
+    paddingHorizontal: 10,
   },
   eyeIcon: {
-    fontSize: 20,
-    paddingRight: 10,
     color: '#888',
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
-    color: '#FFA500',
-    marginBottom: 30,
+    color: "#FFA500",
+    textAlign: "right",
+    marginBottom: 20,
+    fontSize: 14,
   },
   loginButton: {
-    backgroundColor: '#FFA500',
+    backgroundColor: "#FFA500",
     height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 25,
-    marginBottom: 15,
+    marginBottom: 20,
   },
   loginButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+  },
+  registerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
   },
   registerText: {
-    textAlign: 'center',
+    color: "#888",
     fontSize: 14,
-    color: '#888',
   },
   registerLink: {
-    color: '#FFA500',
-    fontWeight: 'bold',
+    color: "#FFA500",
+    marginLeft: 5,
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  shape1: {
+    position: "absolute",
+    width: 250,
+    height: 250,
+    backgroundColor: "#FFA500",
+    borderRadius: 125,
+    top: -100,
+    right: -50,
+    opacity: 0.5,
+  },
+  shape2: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    backgroundColor: "#FFA500",
+    borderRadius: 150,
+    bottom: -150,
+    left: -50,
+    opacity: 0.7,
   },
 });
 
 export default LoginScreen;
+  

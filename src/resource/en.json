@@ -1,0 +1,191 @@
+{
+    "forgot_password": {
+      "title": "Forgot Password?",
+      "subtitle": "Please enter your email to reset the password",
+      "username_placeholder": "User name",
+      "email_placeholder": "Email",
+      "continue": "Continue"
+    },
+    "otp_verification": {
+    "title": "Check your mail",
+    "subtitle": "We just sent an OTP to your registered email address",
+    "placeholder": "Enter OTP",
+    "verify_button": "Verify OTP"
+  },
+  "reset_password": {
+    "title": "Reset your password",
+    "subtitle": "Here’s a tip: Use a combination of numbers, uppercase, lowercase, and special characters.",
+    "new_password": "New password",
+    "confirm_new_password": "Confirm new password",
+    "continue": "Continue",
+    "success": "Success",
+    "password_reset": "Your password has been reset!",
+    "error": "Error",
+    "password_mismatch": "Passwords do not match"
+  },
+  "login": {
+    "title": "Log in to Goods Exchange",
+    "subtitle": "Welcome back! Sign in using your social account or email to continue",
+    "placeholder_username": "Phone, email, or username",
+    "placeholder_password": "Password",
+    "forgot_password": "Forgot password?",
+    "login_button": "Log In",
+    "no_account": "Don’t have an account yet?",
+    "register_now": "Register now",
+    "failed": "Login Failed",
+    "invalid_credentials": "Invalid credentials. Please try again.",
+    "missing_credentials": "Please enter username and password."
+  },
+  "account": {
+    "settings": "Settings",
+    "favorite_items": "Favorite items",
+    "my_orders": "My Orders",
+    "language": "Language",
+    "edit_profile": "Edit Profile",
+    "change_password": "Change Password",
+    "logout": "Logout",
+    "logout_success": "Logged out successfully!",
+    "logout_failed": "Something went wrong while logging out.",
+    "signout_error": "Unable to sign out. Please try again.",
+    "language_modal": {
+      "title": "Select Language",
+      "close": "Close",
+      "english": "English",
+      "vietnamese": "Tiếng Việt"
+    }
+  },
+  "account.reset_password": {
+    "title": "Reset your password",
+    "old_password": "Old Password",
+    "new_password": "New Password",
+    "confirm_new_password": "Confirm New Password",
+    "continue": "Continue",
+    "success": "Success",
+    "password_reset": "Your password has been reset!",
+    "error": "Error",
+    "password_mismatch": "Passwords do not match"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "items": "Items",
+    "shipping": "Shipping",
+    "import_charges": "Import charges",
+    "total": "Total Price",
+    "next": "Next"
+  },
+  "user_profile": {
+    "user_profile": "User Information",
+    "username": "User name",
+    "fullname": "Full name",
+    "birthDate": "Date of birth",
+    "phone": "Phone number",
+    "email": "Email",
+    "save_changes": "Save Changes"
+  },
+  "landing_page": {
+    "menu": {
+      "home": "Home",
+      "products": "Products",
+      "about": "About",
+      "contact": "Contact"
+    },
+    "categories": {
+      "music": "Music",
+      "basketball": "Basketball",
+      "microphone": "Microphone",
+      "volleyball": "Volleyball",
+      "soccer": "Soccer",
+      "gym_equipment": "Gym Equipment"
+    },
+    "category": {
+      "title": "Category",
+      "see_more": "See More",
+      "more_categories": "More Categories"
+    },
+    "best_seller": {
+      "title": "Best Seller"
+    },
+    "product": {
+      "add_to_cart": "ADD TO CART",
+      "category": "Shoes"
+    },
+    "common": {
+      "see_more": "See More",
+      "close": "Close"
+    }
+  },
+  "my_orders": {
+    "title": "My Orders",
+    "find_placeholder": "Find something",
+    "order_number": "Order Number",
+    "order_at": "Order at",
+    "order_status": "Order Status",
+    "shipped": "Shipped",
+    "cancelled": "Cancelled",
+    "items_purchased": "{{count}} items purchased",
+    "price": "Price",
+    "pagination": {
+      "prev": "<",
+      "next": ">"
+    }
+  },"payment_detail": {
+    "title": "Payment Details",
+    "success_message": "Payment done successfully.",
+    "total_amount": "{{amount}} VND",
+    "date": "Date",
+    "order": "Order",
+    "shipping": "Shipping",
+    "total": "Total"
+  },
+  "product_detail": {
+    "title": "Product Details",
+    "add_to_cart": "Add to cart",
+    "rent_product": "Rent Product",
+    "rent_modal_title": "Rent this Product",
+    "start_date_placeholder": "Start Date (DD/MM/YYYY)",
+    "end_date_placeholder": "End Date (DD/MM/YYYY)",
+    "agree_terms": "I agree to the rental terms and conditions.",
+    "proceed_to_payment": "Proceed to Payment",
+    "cancel": "Cancel",
+    "error_rent_dates": "Please select rental dates.",
+    "error_agreement": "You must agree to the terms before proceeding.",
+    "success_rent": "Product rented successfully!"
+  },
+  "component": {
+    "search_placeholder": "Find something...",
+    "filter_search": "Filter Search",
+    "condition": "Condition",
+    "new": "New",
+    "old": "Old",
+    "not_specified": "Not Specified",
+    "apply": "APPLY",
+    "category": "Shoes",
+    "add_to_cart": "ADD TO CART"
+  },
+  "signup": {
+    "title": "Sign Up",
+    "subtitle": "Create new account",
+    "full_name": "Full name",
+    "username": "User name",
+    "email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm password",
+    "create_account": "Create an account",
+    "already_have_account": "Already have an account? Log In",
+    "password_mismatch_error": "Passwords do not match!",
+    "account_created_success": "Account created successfully!",
+    "error": "Error",
+    "unable_to_create_account": "Unable to create an account. Please try again."
+  },
+  "checkout": {
+    "title": "Checkout",
+    "order": "Order",
+    "shipping": "Shipping",
+    "total": "Total",
+    "address": "Shipping Address",
+    "payment": "Payment",
+    "cash": "Cash",
+    "continue": "Continue"
+  }
+  }
+  
