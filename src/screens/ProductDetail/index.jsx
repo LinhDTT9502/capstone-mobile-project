@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { fetchProductById } from "../../services/productService";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const COLORS = {
   primary: "#0035FF",
@@ -22,8 +22,14 @@ const COLORS = {
   dark: "#2C323A",
   light: "#CADDED",
   white: "#FFFFFF",
-  black: "#000000"
+  black: "#000000",
 };
+
+const PRODUCT_COLORS = [
+  { id: 1, name: "Xanh", code: "#0035FF" },
+  { id: 2, name: "Cam", code: "#FA7D0B" },
+  { id: 3, name: "Đen", code: "#000000" }
+];
 
 export default function ProductDetail() {
   const navigation = useNavigation();
@@ -32,8 +38,12 @@ export default function ProductDetail() {
 
   const [product, setProduct] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() + 1)));
-  const [endDate, setEndDate] = useState(new Date(new Date().setDate(new Date().getDate() + 2)));
+  const [startDate, setStartDate] = useState(
+    new Date(new Date().setDate(new Date().getDate() + 1))
+  );
+  const [endDate, setEndDate] = useState(
+    new Date(new Date().setDate(new Date().getDate() + 2))
+  );
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -43,6 +53,16 @@ export default function ProductDetail() {
   const [userComment, setUserComment] = useState("");
   const [userRating, setUserRating] = useState(0);
   const [likes, setLikes] = useState(0);
+  const [comment, setComment] = useState("");
+  
+  const handleSubmitComment = () => {
+    if (!comment.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận.");
+      return;
+    }
+    Alert.alert("Thành công", "Bình luận của bạn đã được gửi");
+    setComment("");
+  };
 
   useEffect(() => {
     loadProductDetails();
@@ -51,7 +71,13 @@ export default function ProductDetail() {
   const loadProductDetails = async () => {
     try {
       const productData = await fetchProductById(productId);
-      setProduct(productData);
+      setProduct({
+        ...productData,
+        originalPrice: 1428000,
+        discount: 100,
+        description:
+          "Vợt cầu lông Yonex Astrox 100ZZ là một trong những cây vợt cao cấp nhất của Yonex, được thiết kế cho những người chơi chuyên nghiệp. Với công nghệ VOLUME CUT RESIN và ROTATIONAL GENERATOR SYSTEM, vợt mang lại khả năng đánh cầu mạnh mẽ và chính xác.",
+      });
     } catch (error) {
       Alert.alert("Error", "Failed to load product details.");
       console.error(error);
@@ -73,20 +99,44 @@ export default function ProductDetail() {
       return;
     }
     if (!isAgreed) {
-      Alert.alert("Lỗi", "Bạn phải đồng ý với điều khoản thuê trước khi thêm vào giỏ.");
+      Alert.alert(
+        "Lỗi",
+        "Bạn phải đồng ý với điều khoản thuê trước khi thêm vào giỏ."
+      );
       return;
     }
     handleAddToCart("rent");
     setModalVisible(false);
   };
 
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Helper function to format date as dd/mm/yyyy
+  const formatDate = (date) => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const handleDateChange = (event, selectedDate, dateType) => {
-    if (dateType === 'start') {
+    const selected = selectedDate || (dateType === "start" ? startDate : endDate);
+    if (dateType === "start") {
       setShowStartDatePicker(false);
-      if (selectedDate) setStartDate(selectedDate);
+      if (selected < tomorrow) {
+        Alert.alert("Lỗi", "Ngày bắt đầu phải từ ngày mai trở đi.");
+      } else {
+        setStartDate(selected);
+      }
     } else {
       setShowEndDatePicker(false);
-      if (selectedDate) setEndDate(selectedDate);
+      if (selected <= startDate) {
+        Alert.alert("Lỗi", "Ngày kết thúc phải sau ngày bắt đầu.");
+      } else {
+        setEndDate(selected);
+      }
     }
   };
 
@@ -95,7 +145,6 @@ export default function ProductDetail() {
       Alert.alert("Lỗi", "Vui lòng chọn số sao đánh giá.");
       return;
     }
-    // Here you would typically send the review to your backend
     Alert.alert("Thành công", "Đánh giá của bạn đã được gửi");
     setUserComment("");
     setUserRating(0);
@@ -106,34 +155,49 @@ export default function ProductDetail() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
         </TouchableOpacity>
         <Text style={styles.title}>Chi tiết sản phẩm</Text>
-        <TouchableOpacity style={styles.likeButton} onPress={() => setLikes(likes + 1)}>
-          <AntDesign name="like2" size={24} color={COLORS.primary} />
-          <Text style={styles.likeCount}>{likes}</Text>
-        </TouchableOpacity>
+        <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content}>
-        <Image source={{ uri: product.imgAvatarPath || demoProduct }} style={styles.productImage} />
+        <Image
+          source={{
+            uri: product.imgAvatarPath || "https://via.placeholder.com/300",
+          }}
+          style={styles.productImage}
+        />
         <View style={styles.productInfo}>
           <Text style={styles.productName}>{product.productName}</Text>
           <Text style={styles.productTag}>For exchange</Text>
-          <Text style={styles.productPrice}>{product.price} ₫</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông số kỹ thuật</Text>
-          <Text style={styles.specificationText}>Tình trạng: {product.condition}%</Text>
-          <Text style={styles.specificationText}>{product.description || "No description available"}</Text>
-          <Text style={styles.specificationText}>Vị trí: {product.location || "Unknown"}</Text>
+          <View style={styles.priceContainer}>
+            <View>
+              <Text style={styles.productPrice}>
+                {product.price.toLocaleString()} ₫
+              </Text>
+              <Text style={styles.originalPrice}>
+                {product.originalPrice.toLocaleString()} ₫
+              </Text>
+              <Text style={styles.discount}>Giảm {product.discount}%</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.likeButton}
+              onPress={() => setLikes(likes + 1)}
+            >
+              <AntDesign name="like2" size={24} color={COLORS.primary} />
+              <Text style={styles.likeCount}>{likes}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.section}>
           <View style={styles.rowContainer}>
-            <View style={styles.leftColumn}>
+            <View style={styles.columnContainer}>
               <Text style={styles.sectionTitle}>Số lượng</Text>
               <View style={styles.quantityContainer}>
                 <TouchableOpacity
@@ -150,42 +214,69 @@ export default function ProductDetail() {
                   <FontAwesome name="plus" size={16} color={COLORS.dark} />
                 </TouchableOpacity>
               </View>
-
-              <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Màu sắc</Text>
-              <View style={styles.colorSelector}>
-                <TouchableOpacity
-                  onPress={() => setColor("Blue")}
-                  style={[styles.colorButton, color === "Blue" && styles.activeColor, { backgroundColor: COLORS.primary }]}
-                />
-                <TouchableOpacity
-                  onPress={() => setColor("Orange")}
-                  style={[styles.colorButton, color === "Orange" && styles.activeColor, { backgroundColor: COLORS.secondary }]}
-                />
-                <TouchableOpacity
-                  onPress={() => setColor("Black")}
-                  style={[styles.colorButton, color === "Black" && styles.activeColor, { backgroundColor: COLORS.black }]}
-                />
-              </View>
-            </View>
-            <View style={styles.rightColumn}>
-              <TouchableOpacity 
-                style={[styles.addToCartButton, { backgroundColor: COLORS.secondary }]} 
-                onPress={() => handleAddToCart("buy")}
-              >
-                <FontAwesome name="shopping-cart" size={20} color={COLORS.white} />
-                <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.addToCartButton, { backgroundColor: COLORS.primary, marginTop: 10 }]} 
-                onPress={() => setModalVisible(true)}
-              >
-                <FontAwesome name="shopping-cart" size={20} color={COLORS.white} />
-                <Text style={styles.addToCartText}>Thuê vào giỏ hàng</Text>
-              </TouchableOpacity>
             </View>
           </View>
+
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Màu sắc</Text>
+          <View style={styles.colorSelector}>
+            {PRODUCT_COLORS.map((colorOption) => (
+              <TouchableOpacity
+                key={colorOption.id}
+                onPress={() => setColor(colorOption.name)}
+                style={[
+                  styles.colorButton,
+                  color === colorOption.name && styles.activeColor,
+                  { backgroundColor: colorOption.code }
+                ]}
+              />
+            ))}
+          </View>
+          <TouchableOpacity 
+            style={[styles.addToCartButton, { backgroundColor: COLORS.secondary, marginTop: 16 }]} 
+            onPress={() => handleAddToCart("buy")}
+          >
+            <FontAwesome name="shopping-cart" size={20} color={COLORS.white} />
+            <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
+          </TouchableOpacity>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Thông số kỹ thuật</Text>
+          <Text style={styles.specificationText}>
+            Tình trạng: {product.condition}%
+          </Text>
+          <Text style={styles.specificationText}>
+            Vị trí: {product.location || "Unknown"}
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Ưu đãi</Text>
+          <View style={styles.promotionContainer}>
+            <Text style={styles.promotionItem}>
+              ✓ Tặng 2 Quấn cán vợt Cầu Lông: VNB 001, VS002 hoặc Joto 001
+            </Text>
+            <Text style={styles.promotionItem}>
+              ✓ Sơn logo mặt vợt miễn phí
+            </Text>
+            <Text style={styles.promotionItem}>
+              ✓ Bảo hành lưới đan trong 72 giờ
+            </Text>
+            <Text style={styles.promotionItem}>
+              ✓ Thay gen vợt miễn phí trọn đời
+            </Text>
+            <Text style={styles.promotionItem}>
+              ✓ Tích luỹ điểm thành viên Premium
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
+          <Text style={styles.descriptionText}>{product.description}</Text>
+        </View>
+
+
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Đánh giá & Nhận xét</Text>
@@ -209,7 +300,7 @@ export default function ProductDetail() {
               multiline
               numberOfLines={3}
             />
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.commentSubmitButton}
               onPress={handleSubmitReview}
             >
@@ -217,18 +308,39 @@ export default function ProductDetail() {
             </TouchableOpacity>
           </View>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Bình luận</Text>
+          <View style={styles.commentInputContainer}>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Nhập bình luận của bạn..."
+              value={comment}
+              onChangeText={setComment}
+              multiline
+              numberOfLines={3}
+            />
+            <TouchableOpacity 
+              style={styles.commentSubmitButton}
+              onPress={handleSubmitComment}
+            >
+              <Text style={styles.commentSubmitText}>Gửi bình luận</Text>
+            </TouchableOpacity>
+          </View>
+          
+        </View>
       </ScrollView>
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.buyNowButton]} 
+        <TouchableOpacity
+          style={[styles.actionButton, styles.buyNowButton]}
           onPress={handleBuyNow}
         >
           <FontAwesome name="shopping-bag" size={20} color={COLORS.white} />
           <Text style={styles.actionButtonText}>Mua Ngay</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.rentButton]} 
+        <TouchableOpacity
+          style={[styles.actionButton, styles.rentButton]}
           onPress={() => setModalVisible(true)}
         >
           <FontAwesome name="calendar" size={20} color={COLORS.white} />
@@ -236,8 +348,8 @@ export default function ProductDetail() {
         </TouchableOpacity>
       </View>
 
-{/* Rental Modal */}
-<Modal
+      {/* Rent Modal */}
+      <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
@@ -246,44 +358,64 @@ export default function ProductDetail() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Thuê sản phẩm này</Text>
-            <TouchableOpacity style={styles.dateInput} onPress={() => setShowStartDatePicker(true)}>
-              <Text>{startDate.toLocaleDateString()}</Text>
+            <TouchableOpacity
+              style={styles.dateInput}
+              onPress={() => setShowStartDatePicker(true)}
+            >
+              <Text>Ngày bắt đầu: {formatDate(startDate)}</Text>
             </TouchableOpacity>
             {showStartDatePicker && (
               <DateTimePicker
                 value={startDate}
                 mode="date"
                 display="default"
-                onChange={(event, selectedDate) => handleDateChange(event, selectedDate, 'start')}
+                minimumDate={tomorrow}
+                onChange={(event, selectedDate) =>
+                  handleDateChange(event, selectedDate, "start")
+                }
               />
             )}
-            <TouchableOpacity style={styles.dateInput} onPress={() => setShowEndDatePicker(true)}>
-              <Text>{endDate.toLocaleDateString()}</Text>
+            <TouchableOpacity
+              style={styles.dateInput}
+              onPress={() => setShowEndDatePicker(true)}
+            >
+              <Text>Ngày kết thúc: {formatDate(endDate)}</Text>
             </TouchableOpacity>
             {showEndDatePicker && (
               <DateTimePicker
                 value={endDate}
                 mode="date"
                 display="default"
-                onChange={(event, selectedDate) => handleDateChange(event, selectedDate, 'end')}
+                minimumDate={tomorrow}
+                onChange={(event, selectedDate) =>
+                  handleDateChange(event, selectedDate, "end")
+                }
               />
             )}
             <View style={styles.checkboxContainer}>
-              <TouchableOpacity onPress={() => setIsAgreed(!isAgreed)} style={styles.checkbox}>
-                <FontAwesome 
-                  name={isAgreed ? "check-square" : "square-o"} 
-                  size={24} 
-                  color={isAgreed ? COLORS.primary : COLORS.dark} 
+              <TouchableOpacity
+                onPress={() => setIsAgreed(!isAgreed)}
+                style={styles.checkbox}
+              >
+                <FontAwesome
+                  name={isAgreed ? "check-square" : "square-o"}
+                  size={24}
+                  color={isAgreed ? COLORS.primary : COLORS.dark}
                 />
               </TouchableOpacity>
-              <Text style={styles.checkboxLabel}>Tôi đồng ý với các điều khoản thuê sản phẩm.</Text>
+              <Text style={styles.checkboxLabel}>
+                Tôi đồng ý với các điều khoản thuê sản phẩm.
+              </Text>
             </View>
 
-            <TouchableOpacity style={styles.submitButton} onPress={handleAddRentToCart}>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleAddRentToCart}
+            >
               <Text style={styles.submitButtonText}>Thuê vào giỏ hàng</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.cancelButton} 
+            <TouchableOpacity
+              style={styles.cancelButton}
               onPress={() => setModalVisible(false)}
             >
               <Text style={styles.cancelButtonText}>Hủy</Text>
@@ -298,7 +430,7 @@ export default function ProductDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop:30,
+    paddingTop: 30,
     backgroundColor: "#F8F9FA",
   },
   header: {
@@ -318,8 +450,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.dark,
   },
-  heartButton: {
-    padding: 8,
+  placeholder: {
+    width: 40,
   },
   content: {
     flex: 1,
@@ -350,10 +482,25 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginBottom: 8,
   },
+  priceContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   productPrice: {
     fontSize: 20,
     fontWeight: "bold",
     color: COLORS.secondary,
+  },
+  originalPrice: {
+    fontSize: 16,
+    color: COLORS.dark,
+    textDecorationLine: "line-through",
+  },
+  discount: {
+    fontSize: 14,
+    color: COLORS.secondary,
+    fontWeight: "bold",
   },
   section: {
     padding: 16,
@@ -372,10 +519,25 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     lineHeight: 20,
   },
+  promotionContainer: {
+    backgroundColor: "#FFF5F5",
+    padding: 12,
+    borderRadius: 8,
+  },
+  promotionItem: {
+    fontSize: 14,
+    color: COLORS.dark,
+    marginBottom: 8,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: COLORS.dark,
+    lineHeight: 20,
+  },
   rowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     gap: 16,
   },
   leftColumn: {
@@ -417,12 +579,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.dark,
   },
   addToCartButton: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 2,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
@@ -445,7 +607,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 8,
     minHeight: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     color: COLORS.dark,
   },
   commentSubmitButton: {
@@ -453,45 +615,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   commentSubmitText: {
     color: COLORS.white,
     fontSize: 14,
     fontWeight: "bold",
   },
-  
-  commentContainer: {
-    padding: 12,
-    backgroundColor: "#F8F9FA",
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  commentHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  commentUser: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: COLORS.dark,
-  },
-  commentText: {
-    fontSize: 14,
-    color: COLORS.dark,
-  },
-  commentDate: {
-    fontSize: 12,
-    color: "#999",
-  },
-  commentNotice: {
-    fontSize: 12,
-    color: "#999",
-    marginBottom: 12,
-  },
   bottomNav: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
@@ -500,11 +632,11 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingVertical: 14,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 2,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
@@ -592,8 +724,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   likeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 8,
   },
   likeCount: {
@@ -602,8 +734,8 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   ratingContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginBottom: 10,
   },
 });

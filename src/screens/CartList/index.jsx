@@ -1,53 +1,113 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert, Modal } from 'react-native';
+import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import demoProduct from "../../../assets/images/product_demo.jpg";
 import { useNavigation } from '@react-navigation/native';
+import DateTimePicker from "@react-native-community/datetimepicker";
+
+const COLORS = {
+  primary: "#0035FF",
+  secondary: "#FA7D0B",
+  dark: "#2C323A",
+  light: "#CADDED",
+  white: "#FFFFFF",
+  black: "#000000",
+};
 
 export default function Cart() {
   const navigation = useNavigation();
-  const [selectedCategory, setSelectedCategory] = useState(0);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [rentModalVisible, setRentModalVisible] = useState(false);
+  const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() + 1)));
+  const [endDate, setEndDate] = useState(new Date(new Date().setDate(new Date().getDate() + 2)));
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  // Sample cart items with type (buy/rent)
+  // Set tomorrow's date
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Helper function to format date as dd/mm/yyyy
+  const formatDate = (date) => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const cartItems = [
-    { id: 1, name: 'Nike Air Zoom Pegasus 36 Miami', price: '$299.43', image: demoProduct, quantity: 1, type: 'buy' },
-    { id: 2, name: 'Adidas Ultraboost 20', price: '$199.43', image: demoProduct, quantity: 1, type: 'rent' },
-    { id: 3, name: 'Converse Chuck Taylor', price: '$99.43', image: demoProduct, quantity: 1, type: 'buy' },
-    { id: 4, name: 'Reebok Classic', price: '$89.43', image: demoProduct, quantity: 1, type: 'rent' },
+    { id: 1, name: 'Nike Air Zoom Pegasus 36 Miami', price: '$299.43', image: demoProduct, quantity: 1 },
+    { id: 2, name: 'Adidas Ultraboost 20', price: '$199.43', image: demoProduct, quantity: 1 },
+    { id: 3, name: 'Converse Chuck Taylor', price: '$99.43', image: demoProduct, quantity: 1 },
+    { id: 4, name: 'Reebok Classic', price: '$89.43', image: demoProduct, quantity: 1 },
   ];
 
   const toggleItemSelection = (itemId) => {
-    setSelectedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
+    setSelectedItems(prev =>
+      prev.some(item => item.id === itemId)
+        ? prev.filter(item => item.id !== itemId)
+        : [...prev, { id: itemId }]
     );
   };
 
   const calculateTotal = () => {
-    const total = cartItems
-      .filter(item => selectedItems.includes(item.id))
-      .reduce((sum, item) => sum + parseFloat(item.price.replace('$', '')) * item.quantity, 0);
+    const total = selectedItems
+      .map(selected => cartItems.find(item => item.id === selected.id))
+      .reduce((sum, item) => sum + (item ? parseFloat(item.price.replace('$', '')) * item.quantity : 0), 0);
     return `$${total.toFixed(2)}`;
   };
 
-  const filterCartItems = () => {
-    if (selectedCategory === 0) return cartItems;
-    return cartItems.filter(item => 
-      item.type === (selectedCategory === 1 ? 'buy' : 'rent')
-    );
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cartItems.map(item => ({ id: item.id })));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleBuyNow = () => {
+    navigation.navigate("Checkout");
+  };
+
+  const handleAddRentToCart = () => {
+    if (startDate >= endDate) {
+      Alert.alert("Lỗi", "Ngày kết thúc phải sau ngày bắt đầu.");
+      return;
+    }
+    setRentModalVisible(false);
+    Alert.alert("Thông báo", "Sản phẩm đã được thêm vào giỏ hàng để thuê!");
+  };
+
+  const handleDateChange = (event, selectedDate, dateType) => {
+    const selected = selectedDate || (dateType === "start" ? startDate : endDate);
+    if (dateType === "start") {
+      setShowStartDatePicker(false);
+      if (selected < tomorrow) {
+        Alert.alert("Lỗi", "Ngày bắt đầu phải từ ngày mai trở đi.");
+      } else {
+        setStartDate(selected);
+      }
+    } else {
+      setShowEndDatePicker(false);
+      if (selected <= startDate) {
+        Alert.alert("Lỗi", "Ngày kết thúc phải sau ngày bắt đầu.");
+      } else {
+        setEndDate(selected);
+      }
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Enhanced Header */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
         </TouchableOpacity>
         <Text style={styles.title}>Giỏ hàng của bạn</Text>
         <View style={styles.badge}>
@@ -55,40 +115,26 @@ export default function Cart() {
         </View>
       </View>
 
-      {/* Enhanced Category Tabs */}
-      <View style={styles.categoryContainer}>
-        {['Tất cả', 'Mua', 'Thuê'].map((category, index) => (
-          <TouchableOpacity
-            key={category}
-            style={[
-              styles.categoryButton,
-              selectedCategory === index && styles.categoryButtonActive,
-            ]}
-            onPress={() => setSelectedCategory(index)}
-          >
-            <Text style={[
-              styles.categoryText,
-              selectedCategory === index && styles.categoryTextActive
-            ]}>
-              {category}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Select All Checkbox */}
+      <View style={styles.selectAllContainer}>
+        <TouchableOpacity onPress={handleSelectAll} style={styles.checkboxContainer}>
+          <View style={[styles.checkbox, selectAll && styles.checkboxSelected]}>
+            {selectAll && <Ionicons name="checkmark" size={16} color="#FFF" />}
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.selectAllText}>Chọn tất cả</Text>
       </View>
 
-      {/* Enhanced Content */}
+      {/* Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {filterCartItems().map((item) => (
-          <Animated.View key={item.id} style={styles.cartItem}>
+        {cartItems.map((item) => (
+          <View key={item.id} style={styles.cartItem}>
             <TouchableOpacity 
               onPress={() => toggleItemSelection(item.id)} 
               style={styles.checkboxContainer}
             >
-              <View style={[
-                styles.checkbox,
-                selectedItems.includes(item.id) && styles.checkboxSelected
-              ]}>
-                {selectedItems.includes(item.id) && (
+              <View style={[styles.checkbox, selectedItems.some(selected => selected.id === item.id) && styles.checkboxSelected]}>
+                {selectedItems.some(selected => selected.id === item.id) && (
                   <Ionicons name="checkmark" size={16} color="#FFF" />
                 )}
               </View>
@@ -109,42 +155,98 @@ export default function Cart() {
               <View style={styles.itemFooter}>
                 <View style={styles.quantityContainer}>
                   <TouchableOpacity style={styles.quantityButton}>
-                    <Ionicons name="remove" size={20} color="#4A90E2" />
+                    <Ionicons name="remove" size={20} color={COLORS.primary} />
                   </TouchableOpacity>
                   <Text style={styles.quantityText}>{item.quantity}</Text>
                   <TouchableOpacity style={styles.quantityButton}>
-                    <Ionicons name="add" size={20} color="#4A90E2" />
+                    <Ionicons name="add" size={20} color={COLORS.primary} />
                   </TouchableOpacity>
-                </View>
-                <View style={styles.typeTag}>
-                  <Text style={styles.typeText}>
-                    {item.type === 'buy' ? 'Mua' : 'Thuê'}
-                  </Text>
                 </View>
               </View>
             </View>
-          </Animated.View>
+          </View>
         ))}
       </ScrollView>
 
-      {/* Enhanced Footer */}
+      {/* Footer with Rent and Buy buttons */}
       {selectedItems.length > 0 && (
-        <View style={styles.footer}>
-          <View style={styles.totalContainer}>
-            <Text style={styles.totalLabel}>Tổng cộng:</Text>
-            <Text style={styles.totalValue}>{calculateTotal()}</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.checkoutButton}
-            onPress={() => navigation.navigate('Checkout')}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.buyNowButton]}
+            onPress={handleBuyNow}
           >
-            <Text style={styles.checkoutButtonText}>
-              Thanh toán ({selectedItems.length})
-            </Text>
-            <Ionicons name="arrow-forward" size={24} color="#FFF" />
+            <FontAwesome name="shopping-bag" size={20} color={COLORS.white} />
+            <Text style={styles.actionButtonText}>Mua Ngay</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.rentButton]}
+            onPress={() => setRentModalVisible(true)}
+          >
+            <FontAwesome name="calendar" size={20} color={COLORS.white} />
+            <Text style={styles.actionButtonText}>Thuê</Text>
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Rent Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={rentModalVisible}
+        onRequestClose={() => setRentModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Chọn ngày thuê</Text>
+            <TouchableOpacity
+              style={styles.dateInput}
+              onPress={() => setShowStartDatePicker(true)}
+            >
+              <Text>Ngày bắt đầu: {formatDate(startDate)}</Text>
+            </TouchableOpacity>
+            {showStartDatePicker && (
+              <DateTimePicker
+                value={startDate}
+                mode="date"
+                display="default"
+                minimumDate={tomorrow}
+                onChange={(event, selectedDate) =>
+                  handleDateChange(event, selectedDate, "start")
+                }
+              />
+            )}
+            <TouchableOpacity
+              style={styles.dateInput}
+              onPress={() => setShowEndDatePicker(true)}
+            >
+              <Text>Ngày kết thúc: {formatDate(endDate)}</Text>
+            </TouchableOpacity>
+            {showEndDatePicker && (
+              <DateTimePicker
+                value={endDate}
+                mode="date"
+                display="default"
+                minimumDate={tomorrow}
+                onChange={(event, selectedDate) =>
+                  handleDateChange(event, selectedDate, "end")
+                }
+              />
+            )}
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleAddRentToCart}
+            >
+              <Text style={styles.submitButtonText}>Thêm vào giỏ hàng để thuê</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setRentModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -160,9 +262,9 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#FFF',
+    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
+    borderBottomColor: COLORS.light,
   },
   backButton: {
     padding: 8,
@@ -171,45 +273,33 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 20,
     fontWeight: '600',
-    color: '#212529',
+    color: COLORS.dark,
     marginLeft: 8,
   },
   badge: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   badgeText: {
-    color: '#FFF',
+    color: COLORS.white,
     fontSize: 12,
     fontWeight: '600',
   },
-  categoryContainer: {
+  selectAllContainer: {
     flexDirection: 'row',
-    padding: 12,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
-  },
-  categoryButton: {
-    flex: 1,
-    paddingVertical: 12,
-    marginHorizontal: 4,
-    borderRadius: 8,
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    padding: 12,
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.light,
   },
-  categoryButtonActive: {
-    backgroundColor: '#4A90E2',
-  },
-  categoryText: {
-    fontSize: 15,
+  selectAllText: {
+    fontSize: 16,
     fontWeight: '500',
-    color: '#495057',
-  },
-  categoryTextActive: {
-    color: '#FFF',
+    color: COLORS.dark,
+    marginLeft: 8,
   },
   content: {
     flex: 1,
@@ -217,15 +307,12 @@ const styles = StyleSheet.create({
   },
   cartItem: {
     flexDirection: 'row',
-    backgroundColor: '#FFF',
+    backgroundColor: COLORS.white,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -239,13 +326,13 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#CED4DA',
+    borderColor: COLORS.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxSelected: {
-    backgroundColor: '#4A90E2',
-    borderColor: '#4A90E2',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   productImage: {
     width: 100,
@@ -265,7 +352,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: '#212529',
+    color: COLORS.dark,
     marginRight: 8,
   },
   deleteButton: {
@@ -274,7 +361,7 @@ const styles = StyleSheet.create({
   itemPrice: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#4A90E2',
+    color: COLORS.secondary,
     marginVertical: 8,
   },
   itemFooter: {
@@ -285,7 +372,7 @@ const styles = StyleSheet.create({
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS.light,
     borderRadius: 8,
     padding: 4,
   },
@@ -295,54 +382,95 @@ const styles = StyleSheet.create({
   quantityText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#212529',
+    color: COLORS.dark,
     marginHorizontal: 12,
   },
-  typeTag: {
-    backgroundColor: '#E9ECEF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  typeText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#495057',
-  },
-  footer: {
-    backgroundColor: '#FFF',
+  bottomNav: {
+    flexDirection: 'row',
     padding: 16,
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: '#E9ECEF',
+    borderTopColor: COLORS.light,
   },
-  totalContainer: {
+  actionButton: {
+    flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#212529',
-  },
-  totalValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#4A90E2',
-  },
-  checkoutButton: {
-    flexDirection: 'row',
-    backgroundColor: '#4A90E2',
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 2,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
-  checkoutButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '600',
+  actionButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  buyNowButton: {
+    backgroundColor: COLORS.primary,
     marginRight: 8,
+  },
+  rentButton: {
+    backgroundColor: COLORS.secondary,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "90%",
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: COLORS.dark,
+  },
+  dateInput: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: COLORS.light,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    color: COLORS.dark,
+  },
+  submitButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 14,
+    borderRadius: 8,
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  submitButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  cancelButton: {
+    backgroundColor: COLORS.white,
+    paddingVertical: 12,
+    borderRadius: 8,
+    width: "100%",
+    alignItems: "center",
+    borderColor: COLORS.secondary,
+    borderWidth: 1,
+  },
+  cancelButtonText: {
+    color: COLORS.secondary,
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
