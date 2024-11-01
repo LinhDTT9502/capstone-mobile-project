@@ -13,7 +13,6 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Swiper from 'react-native-swiper';
 
-// Assume these components are properly implemented
 import Header from '../../layouts/Header';
 import ScrollingLogos from '../../components/ScrollingLogos';
 import { fetchCategories } from '../../services/categoryService';
@@ -39,52 +38,50 @@ const featuredProducts = [
   {
     id: '1',
     name: 'Adidas Ultraboost 21',
-    price: '$180',
+    price: '3.600.000 ₫',
     image: 'https://assets.adidas.com/images/w_600,f_auto,q_auto/dfa07f83ea7d4c94bac5622413432f16_9366/Giay_Ultraboost_5_trang_ID8840.jpg',
     description: 'Revolutionary running shoes with responsive cushioning.',
   },
   {
     id: '2',
     name: 'Yonex Astrox 88D Pro',
-    price: '$220',
+    price: '4.400.000 ₫',
     image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9KZJMYEXdNFzL5-Y2hM0n0zh_x35L_-P8Kg&s',
     description: 'Professional badminton racket for offensive players.',
   },
   {
     id: '3',
     name: 'Nike Phantom GT Elite',
-    price: '$250',
+    price: '5.000.000 ₫',
     image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2Vq8gZ6XiJD5xZolVrWrxZHNBH-G3tN6gIA&s',
     description: 'High-performance football boots with enhanced ball control.',
   },
 ];
 
 const flashSaleProducts = [
-  // Sample flash sale products
   {
-    name: 'Product 1',
-    price: '$50',
+    name: 'Giày chạy bộ Nike Air Zoom',
+    price: '2.000.000 ₫',
     image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-Ts7IAS3SJ041ucSeE70bf79UWNnZLs8Pvg&s',
-    discount: '20',
+    discount: '20%',
   },
   {
-    name: 'Product 2',
-    price: '$100',
+    name: 'Áo thể thao Adidas Climacool',
+    price: '800.000 ₫',
     image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-Ts7IAS3SJ041ucSeE70bf79UWNnZLs8Pvg&s',
-    discount: '15',
+    discount: '15%',
   },
 ];
 
 const recentlyViewedProducts = [
-  // Sample recently viewed products
   {
-    name: 'Product 3',
-    price: '$75',
+    name: 'Bóng đá Nike Strike',
+    price: '750.000 ₫',
     image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEjUFOspD24fKk_QJRCWd_pNv9DtFFhv0PZA&s',
   },
   {
-    name: 'Product 4',
-    price: '$120',
+    name: 'Túi đựng vợt tennis Wilson',
+    price: '1.200.000 ₫',
     image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEjUFOspD24fKk_QJRCWd_pNv9DtFFhv0PZA&s',
   },
 ];
@@ -130,7 +127,7 @@ const HomePage = () => {
       <View style={styles.categoryIcon}>
         <MaterialCommunityIcons
           name={categoryIcons[item.categoryName] || 'shape-outline'}
-          size={24}
+          size={28}
           color="#4A90E2"
         />
       </View>
@@ -146,7 +143,9 @@ const HomePage = () => {
     >
       <Image source={{ uri: product.image }} style={styles.productImage} />
       {product.discount && (
-        <Text style={styles.discountTag}>{product.discount} OFF</Text>
+        <View style={styles.discountTag}>
+          <Text style={styles.discountText}>{product.discount}</Text>
+        </View>
       )}
       <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
       <Text style={styles.productPrice}>{product.price}</Text>
@@ -159,7 +158,6 @@ const HomePage = () => {
   const renderPromotionalCard = ({ item }) => (
     <TouchableOpacity 
       style={[styles.promotionalCard, { backgroundColor: item.backgroundColor }]}
-      // onPress={() => navigation.navigate('Promotion', { id: item.id })}
     >
       <View style={styles.promotionalContent}>
         <View style={styles.promotionalTextContainer}>
@@ -175,31 +173,33 @@ const HomePage = () => {
     <View style={styles.container}>
       <Header />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-      <Swiper
-        style={styles.wrapper}
-        showsButtons={false}
-        autoplay
-        autoplayTimeout={5}
-        dot={<View style={styles.dot} />}
-        activeDot={<View style={styles.activeDot} />}
-        paginationStyle={styles.pagination}
-      >
-        {bannerImages.map((image, index) => (
-          <View key={index} style={styles.slide}>
-            <Image source={{ uri: image }} style={styles.bannerImage} />
-          </View>
-        ))}
-      </Swiper>
+        <Swiper
+          style={styles.wrapper}
+          showsButtons={false}
+          autoplay
+          autoplayTimeout={5}
+          dot={<View style={styles.dot} />}
+          activeDot={<View style={styles.activeDot} />}
+          paginationStyle={styles.pagination}
+        >
+          {bannerImages.map((image, index) => (
+            <View key={index} style={styles.slide}>
+              <Image source={{ uri: image }} style={styles.bannerImage} />
+            </View>
+          ))}
+        </Swiper>
 
-        <Text style={styles.sectionTitle}>Danh mục</Text>
-        <FlatList
-          data={categories}
-          renderItem={renderCategory}
-          keyExtractor={(item) => item.id.toString()}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryContainer}
-        />
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Danh mục</Text>
+          <FlatList
+            data={categories}
+            renderItem={renderCategory}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryContainer}
+          />
+        </View>
 
         <ScrollingLogos />
 
@@ -215,7 +215,6 @@ const HomePage = () => {
           />
         </View>
 
-        {/* New Promotional Section */}
         <View style={styles.promotionalSection}>
           <Text style={styles.sectionTitle}>Khám phá thêm</Text>
           <FlatList
@@ -228,15 +227,13 @@ const HomePage = () => {
           />
         </View>
 
-        {/* Flash Sale Section */}
         <View style={styles.flashSaleSection}>
-          <Text style={styles.sectionTitle}>Flash Saler</Text>
+          <Text style={styles.sectionTitle}>Flash Sale</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {flashSaleProducts.map((product) => renderProductCard(product))}
           </ScrollView>
         </View>
 
-        {/* Recently Viewed Section */}
         <View style={styles.recentlyViewedSection}>
           <Text style={styles.sectionTitle}>Đã xem gần đây</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -266,7 +263,6 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     height: 200,
-    marginBottom:30,
   },
   slide: {
     flex: 1,
@@ -295,10 +291,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     margin: 3,
   },
+  sectionContainer: {
+    marginTop: 20,
+    marginBottom: 10,
+  },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    // marginBottom: 16,
+    marginBottom: 16,
     marginHorizontal: 16,
     color: '#333',
   },
@@ -307,24 +307,30 @@ const styles = StyleSheet.create({
   },
   categoryItem: {
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: 12,
   },
   categoryIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: '#E6F0FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   categoryName: {
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
     color: '#333',
+    fontWeight: '600',
   },
   featuredSection: {
-    marginTop: 16,
+    marginTop: 24,
   },
   featuredProductsContainer: {
     padding: 8,
@@ -332,7 +338,7 @@ const styles = StyleSheet.create({
   productCard: {
     width: (width - 48) / 2,
     backgroundColor: "#FFF",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 12,
     margin: 8,
     shadowColor: "#000",
@@ -343,64 +349,65 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: "100%",
-    height: 120,
-    borderRadius: 8,
-    marginBottom: 8,
+    height: 140,
+    borderRadius: 12,
+    marginBottom: 12,
   },
   productName: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  productPrice: {
     fontSize: 16,
     fontWeight: "bold",
+    marginBottom: 6,
+    color: '#333',
+  },
+  productPrice: {
+    fontSize: 18,
+    fontWeight: "bold",
     color: "#4A90E2",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   discountTag: {
     position: 'absolute',
     top: 8,
     right: 8,
     backgroundColor: "#FF6347",
-    color: "#FFF",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    fontSize: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  addToCartButton: {
-    backgroundColor: "#FF9900",
-    borderRadius: 6,
-    padding: 8,
-    alignItems: "center",
-  },
-  addToCartText: {
+  discountText: {
     color: "#FFF",
     fontSize: 12,
     fontWeight: "bold",
   },
-  flashSaleSection: {
-    marginVertical: 20,
-    backgroundColor: '#FFF3E0', // Light orange background
-    padding: 16,
-    borderRadius: 12,
+  addToCartButton: {
+    backgroundColor: "#FF9900",
+    borderRadius: 8,
+    padding: 10,
+    alignItems: "center",
   },
-  recommendedSection: {
-    marginVertical: 20,
+  addToCartText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight:  "bold",
+  },
+  flashSaleSection: {
+    marginVertical: 24,
+    backgroundColor: '#FFF3E0',
+    padding: 16,
+    borderRadius: 16,
   },
   recentlyViewedSection: {
-    marginVertical: 20,
-    backgroundColor: '#E3F2FD', // Light blue background
+    marginVertical: 24,
+    backgroundColor: '#E3F2FD',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
   },
   viewAllButton: {
     backgroundColor: '#4A90E2',
     marginHorizontal: 16,
     marginVertical: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
   },
   viewAllText: {
@@ -421,7 +428,7 @@ const styles = StyleSheet.create({
     width: width - 48,
     height: 180,
     marginHorizontal: 8,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
     elevation: 4,
     shadowColor: '#000',
@@ -439,46 +446,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   promotionalTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   promotionalSubtitle: {
-    fontSize: 16,
+    fontSize: 18,
     opacity: 0.8,
   },
   promotionalImage: {
     width: 140,
     height: 140,
-    borderRadius: 12,
-  },
-  gradientOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.3,
-  },
-  cardShadow: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
-  },
-
-  animatedContainer: {
-    transform: [{ scale: 1 }],
-  },
-  enhancedTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  enhancedSubtitle: {
-    fontSize: 18,
-    letterSpacing: 0.5,
-    opacity: 0.9,
+    borderRadius: 16,
   },
 });
 

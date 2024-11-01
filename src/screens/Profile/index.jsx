@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,22 @@ import {
   Modal,
   ScrollView,
   SafeAreaView,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { signOut } from '../../api/apiAuth';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectUser, logout } from '../../redux/slices/authSlice';
+// import { signOutUser } from "../../services/authService";
 
 export default function Account() {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
+  const [scaleAnim] = useState(new Animated.Value(1));
 
   const statuses = [
     { label: 'Chờ xác nhận', icon: 'time-outline', value: 'pending' },
@@ -27,7 +34,10 @@ export default function Account() {
   ];
 
   const handleStatusClick = (status) => {
-    navigation.navigate('MyOrder', { status });
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+    ]).start(() => navigation.navigate('MyOrder', { status }));
   };
 
   const changeLanguage = (language) => {
@@ -66,21 +76,58 @@ export default function Account() {
     }
   };
 
+
+  useEffect(() => {
+    if (!user) {
+      getUserProfile('userId') 
+        .then((response) => {
+          dispatch(updateUser(response.data));
+        })
+        .catch((error) => {
+          console.error('Error fetching user profile:', error);
+        });
+    }
+  }, [dispatch, user]);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Quản lý tài khoản</Text>
         </View>
 
         <View style={styles.profileSection}>
-          <Image
-            source={{ uri: 'https://via.placeholder.com/100' }}
-            style={styles.profileImage}
-          />
-          <Text style={styles.profileName}>Melissa Mayer</Text>
-          <Text style={styles.profileId}>Mã tài khoản: 954-810</Text>
-        </View>
+  {!user ? (
+    <>
+      <Text style={styles.notLoggedInText}>
+        Bạn chưa đăng nhập. Vui lòng đăng nhập hoặc đăng ký để tiếp tục.
+      </Text>
+      <View style={styles.authButtonsContainer}>
+        <TouchableOpacity
+          style={styles.authButton}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={styles.authButtonText}>Đăng nhập</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.authButton}
+          onPress={() => navigation.navigate('SignUp')}
+        >
+          <Text style={styles.authButtonText}>Đăng ký</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  ) : (
+    <>
+      <Image
+        source={{ uri: user.profileImage || 'https://via.placeholder.com/100' }}
+        style={styles.profileImage}
+      />
+      <Text style={styles.profileName}>{user.FullName}</Text>
+      <Text style={styles.profileId}>Mã tài khoản: {user.UserId}</Text>
+    </>
+  )}
+</View>
 
         <View style={styles.orderSection}>
           <Text style={styles.sectionTitle}>Đơn hàng của tôi</Text>
@@ -91,7 +138,7 @@ export default function Account() {
                 style={styles.statusButton}
                 onPress={() => handleStatusClick(item.value)}
               >
-                <Ionicons name={item.icon} size={24} color="#FF9900" />
+                <Ionicons name={item.icon} size={28} color="#FF9900" style={styles.statusIcon} />
                 <Text style={styles.statusText}>{item.label}</Text>
               </TouchableOpacity>
             ))}
@@ -101,7 +148,7 @@ export default function Account() {
             onPress={() => navigation.navigate('MyOrder', { status: 'all' })}
           >
             <Text style={styles.viewAllOrdersText}>Xem tất cả đơn hàng</Text>
-            <Ionicons name="chevron-forward" size={20} color="#888" />
+            <Ionicons name="chevron-forward" size={20} color="#FF9900" />
           </TouchableOpacity>
         </View>
 
@@ -133,9 +180,11 @@ export default function Account() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Đăng xuất</Text>
-        </TouchableOpacity>
+        {user && (
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Đăng xuất</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       <Modal
@@ -175,17 +224,21 @@ export default function Account() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop:30,
+    paddingTop: 30,
     backgroundColor: '#F5F7FA',
+  },
+  scrollContent: {
+    paddingBottom: 30,
   },
   header: {
     padding: 16,
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+    elevation: 2,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -193,16 +246,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFF',
     padding: 20,
-    marginBottom: 10,
+    marginBottom: 15,
+    borderRadius: 10,
+    elevation: 3,
+    marginHorizontal: 10,
+    marginTop: 15,
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
     marginBottom: 10,
+    borderWidth: 3,
+    borderColor: '#FF9900',
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -213,28 +272,52 @@ const styles = StyleSheet.create({
   },
   orderSection: {
     backgroundColor: '#FFF',
-    padding: 16,
-    marginBottom: 10,
+    padding: 20,
+    marginBottom: 15,
+    borderRadius: 15,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginHorizontal: 15,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 15,
+    marginBottom: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: '#FF9900',
+    paddingBottom: 10,
   },
   statusMenu: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 20,
   },
   statusButton: {
     alignItems: 'center',
+    backgroundColor: '#F5F7FA',
+    borderRadius: 12,
+    padding: 12,
+    width: 80,
+  },
+  iconContainer: {
+    backgroundColor: '#FF9900',
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   statusText: {
     fontSize: 12,
-    color: '#666',
-    marginTop: 5,
+    color: '#333',
     textAlign: 'center',
+    marginTop: 8,
+    fontWeight: '600',
   },
   viewAllOrders: {
     flexDirection: 'row',
@@ -243,14 +326,19 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
+    marginTop: 10,
   },
   viewAllOrdersText: {
     fontSize: 16,
-    color: '#333',
+    color: '#FF9900',
+    fontWeight: 'bold',
   },
   settingsSection: {
     backgroundColor: '#FFF',
     padding: 16,
+    borderRadius: 10,
+    elevation: 3,
+    marginHorizontal: 10,
   },
   settingItem: {
     flexDirection: 'row',
@@ -271,6 +359,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
+    elevation: 3,
   },
   logoutText: {
     color: '#FFF',
@@ -288,12 +377,14 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     width: '80%',
+    elevation: 5,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
+    color: '#333',
   },
   languageOption: {
     paddingVertical: 15,
@@ -301,18 +392,46 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
   },
   languageText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#333',
   },
   modalCloseButton: {
     marginTop: 20,
     backgroundColor: '#FF9900',
-    padding: 10,
-    borderRadius: 5,
+    padding: 12,
+    borderRadius: 8,
     alignItems: 'center',
   },
   modalCloseButtonText: {
     color: '#FFF',
     fontWeight: 'bold',
+    fontSize: 16,
+  },
+  notLoggedInText: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  authButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  authButton: {
+    backgroundColor: '#4A90E2',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  authButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  statusIcon: {
+    marginBottom: 8,
   },
 });

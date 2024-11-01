@@ -1,18 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { updateProfile } from "../../api/apiUser";
 
+import { useSelector } from "react-redux";
+import { selectUser } from "../../redux/slices/authSlice";
+
 export default function EditProfile() {
   const navigation = useNavigation();
+  const user = useSelector(selectUser);
+
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    UserName: "Maint_123",
-    FullName: "Maint_123",
-    Email: "M******3@gmail.com",
-    Phone: "*****02",
-    BirthDate: "2001-01-01"
+    UserName: user?.UserName || "",
+    FullName: user?.FullName || "",
+    Email: user?.Email || "",
+    Phone: user?.Phone || "",
+    BirthDate: user?.BirthDate || "",
   });
   const [initialData, setInitialData] = useState(formData);
 
@@ -56,6 +61,21 @@ export default function EditProfile() {
       </View>
     </View>
   );
+
+
+  useEffect(() => {
+    if (user) {
+      const initialFormData = {
+        UserName: user.UserName,
+        FullName: user.FullName,
+        Email: user.Email,
+        Phone: user.Phone,
+        BirthDate: user.BirthDate,
+      };
+      setFormData(initialFormData);
+      setInitialData(initialFormData);
+    }
+  }, [user]);
 
   return (
     <ScrollView style={styles.container}>

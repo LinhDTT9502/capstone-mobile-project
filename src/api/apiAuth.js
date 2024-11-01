@@ -21,24 +21,24 @@ export const signIn = (userName, password) => {
 //   });
 // };
 
-// export const signOut = (data) => {
-//   return axios.post(`${API_BASE_URL}/sign-out`, data, {
-//     headers: {
-//       'Content-Type': 'application/json'
-//     }
-//   });
-// };
+export const signOut = (data) => {
+  return axios.post(`${API_BASE_URL}/sign-out`, data, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
 
-// export const refreshTokenAPI = (token, refreshToken) => {
-//   return axios.post(`${API_BASE_URL}/refresh-token`, {
-//     token,
-//     refreshToken,
-//   }, {
-//     headers: {
-//       'Content-Type': 'application/json'
-//     }
-//   });
-// };
+export const refreshTokenAPI = (token, refreshToken) => {
+  return axios.post(`${API_BASE_URL}/refresh-token`, {
+    token,
+    refreshToken,
+  }, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
 
 // export const changePassword = (data) => {
 //   return axios.post(`${API_BASE_URL}/change-password`, data, {
