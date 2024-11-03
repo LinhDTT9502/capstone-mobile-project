@@ -108,6 +108,13 @@ export default function Header() {
                 navigation.navigate("ContactUs");
               }}
             />
+            <MenuItem
+              title="Chính sách"
+              onPress={() => {
+                toggleMenu();
+                navigation.navigate("Policy");
+              }}
+            />
           </Animated.View>
         </TouchableOpacity>
       </Modal>

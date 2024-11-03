@@ -126,13 +126,6 @@ const LoginScreen = () => {
             <Text style={styles.registerLink}>Đăng ký ngay</Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={styles.guestButton}
-          onPress={() => navigation.navigate('HomeController')}
-        >
-          <Text style={styles.guestButtonText}>Tiếp tục với vai trò là Khách</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -223,19 +216,6 @@ const styles = StyleSheet.create({
     color: "#FFA500",
     marginLeft: 5,
     fontSize: 14,
-    fontWeight: "bold",
-  },
-  guestButton: {
-    backgroundColor: "#4A90E2",
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 25,
-    marginTop: 10,
-  },
-  guestButtonText: {
-    color: "#FFF",
-    fontSize: 16,
     fontWeight: "bold",
   },
   shape1: {

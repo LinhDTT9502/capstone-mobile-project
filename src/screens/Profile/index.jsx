@@ -4,23 +4,21 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  Alert,
   StyleSheet,
-  Modal,
   ScrollView,
   SafeAreaView,
   Animated,
+  Modal,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
-import { useDispatch, useSelector } from 'react-redux';
-import { selectUser, logout } from '../../redux/slices/authSlice';
-// import { signOutUser } from "../../services/authService";
+import { selectUser } from '../../redux/slices/authSlice';
+import LogoutButton from '../../components/LogoutButton';
 
 export default function Account() {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
   const user = useSelector(selectUser);
 
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
@@ -40,54 +38,30 @@ export default function Account() {
     ]).start(() => navigation.navigate('MyOrder', { status }));
   };
 
-  const changeLanguage = (language) => {
-    setLanguageModalVisible(false);
-    // Implement language change logic here
-  };
+  // const changeLanguage = (language) => {
+  //   setLanguageModalVisible(false);
+  //   // Implement language change logic here
+  // };
 
   const handleChangePassword = () => {
     navigation.navigate('AccountResetPassword');
   };
 
-  const handleLogout = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('Thiếu thông tin đăng xuất');
-      }
-      navigation.navigate('Login');
-      // const response = await signOut({
-      //   token,
-      //   refreshToken,
-      //   userId: parseInt(userId),
-      // });
-      await AsyncStorage.removeItem('token');
-      Alert.alert('Thành công', 'Đăng xuất thành công!');
-      // if (response.status === 200) {
-      //   await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userId']);
-      //   navigation.navigate('Login');
-      //   Alert.alert('Thành công', 'Đăng xuất thành công!');
-      // } else {
-      //   throw new Error('Đăng xuất thất bại');
-      // }
-    } catch (error) {
-      console.error('Logout error:', error);
-      Alert.alert('Lỗi', 'Có lỗi xảy ra khi đăng xuất');
-    }
-  };
-
-
   useEffect(() => {
-    if (!user) {
-      getUserProfile('userId') 
-        .then((response) => {
-          dispatch(updateUser(response.data));
-        })
-        .catch((error) => {
-          console.error('Error fetching user profile:', error);
-        });
-    }
-  }, [dispatch, user]);
+    const checkToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          navigation.navigate('Login'); 
+        }
+      } catch (error) {
+        console.error('Error checking token:', error);
+      }
+    };
+
+    checkToken();
+  }, [navigation]);
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -97,36 +71,13 @@ export default function Account() {
         </View>
 
         <View style={styles.profileSection}>
-  {!user ? (
-    <>
-      <Text style={styles.notLoggedInText}>
-        Bạn chưa đăng nhập. Vui lòng đăng nhập hoặc đăng ký để tiếp tục.
-      </Text>
-      <View style={styles.authButtonsContainer}>
-        <TouchableOpacity
-          style={styles.authButton}
-          onPress={() => navigation.navigate('Login')}
-        >
-          <Text style={styles.authButtonText}>Đăng nhập</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.authButton}
-          onPress={() => navigation.navigate('SignUp')}
-        >
-          <Text style={styles.authButtonText}>Đăng ký</Text>
-        </TouchableOpacity>
-      </View>
-    </>
-  ) : (
-    <>
+
       <Image
         source={{ uri: user.profileImage || 'https://via.placeholder.com/100' }}
         style={styles.profileImage}
       />
       <Text style={styles.profileName}>{user.FullName}</Text>
       <Text style={styles.profileId}>Mã tài khoản: {user.UserId}</Text>
-    </>
-  )}
 </View>
 
         <View style={styles.orderSection}>
@@ -154,14 +105,14 @@ export default function Account() {
 
         <View style={styles.settingsSection}>
           <Text style={styles.sectionTitle}>Cài đặt tài khoản</Text>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.settingItem}
             onPress={() => setLanguageModalVisible(true)}
           >
             <Ionicons name="language-outline" size={24} color="#4A90E2" />
             <Text style={styles.settingText}>Ngôn ngữ</Text>
             <Ionicons name="chevron-forward" size={20} color="#888" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity
             style={styles.settingItem}
             onPress={() => navigation.navigate('EditProfile')}
@@ -181,9 +132,7 @@ export default function Account() {
         </View>
 
         {user && (
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutText}>Đăng xuất</Text>
-          </TouchableOpacity>
+          <LogoutButton />
         )}
       </ScrollView>
 

@@ -13,13 +13,13 @@ export const signIn = (userName, password) => {
   });
 };
 
-// export const signUp = (userData) => {
-//   return axios.post(`${API_BASE_URL}/sign-up`, userData, {
-//     headers: {
-//       'Content-Type': 'application/json'
-//     }
-//   });
-// };
+export const signUp = (userData) => {
+  return axios.post(`${API_BASE_URL}/sign-up`, userData, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
 
 export const signOut = (data) => {
   return axios.post(`${API_BASE_URL}/sign-out`, data, {

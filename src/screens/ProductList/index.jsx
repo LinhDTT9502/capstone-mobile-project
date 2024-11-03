@@ -2,36 +2,40 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  ScrollView,
+  FlatList,
   Image,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   Modal,
-  FlatList,
   SafeAreaView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import AddToCartButton from '../../components/AddToCardButton';
 
-// api
 import { fetchProducts, fetchProductsFiltered } from "../../services/productService";
 
 const logoImage = require("../Logo/2sport_logo.png");
+
+const COLORS = {
+  primary: "#4A90E2",
+  secondary: "#FF9900",
+  background: "#F5F7FA",
+  text: "#333333",
+  border: "#E0E0E0",
+};
 
 export default function ProductListing() {
   const navigation = useNavigation();
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-
-  // Add filter states
   const [sortBy, setSortBy] = useState("");
   const [isAscending, setIsAscending] = useState(true);
   const [selectedBrands, setSelectedBrands] = useState([]);
@@ -49,7 +53,6 @@ export default function ProductListing() {
 
   const applySearchFilter = () => {
     const query = removeVietnameseAccents(searchQuery.toLowerCase());
-
     setFilteredProducts(
       products.filter(product =>
         removeVietnameseAccents(product.productName.toLowerCase()).includes(query)
@@ -64,28 +67,14 @@ export default function ProductListing() {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      if (selectedFilters.length > 0) {
-        // Apply filters
-        const { total, products: fetchedProducts } = await fetchProductsFiltered(
-          sortBy,
-          isAscending,
-          selectedBrands,
-          selectedCategories,
-          minPrice,
-          maxPrice
-        );
-        setProducts(prevProducts => 
-          currentPage === 1 ? fetchedProducts : [...prevProducts, ...fetchedProducts]
-        );
-        setTotalProducts(total);
-      } else {
-        // Load without filters
-        const { total, products: fetchedProducts } = await fetchProducts(currentPage);
-        setProducts(prevProducts => 
-          currentPage === 1 ? fetchedProducts : [...prevProducts, ...fetchedProducts]
-        );
-        setTotalProducts(total);
-      }
+      const { total, products: fetchedProducts } = selectedFilters.length > 0
+        ? await fetchProductsFiltered(sortBy, isAscending, selectedBrands, selectedCategories, minPrice, maxPrice)
+        : await fetchProducts(currentPage);
+
+      setProducts(prevProducts => 
+        currentPage === 1 ? fetchedProducts : [...prevProducts, ...fetchedProducts]
+      );
+      setTotalProducts(total);
     } catch (error) {
       console.error("Error loading products:", error);
     } finally {
@@ -109,20 +98,17 @@ export default function ProductListing() {
   ];
 
   const toggleFilter = (filter) => {
-    // Update selected filters
     setSelectedFilters(prevFilters =>
       prevFilters.includes(filter.value)
         ? prevFilters.filter(f => f !== filter.value)
         : [...prevFilters, filter.value]
     );
-
-    // Update sort parameters
     setSortBy(filter.sortBy);
     setIsAscending(filter.ascending);
   };
 
   const applyFilters = () => {
-    setCurrentPage(1); // Reset to first page
+    setCurrentPage(1);
     loadProducts();
     toggleFilterModal();
   };
@@ -135,24 +121,16 @@ export default function ProductListing() {
       <Image
         source={{ uri: item.imgAvatarPath || "https://via.placeholder.com/150" }}
         style={styles.productImage}
-        defaultSource={require("../../../assets/images/product_demo.jpg")}
-      />
+        defaultSource={require("../../../assets/images/product_demo.jpg")}      />
       <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={2}>
-          {item.productName} {/* Displaying the product name */}
-        </Text>
-        <Text style={styles.productCategory} numberOfLines={1}>
-          {item.categoryName} {/* Displaying the category name below the product name */}
-        </Text>
-        <Text style={styles.productPrice}>{item.price} ₫</Text>
-        <TouchableOpacity style={styles.addToCartButton}>
-          <Text style={styles.addToCartText}>Thêm vào giỏ</Text>
-        </TouchableOpacity>
+        <Text style={styles.productName} numberOfLines={2}>{item.productName}</Text>
+        <Text style={styles.productCategory} numberOfLines={1}>{item.categoryName}</Text>
+        <Text style={styles.productPrice}>{item.price.toLocaleString()} ₫</Text>
+        <AddToCartButton onAddToCart={() => {}} />
       </View>
     </TouchableOpacity>
   );
-  
-  
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -168,33 +146,33 @@ export default function ProductListing() {
           />
         </View>
         <TouchableOpacity onPress={toggleFilterModal}>
-          <Ionicons name="options-outline" size={24} color="#4A90E2" />
+          <Ionicons name="options-outline" size={24} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
       {selectedFilters.length > 0 && (
-        <ScrollView
+        <FlatList
           horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterChips}
-        >
-          {selectedFilters.map((filterValue) => {
-            const filter = filters.find(f => f.value === filterValue);
+          data={selectedFilters}
+          renderItem={({ item }) => {
+            const filter = filters.find(f => f.value === item);
             return (
               <TouchableOpacity
-                key={filterValue}
                 style={styles.filterChip}
                 onPress={() => toggleFilter(filter)}
               >
                 <Text style={styles.filterChipText}>{filter.label}</Text>
-                <Ionicons name="close-circle" size={18} color="#4A90E2" />
+                <Ionicons name="close-circle" size={18} color={COLORS.primary} />
               </TouchableOpacity>
             );
-          })}
-        </ScrollView>
+          }}
+          keyExtractor={item => item}
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterChips}
+        />
       )}
 
-<FlatList
+      <FlatList
         data={filteredProducts}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id.toString()}
@@ -230,18 +208,14 @@ export default function ProductListing() {
                 key={filter.value}
                 style={[
                   styles.filterOption,
-                  selectedFilters.includes(filter.value) &&
-                    styles.filterOptionSelected,
+                  selectedFilters.includes(filter.value) && styles.filterOptionSelected,
                 ]}
                 onPress={() => toggleFilter(filter)}
               >
-                <Text
-                  style={[
-                    styles.filterOptionText,
-                    selectedFilters.includes(filter.value) &&
-                      styles.filterOptionTextSelected,
-                  ]}
-                >
+                <Text style={[
+                  styles.filterOptionText,
+                  selectedFilters.includes(filter.value) && styles.filterOptionTextSelected,
+                ]}>
                   {filter.label}
                 </Text>
                 {selectedFilters.includes(filter.value) && (
@@ -249,10 +223,7 @@ export default function ProductListing() {
                 )}
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              style={styles.applyButton}
-              onPress={applyFilters}
-            >
+            <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
               <Text style={styles.applyButtonText}>Áp dụng</Text>
             </TouchableOpacity>
           </View>
@@ -265,16 +236,16 @@ export default function ProductListing() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 30,
-    backgroundColor: "#F5F7FA",
+    paddingTop:30,
+    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.background,
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomColor: COLORS.border,
   },
   logoImage: {
     width: 80,
@@ -300,7 +271,7 @@ const styles = StyleSheet.create({
   filterChips: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.background,
   },
   filterChip: {
     flexDirection: "row",
@@ -312,7 +283,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterChipText: {
-    color: "#4A90E2",
+    color: COLORS.primary,
     marginRight: 4,
   },
   productList: {
@@ -323,7 +294,7 @@ const styles = StyleSheet.create({
   },
   productCard: {
     width: "48%",
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.background,
     borderRadius: 12,
     marginBottom: 16,
     shadowColor: "#000",
@@ -345,31 +316,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     marginBottom: 4,
+    color: COLORS.text,
+  },
+  productCategory: {
+    fontSize: 12,
+    color: "#999",
+    marginBottom: 4,
   },
   productPrice: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#4A90E2",
+    color: COLORS.primary,
     marginBottom: 8,
-  },
-  addToCartButton: {
-    backgroundColor: "#FF9900",
-    borderRadius: 6,
-    paddingVertical: 8,
-    alignItems: "center",
-  },
-  addToCartText: {
-    color: "#FFF",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  wishlistButton: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    borderRadius: 20,
-    padding: 6,
   },
   modalContainer: {
     flex: 1,
@@ -377,7 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -391,6 +349,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
+    color: COLORS.text,
   },
   filterOption: {
     flexDirection: "row",
@@ -398,34 +357,32 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomColor: COLORS.border,
   },
   filterOptionSelected: {
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
   },
   filterOptionText: {
     fontSize: 16,
-    color: "#333",
+    color: COLORS.text,
   },
   filterOptionTextSelected: {
-    color: "#FFF",
+    color: COLORS.background,
   },
   applyButton: {
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: "center",
     marginTop: 20,
   },
   applyButtonText: {
-    color: "#FFF",
+    color: COLORS.background,
     fontSize: 16,
     fontWeight: "bold",
   },
-  productCategory: {
-    fontSize: 12,
-    color: "#999",
-    marginBottom: 4,
+  loadingContainer: {
+    padding: 16,
+    alignItems: 'center',
   },
-  
 });

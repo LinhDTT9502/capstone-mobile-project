@@ -1,68 +1,66 @@
-// cartSlice.js
-
 import { createSlice } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const loadState = () => {
+const loadCustomerCart = () => {
   try {
-    const serializedState = localStorage.getItem('cart');
+    const serializedState = localStorage.getItem('customerCart');
     if (serializedState === null) {
-      return undefined;
+      return [];
     }
     return JSON.parse(serializedState);
   } catch (err) {
-    return undefined;
+    return [];
   }
 };
 
-const saveState = async (state) => {
+const saveCustomerCart = async (state) => {
   try {
     const serializedState = JSON.stringify(state);
-    await AsyncStorage.setItem('cart', serializedState);
+    await AsyncStorage.setItem('customerCart', serializedState);
   } catch (err) {
-    console.error('Error saving cart state:', err);
+    console.error('Error saving customer cart:', err);
   }
 };
 
 const initialState = {
-  items: loadState() || [],
+  items: loadCustomerCart(),
 };
 
-const cartSlice = createSlice({
-  name: 'cart',
+const customerCartSlice = createSlice({
+  name: 'customerCart',
   initialState,
   reducers: {
-    addCart: (state, action) => {
+    addCusCart: (state, action) => {
       const product = state.items.find(item => item.id === action.payload.id);
       if (product) {
         product.quantity += 1;
       } else {
         state.items.push({ ...action.payload, quantity: 1 });
       }
-      saveState(state.items);
+      saveCustomerCart(state.items);
     },
-    removeFromCart: (state, action) => {
+    removeFromCusCart: (state, action) => {
       state.items = state.items.filter(item => item.id !== action.payload);
-      saveState(state.items);
+      saveCustomerCart(state.items);
     },
-    decreaseQuantity: (state, action) => {
+    decreaseCusQuantity: (state, action) => {
       const product = state.items.find(item => item.id === action.payload);
       if (product && product.quantity > 1) {
         product.quantity -= 1;
       } else {
         state.items = state.items.filter(item => item.id !== action.payload);
       }
-      saveState(state.items);
+      saveCustomerCart(state.items);
     },
-    clearCart: (state) => {
+    clearCusCart: (state) => {
       state.items = [];
-      saveState(state.items);
-    }
-  }
+      saveCustomerCart(state.items);
+    },
+  },
 });
 
-export const { addCart, removeFromCart, decreaseQuantity, clearCart } = cartSlice.actions;
+export const { addCusCart, removeFromCusCart, decreaseCusQuantity, clearCusCart } = customerCartSlice.actions;
 
-export const selectCartItems = state => state.cart.items;
+export const selectCustomerCartItems = (state) => state.customerCart.items;
 
-export default cartSlice.reducer;
+export default customerCartSlice.reducer;

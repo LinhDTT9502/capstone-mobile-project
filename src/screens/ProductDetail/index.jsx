@@ -1,4 +1,4 @@
-import React, { useState, useEffect, } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,11 @@ import {
 import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { fetchProductById } from "../../services/productService";
+import { fetchLikes, handleToggleLike } from "../../services/likeService";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import AddToCartButton from "../../components/AddToCardButton";
+import RentButton from "../../components/RentButton";
+import BuyNowButton from "../../components/BuyNowButton";
 
 const COLORS = {
   primary: "#0035FF",
@@ -28,7 +32,7 @@ const COLORS = {
 const PRODUCT_COLORS = [
   { id: 1, name: "Xanh", code: "#0035FF" },
   { id: 2, name: "Cam", code: "#FA7D0B" },
-  { id: 3, name: "Đen", code: "#000000" }
+  { id: 3, name: "Đen", code: "#000000" },
 ];
 
 export default function ProductDetail() {
@@ -53,8 +57,9 @@ export default function ProductDetail() {
   const [userComment, setUserComment] = useState("");
   const [userRating, setUserRating] = useState(0);
   const [likes, setLikes] = useState(0);
+
   const [comment, setComment] = useState("");
-  
+
   const handleSubmitComment = () => {
     if (!comment.trim()) {
       Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận.");
@@ -66,7 +71,35 @@ export default function ProductDetail() {
 
   useEffect(() => {
     loadProductDetails();
+    loadLikes();
   }, [productId]);
+
+  const loadLikes = async () => {
+    try {
+      const likesData = await fetchLikes();
+      setLikes(likesData.likes);
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể tải số lượng lượt thích.");
+    }
+  };
+
+  const handleLikeToggle = async () => {
+    try {
+      const result = await handleToggleLike(productId, navigation);
+      if (result.error) {
+        Alert.alert("Thông báo", result.error, [
+          { text: "Hủy", style: "cancel" },
+          { text: "Đăng nhập", onPress: () => navigation.navigate("Login") },
+        ]);
+        return;
+      }
+
+      setLikes(result.newLikesCount);
+      Alert.alert("Thông báo", result.message);
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể thực hiện hành động like.");
+    }
+  };
 
   const loadProductDetails = async () => {
     try {
@@ -109,20 +142,20 @@ export default function ProductDetail() {
     setModalVisible(false);
   };
 
-
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   // Helper function to format date as dd/mm/yyyy
   const formatDate = (date) => {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
   const handleDateChange = (event, selectedDate, dateType) => {
-    const selected = selectedDate || (dateType === "start" ? startDate : endDate);
+    const selected =
+      selectedDate || (dateType === "start" ? startDate : endDate);
     if (dateType === "start") {
       setShowStartDatePicker(false);
       if (selected < tomorrow) {
@@ -187,9 +220,9 @@ export default function ProductDetail() {
             </View>
             <TouchableOpacity
               style={styles.likeButton}
-              onPress={() => setLikes(likes + 1)}
+              onPress={handleLikeToggle}
             >
-              <AntDesign name="like2" size={24} color={COLORS.primary} />
+              <AntDesign name="like2" size={24} color="#0035FF" />
               <Text style={styles.likeCount}>{likes}</Text>
             </TouchableOpacity>
           </View>
@@ -201,14 +234,20 @@ export default function ProductDetail() {
               <Text style={styles.sectionTitle}>Số lượng</Text>
               <View style={styles.quantityContainer}>
                 <TouchableOpacity
-                  style={[styles.quantityButton, { backgroundColor: COLORS.light }]}
+                  style={[
+                    styles.quantityButton,
+                    { backgroundColor: COLORS.light },
+                  ]}
                   onPress={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
                 >
                   <FontAwesome name="minus" size={16} color={COLORS.dark} />
                 </TouchableOpacity>
                 <Text style={styles.quantityText}>{quantity}</Text>
                 <TouchableOpacity
-                  style={[styles.quantityButton, { backgroundColor: COLORS.light }]}
+                  style={[
+                    styles.quantityButton,
+                    { backgroundColor: COLORS.light },
+                  ]}
                   onPress={() => setQuantity(quantity + 1)}
                 >
                   <FontAwesome name="plus" size={16} color={COLORS.dark} />
@@ -226,18 +265,14 @@ export default function ProductDetail() {
                 style={[
                   styles.colorButton,
                   color === colorOption.name && styles.activeColor,
-                  { backgroundColor: colorOption.code }
+                  { backgroundColor: colorOption.code },
                 ]}
               />
             ))}
           </View>
-          <TouchableOpacity 
-            style={[styles.addToCartButton, { backgroundColor: COLORS.secondary, marginTop: 16 }]} 
-            onPress={() => handleAddToCart("buy")}
-          >
-            <FontAwesome name="shopping-cart" size={20} color={COLORS.white} />
-            <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
-          </TouchableOpacity>
+          <View style={styles.addToCartContainer}>
+            <AddToCartButton onAddToCart={() => handleAddToCart("add")} />
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -275,8 +310,6 @@ export default function ProductDetail() {
           <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
           <Text style={styles.descriptionText}>{product.description}</Text>
         </View>
-
-
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Đánh giá & Nhận xét</Text>
@@ -320,32 +353,23 @@ export default function ProductDetail() {
               multiline
               numberOfLines={3}
             />
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.commentSubmitButton}
               onPress={handleSubmitComment}
             >
               <Text style={styles.commentSubmitText}>Gửi bình luận</Text>
             </TouchableOpacity>
           </View>
-          
         </View>
       </ScrollView>
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.buyNowButton]}
-          onPress={handleBuyNow}
-        >
-          <FontAwesome name="shopping-bag" size={20} color={COLORS.white} />
-          <Text style={styles.actionButtonText}>Mua Ngay</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.rentButton]}
-          onPress={() => setModalVisible(true)}
-        >
-          <FontAwesome name="calendar" size={20} color={COLORS.white} />
-          <Text style={styles.actionButtonText}>Thuê</Text>
-        </TouchableOpacity>
+        <View style={styles.buyNowContainer}>
+          <BuyNowButton onPress={() => handleAddToCart("buy")} />
+        </View>
+        <View style={styles.rentContainer}>
+          <RentButton onPress={() => setModalVisible(true)} />
+        </View>
       </View>
 
       {/* Rent Modal */}
@@ -578,25 +602,7 @@ const styles = StyleSheet.create({
   activeColor: {
     borderColor: COLORS.dark,
   },
-  addToCartButton: {
-    flexDirection: "row",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  addToCartText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
+
   commentInputContainer: {
     marginBottom: 16,
   },
@@ -622,14 +628,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
-  bottomNav: {
-    flexDirection: "row",
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.light,
-    gap: 12,
-  },
+
   actionButton: {
     flex: 1,
     flexDirection: "row",
@@ -649,12 +648,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginLeft: 8,
   },
-  buyNowButton: {
-    backgroundColor: COLORS.primary,
-  },
-  rentButton: {
-    backgroundColor: COLORS.secondary,
-  },
+
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -737,5 +731,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginBottom: 10,
+  },
+
+  bottomNav: {
+    flexDirection: "row",
+    padding: 16,
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.light,
+  },
+  buyNowContainer: {
+    flex: 1,
+    marginRight: 8,
+  },
+  rentContainer: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  addToCartContainer: {
+    marginTop: 16,
   },
 });
