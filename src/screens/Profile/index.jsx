@@ -121,6 +121,14 @@ export default function Account() {
             <Text style={styles.settingText}>Chỉnh sửa hồ sơ</Text>
             <Ionicons name="chevron-forward" size={20} color="#888" />
           </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('UserShipment')}
+          >
+            <Ionicons name="location-outline" size={24} color="#FF9900" />
+            <Text style={styles.settingText}>Địa chỉ của tôi</Text>
+            <Ionicons name="chevron-forward" size={20} color="#888" />
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.settingItem}
             onPress={handleChangePassword}
@@ -136,7 +144,8 @@ export default function Account() {
         )}
       </ScrollView>
 
-      <Modal
+{/* change language */}
+      {/* <Modal
         visible={languageModalVisible}
         transparent={true}
         animationType="slide"
@@ -165,7 +174,8 @@ export default function Account() {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
+
     </SafeAreaView>
   );
 }

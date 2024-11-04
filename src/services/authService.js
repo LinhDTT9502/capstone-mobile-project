@@ -1,6 +1,6 @@
 import { jwtDecode } from 'jwt-decode';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { signIn, refreshTokenAPI  } from '../api/apiAuth';
+import { signIn, refreshTokenAPI , signUp } from '../api/apiAuth';
 
 export const authenticateUser = async ( username, password) => {
   
@@ -15,15 +15,15 @@ export const authenticateUser = async ( username, password) => {
   }
 };
 
-// export const signUpUser = async (userData) => {
-//   try {
-//     const response = await signUp(userData);
-//     return response.data;
-//   } catch (error) {
-//     console.error('Error during sign-up:', error);
-//     throw error;
-//   }
-// };
+export const signUpUser = async (userData) => {
+  try {
+    const response = await signUp(userData);
+    return response.data;
+  } catch (error) {
+    console.error('Error during sign-up:', error);
+    throw error;
+  }
+};
 
 // export const signOutUser = async (data) => {
 //   try {

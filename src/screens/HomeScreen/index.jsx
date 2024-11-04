@@ -159,9 +159,9 @@ const HomePage = () => {
       <Text style={styles.productPrice}>
         {typeof product.price === 'number' ? product.price.toLocaleString() : product.price} ₫
       </Text>
-      <TouchableOpacity style={styles.addToCartButton}>
+      {/* <TouchableOpacity style={styles.addToCartButton}>
         <Text style={styles.addToCartText}>Thêm vào giỏ</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </TouchableOpacity>
   );
 

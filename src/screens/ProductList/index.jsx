@@ -126,7 +126,7 @@ export default function ProductListing() {
         <Text style={styles.productName} numberOfLines={2}>{item.productName}</Text>
         <Text style={styles.productCategory} numberOfLines={1}>{item.categoryName}</Text>
         <Text style={styles.productPrice}>{item.price.toLocaleString()} ₫</Text>
-        <AddToCartButton onAddToCart={() => {}} />
+        {/* <AddToCartButton onAddToCart={() => {}} /> */}
       </View>
     </TouchableOpacity>
   );

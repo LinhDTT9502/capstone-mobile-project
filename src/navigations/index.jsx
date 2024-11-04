@@ -18,6 +18,7 @@ import MyOrderScreen from '../screens/MyOrder';
 import AccountResetPassword from '../screens/Auth/AccountResetPassword';
 import MyOrder from '../screens/MyOrder/index';
 import Policy from '../screens/Policy/index';
+import UserShipment from '../screens/UserShipment/index';
 
 const Stack = createStackNavigator();
 
@@ -40,6 +41,7 @@ export default function MainContainer() {
       <Stack.Screen name="AccountResetPassword" component={AccountResetPassword} />
       <Stack.Screen name="MyOrder" component={MyOrder} />
       <Stack.Screen name="Policy" component={Policy} />
+      <Stack.Screen name="UserShipment" component={UserShipment} />
     </Stack.Navigator>
   );
 }

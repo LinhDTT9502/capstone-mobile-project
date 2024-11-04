@@ -26,7 +26,7 @@ export const getUserProfile = (userId) => {
 };
 
 // PUT update user profile
-export const updateProfile = (userId, profileData) => {
+export const updateProfileApi = (userId, profileData) => {
   return axiosInstance.put(
     `${API_BASE_URL}/update-profile?id=${userId}`,
     profileData,
