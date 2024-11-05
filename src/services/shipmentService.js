@@ -8,7 +8,7 @@ import {
 export const getUserShipmentDetails = async (token) => {
   try {
     const response = await getShipmentDetails(token);
-    return response.data;
+    return response.data.$values;
   } catch (error) {
     console.error("Error fetching shipments:", error);
     throw new Error("Error fetching shipments");

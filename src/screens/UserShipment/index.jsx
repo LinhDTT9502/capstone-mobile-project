@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { selectShipment, setShipment } from '../../redux/slices/shipmentSlice';
+import { selectShipment, selectShipments, setShipment } from '../../redux/slices/shipmentSlice';
 import { getUserShipmentDetails } from '../../services/shipmentService';
 import AddShipment from '../../components/Shipment/AddShipment';
 import UpdateShipment from '../../components/Shipment/UpdateShipment';
@@ -20,32 +20,65 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function UserShipment() {
   const dispatch = useDispatch();
-  const shipments = useSelector(selectShipment);
+  const shipment = useSelector(selectShipment);
+  const [shipments, setShipments] = useState([])
   const [isLoading, setIsLoading] = useState(true);
   const [currentShipment, setCurrentShipment] = useState(null);
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
+  const SM = useSelector(selectShipments)
 
-  const fetchShipments = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        Alert.alert('Error', 'No token found');
-        return;
-      }
-      const shipmentData = await getUserShipmentDetails(token);
-      dispatch(setShipment(shipmentData.$values));
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching shipments:', error);
-      Alert.alert('Error', 'Failed to fetch shipments');
-      setIsLoading(false);
-    }
-  };
+  // const fetchShipments = async () => {
+  //   const token = await AsyncStorage.getItem('token');
+  //     console.log(token);
+  //   try {
+  //     if (!token) {
+  //       Alert.alert('Error', 'No token found');
+  //       return;
+  //     }
+  //     const shipmentData = await getUserShipmentDetails(token);
+  //     console.log(shipmentData);
+
+  //     // dispatch(setShipment(shipmentData.$values));
+  //     setIsLoading(false);
+  //   } catch (error) {
+  //     console.error('Error fetching shipments:', error);
+  //     Alert.alert('Error', 'Failed to fetch shipments');
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchShipments();
+  // }, [dispatch]);
+
 
   useEffect(() => {
-    fetchShipments();
+    const getShipment = async () => {
+      const token = await AsyncStorage.getItem('token');
+      // console.log(token);
+      try {
+        if (token) {
+          const shipmentData = await getUserShipmentDetails(token);
+          // console.log(shipmentData);
+          
+          dispatch(setShipment(shipmentData));
+          setShipments(shipmentData)
+          setIsLoading(false);
+          // console.log(shipments);
+        }
+      } catch (error) {
+        console.error("Error fetching shipment:", error);
+        setIsLoading(false);
+      }
+    };
+
+    getShipment();
   }, [dispatch]);
 
+  useEffect(() => {
+  }, [shipments, dispatch]);
+
+ 
   const handleUpdateShipment = (shipment) => {
     setCurrentShipment(shipment);
     setIsUpdateModalVisible(true);
@@ -89,13 +122,13 @@ export default function UserShipment() {
                 >
                   <Icon name="edit" size={20} color="#FFF" />
                 </TouchableOpacity>
-                <DeleteShipment id={shipment.id} refreshShipments={fetchShipments} />
+                {/* <DeleteShipment id={shipment.id} refreshShipments={fetchShipments} /> */}
               </View>
             </View>
           ))}
         </ScrollView>
       )}
-      <AddShipment refreshShipments={fetchShipments} />
+      {/* <AddShipment refreshShipments={fetchShipments} /> */}
       {isUpdateModalVisible && (
         <UpdateShipment shipment={currentShipment} onClose={closeUpdateModal} />
       )}
