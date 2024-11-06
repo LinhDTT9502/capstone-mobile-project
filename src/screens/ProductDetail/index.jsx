@@ -74,44 +74,57 @@ export default function ProductDetail() {
   }, []);
 
   const checkLoginStatus = async () => {
-    const token = await AsyncStorage.getItem("token");
-    setIsLoggedIn(!!token);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    } catch (error) {
+      console.error("Error retrieving token:", error);
+      setIsLoggedIn(false);
+    }
   };
 
   const loadLikes = async () => {
     try {
       const likesData = await fetchLikes();
-      setLikes(likesData.likes);
+      // console.log("Full likes response:", likesData); 
+      setLikes(likesData.likes || 0); 
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể tải số lượng lượt thích.");
+      console.error("Error fetching likes:", error);
     }
   };
+  
 
   const handleLikeToggle = async () => {
     if (!isLoggedIn) {
-      Alert.alert("Thông báo", "Bạn vui lòng đăng nhập để thích sản phẩm.");
       return;
     }
+  
+    const previousLikes = likes;
+    const newLikesCount = likes === 0 ? likes + 1 : likes - 1;
+    setLikes(newLikesCount);
+  
     try {
-      const result = await handleToggleLike(productId, navigation);
-      setLikes(result.newLikesCount);
-      Alert.alert("Thông báo", result.message);
+      // console.log("Sending like toggle request...");
+      await handleToggleLike(productId, navigation); 
+      await loadProductDetails(); 
     } catch (error) {
+      setLikes(previousLikes); 
       Alert.alert("Lỗi", "Không thể thực hiện hành động like.");
     }
   };
+  
+  
 
   const loadProductDetails = async () => {
     try {
       const productData = await fetchProductById(productId);
       setProduct(productData.$values[0]);
+      setLikes(productData.$values[0]?.likes || 0);
     } catch (error) {
       Alert.alert("Lỗi", "Không thể tải thông tin sản phẩm.");
       console.error("Error loading product details:", error);
     }
   };
-
-  
 
   const handleSubmitComment = () => {
     if (!comment.trim()) {
@@ -231,10 +244,10 @@ export default function ProductDetail() {
             <TouchableOpacity
               style={styles.likeButton}
               onPress={handleLikeToggle}
-              disabled={!isLoggedIn}
+              disabled={!isLoggedIn} 
             >
               <AntDesign name="like2" size={24} color="#0035FF" />
-              <Text style={styles.likeCount}>{likes}</Text>
+              {likes !== null && <Text style={styles.likeCount}>{likes}</Text>}
             </TouchableOpacity>
           </View>
         </View>
@@ -282,7 +295,10 @@ export default function ProductDetail() {
             ))}
           </View>
           <View style={styles.addToCartContainer}>
-          <AddToCartButton product={product} onAddToCart={() => handleAddToCart("add")} />
+            <AddToCartButton
+              product={product} quantity={quantity}
+              onAddToCart={() => handleAddToCart("add")}
+            />
           </View>
         </View>
 

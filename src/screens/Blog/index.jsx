@@ -119,12 +119,12 @@ export default function BlogScreen() {
         <Text style={styles.headerTitle}>Blog Feed</Text>
       </View>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.createBlogButton}
         onPress={() => setModalVisible(true)}
       >
         <Text style={styles.createBlogButtonText}>Write a new blog post...</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {isLoading ? (
         <ActivityIndicator size="large" color="#0035FF" style={styles.loader} />

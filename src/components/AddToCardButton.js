@@ -6,7 +6,7 @@ import { addCusCart } from '../redux/slices/customerCartSlice';
 import { addCart } from '../redux/slices/cartSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AddToCartButton = ({ product }) => {
+const AddToCartButton = ({ product, quantity }) => {
   const dispatch = useDispatch();
 
   const handleAddToCart = async () => {
@@ -18,12 +18,12 @@ const AddToCartButton = ({ product }) => {
 
     try {
       const token = await AsyncStorage.getItem('token');
+      const payload = { ...product, quantity };
       if (!token) {
-        dispatch(addCart(product));
-        Alert.alert('Thông báo', 'Sản phẩm đã được thêm vào giỏ hàng!');
+        dispatch(addCart(payload));        Alert.alert('Thông báo', `Sản phẩm "${product.productName}" với số lượng ${quantity} đã được thêm vào giỏ hàng!`);
       } else {
-        dispatch(addCusCart(product));
-        Alert.alert('Thông báo', `${product.productName} đã được thêm vào giỏ hàng!`);
+        dispatch(addCusCart(payload));
+        Alert.alert('Thông báo', `"${product.productName}" với số lượng ${quantity} đã được thêm vào giỏ hàng!`);
       }
     } catch (error) {
       console.error('Error adding to cart:', error);

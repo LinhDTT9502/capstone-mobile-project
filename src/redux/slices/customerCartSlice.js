@@ -33,10 +33,11 @@ const customerCartSlice = createSlice({
   reducers: {
     addCusCart: (state, action) => {
       const product = state.items.find(item => item.id === action.payload.id);
+      const quantityToAdd = action.payload.quantity || 1; // Use specified quantity or default to 1
       if (product) {
-        product.quantity += 1;
+        product.quantity += quantityToAdd;
       } else {
-        state.items.push({ ...action.payload, quantity: 1 });
+        state.items.push({ ...action.payload, quantity: quantityToAdd });
       }
       saveCustomerCart(state.items);
     },

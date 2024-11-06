@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,14 +10,26 @@ import {
   Modal,
   SafeAreaView,
   StatusBar,
-} from 'react-native';
-import { Ionicons, FontAwesome } from '@expo/vector-icons';
+} from "react-native";
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useNavigation } from '@react-navigation/native';
-import { useSelector, useDispatch } from 'react-redux';
-import { loadCartState , selectCartItems, addCart, removeFromCart, decreaseQuantity } from '../../redux/slices/cartSlice';
-import { loadCustomerCartState , addCusCart, removeFromCusCart, decreaseCusQuantity, selectCustomerCartItems } from '../../redux/slices/customerCartSlice';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from "@react-navigation/native";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  loadCartState,
+  selectCartItems,
+  addCart,
+  removeFromCart,
+  decreaseQuantity,
+} from "../../redux/slices/cartSlice";
+import {
+  loadCustomerCartState,
+  addCusCart,
+  removeFromCusCart,
+  decreaseCusQuantity,
+  selectCustomerCartItems,
+} from "../../redux/slices/customerCartSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const COLORS = {
   primary: "#3366FF",
@@ -38,15 +50,19 @@ export default function Cart() {
     dispatch(loadCartState());
     dispatch(loadCustomerCartState());
   }, [dispatch]);
-  
+
   const guestCartItems = useSelector(selectCartItems);
   const customerCartItems = useSelector(selectCustomerCartItems);
   const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [rentModalVisible, setRentModalVisible] = useState(false);
-  const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() + 1)));
-  const [endDate, setEndDate] = useState(new Date(new Date().setDate(new Date().getDate() + 2)));
+  const [startDate, setStartDate] = useState(
+    new Date(new Date().setDate(new Date().getDate() + 1))
+  );
+  const [endDate, setEndDate] = useState(
+    new Date(new Date().setDate(new Date().getDate() + 2))
+  );
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [token, setToken] = useState(null);
@@ -73,7 +89,7 @@ export default function Cart() {
 
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
-    setSelectedItems(selectAll ? [] : cartItems.map(item => item.id));
+    setSelectedItems(selectAll ? [] : cartItems.map((item) => item.id));
   };
 
   const toggleItemSelection = (itemId) => {
@@ -84,6 +100,8 @@ export default function Cart() {
     );
   };
 
+
+
   const handleRemoveItem = (itemId) => {
     if (token) {
       dispatch(removeFromCusCart(itemId));
@@ -92,27 +110,37 @@ export default function Cart() {
     }
   };
 
-  const handleUpdateQuantity = (item, newQuantity) => {
-    if (newQuantity < 1) {
-      handleRemoveItem(item.id);
-      return;
-    }
+const handleIncreaseQuantity = (item) => {
     if (token) {
-      dispatch(addCusCart({ ...item, quantity: newQuantity }));
+      dispatch(addCusCart({ ...item, quantity: 1 })); 
     } else {
-      dispatch(addCart({ ...item, quantity: newQuantity }));
+      dispatch(addCart({ ...item, quantity: 1 })); 
     }
   };
 
+  const handleDecreaseQuantity = (item) => {
+    if (token) {
+      dispatch(decreaseCusQuantity(item.id)); 
+    } else {
+      dispatch(decreaseQuantity(item.id)); 
+    }
+  };
+  
+
   const calculateTotal = () => {
-    return selectedItems.reduce((sum, itemId) => {
-      const item = cartItems.find(i => i.id === itemId);
-      return sum + (item ? parseFloat(item.price) * item.quantity : 0);
-    }, 0).toFixed(0);
+    return selectedItems
+      .reduce((sum, itemId) => {
+        const item = cartItems.find((i) => i.id === itemId);
+        return sum + (item ? parseFloat(item.price) * item.quantity : 0);
+      }, 0)
+      .toFixed(0);
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
   };
 
   const handleBuyNow = () => {
@@ -132,7 +160,8 @@ export default function Cart() {
   };
 
   const handleDateChange = (event, selectedDate, dateType) => {
-    const currentDate = selectedDate || (dateType === "start" ? startDate : endDate);
+    const currentDate =
+      selectedDate || (dateType === "start" ? startDate : endDate);
     if (dateType === "start") {
       setShowStartDatePicker(false);
       setStartDate(currentDate);
@@ -156,7 +185,7 @@ export default function Cart() {
       <StatusBar barStyle="dark-content" />
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
@@ -168,9 +197,14 @@ export default function Cart() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.selectAllContainer} onPress={handleSelectAll}>
+        <TouchableOpacity
+          style={styles.selectAllContainer}
+          onPress={handleSelectAll}
+        >
           <View style={[styles.checkbox, selectAll && styles.checkboxSelected]}>
-            {selectAll && <Ionicons name="checkmark" size={16} color={COLORS.white} />}
+            {selectAll && (
+              <Ionicons name="checkmark" size={16} color={COLORS.white} />
+            )}
           </View>
           <Text style={styles.selectAllText}>Chọn tất cả</Text>
         </TouchableOpacity>
@@ -178,34 +212,65 @@ export default function Cart() {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {cartItems.map((item) => (
             <View key={item.id} style={styles.cartItem}>
-              <TouchableOpacity 
-                onPress={() => toggleItemSelection(item.id)} 
+              <TouchableOpacity
+                onPress={() => toggleItemSelection(item.id)}
                 style={styles.checkboxContainer}
               >
-                <View style={[styles.checkbox, selectedItems.includes(item.id) && styles.checkboxSelected]}>
-                  {selectedItems.includes(item.id) && <Ionicons name="checkmark" size={16} color={COLORS.white} />}
+                <View
+                  style={[
+                    styles.checkbox,
+                    selectedItems.includes(item.id) && styles.checkboxSelected,
+                  ]}
+                >
+                  {selectedItems.includes(item.id) && (
+                    <Ionicons name="checkmark" size={16} color={COLORS.white} />
+                  )}
                 </View>
               </TouchableOpacity>
 
-              <Image source={{ uri: item.imgAvatarPath }} style={styles.productImage} />
-              
+              <Image
+                source={{ uri: item.imgAvatarPath }}
+                style={styles.productImage}
+              />
+
               <View style={styles.itemDetails}>
                 <View style={styles.itemHeader}>
-                  <Text style={styles.itemName} numberOfLines={2}>{item.productName}</Text>
-                  <TouchableOpacity style={styles.deleteButton} onPress={() => handleRemoveItem(item.id)}>
-                    <Ionicons name="trash-outline" size={20} color={COLORS.danger} />
+                  <Text style={styles.itemName} numberOfLines={2}>
+                    {item.productName}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleRemoveItem(item.id)}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={20}
+                      color={COLORS.danger}
+                    />
                   </TouchableOpacity>
                 </View>
-                
-                <Text style={styles.itemPrice}>{formatCurrency(parseFloat(item.price))}</Text>
-                
+
+                <Text style={styles.itemPrice}>
+                  {formatCurrency(parseFloat(item.price))}
+                </Text>
+
                 <View style={styles.itemFooter}>
                   <View style={styles.quantityContainer}>
-                    <TouchableOpacity style={styles.quantityButton} onPress={() => handleUpdateQuantity(item, item.quantity - 1)}>
-                      <Ionicons name="remove" size={20} color={COLORS.primary} />
+                    <TouchableOpacity
+                      style={styles.quantityButton}
+                      onPress={() => handleDecreaseQuantity(item)}
+                    >
+                      <Ionicons
+                        name="remove"
+                        size={20}
+                        color={COLORS.primary}
+                      />
                     </TouchableOpacity>
                     <Text style={styles.quantityText}>{item.quantity}</Text>
-                    <TouchableOpacity style={styles.quantityButton} onPress={() => handleUpdateQuantity(item, item.quantity + 1)}>
+                    <TouchableOpacity
+                      style={styles.quantityButton}
+                      onPress={() => handleIncreaseQuantity(item)}
+                    >
                       <Ionicons name="add" size={20} color={COLORS.primary} />
                     </TouchableOpacity>
                   </View>
@@ -219,14 +284,20 @@ export default function Cart() {
           <View style={styles.bottomNav}>
             <View style={styles.totalContainer}>
               <Text style={styles.totalText}>Tổng cộng:</Text>
-              <Text style={styles.totalAmount}>{formatCurrency(calculateTotal())}</Text>
+              <Text style={styles.totalAmount}>
+                {formatCurrency(calculateTotal())}
+              </Text>
             </View>
             <View style={styles.actionButtonsContainer}>
               <TouchableOpacity
                 style={[styles.actionButton, styles.buyNowButton]}
                 onPress={handleBuyNow}
               >
-                <FontAwesome name="shopping-bag" size={20} color={COLORS.white} />
+                <FontAwesome
+                  name="shopping-bag"
+                  size={20}
+                  color={COLORS.white}
+                />
                 <Text style={styles.actionButtonText}>Mua ngay</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -261,7 +332,9 @@ export default function Cart() {
                   mode="date"
                   display="default"
                   minimumDate={new Date()}
-                  onChange={(event, selectedDate) => handleDateChange(event, selectedDate, "start")}
+                  onChange={(event, selectedDate) =>
+                    handleDateChange(event, selectedDate, "start")
+                  }
                 />
               )}
               <TouchableOpacity
@@ -276,14 +349,18 @@ export default function Cart() {
                   mode="date"
                   display="default"
                   minimumDate={new Date(startDate.getTime() + 86400000)}
-                  onChange={(event, selectedDate) => handleDateChange(event, selectedDate, "end")}
+                  onChange={(event, selectedDate) =>
+                    handleDateChange(event, selectedDate, "end")
+                  }
                 />
               )}
               <TouchableOpacity
                 style={styles.submitButton}
                 onPress={handleAddRentToCart}
               >
-                <Text style={styles.submitButtonText}>Thêm vào giỏ hàng để thuê</Text>
+                <Text style={styles.submitButtonText}>
+                  Thêm vào giỏ hàng để thuê
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -302,7 +379,7 @@ export default function Cart() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    paddingTop:30,
+    paddingTop: 30,
     backgroundColor: COLORS.light,
   },
   container: {
@@ -310,8 +387,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.light,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingTop: 10,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -325,7 +402,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.dark,
     marginLeft: 8,
   },
@@ -338,11 +415,11 @@ const styles = StyleSheet.create({
   badgeText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   selectAllContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
@@ -354,8 +431,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   checkboxSelected: {
@@ -363,7 +440,7 @@ const styles = StyleSheet.create({
   },
   selectAllText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: COLORS.dark,
   },
   content: {
@@ -371,7 +448,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cartItem: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: COLORS.white,
     padding: 16,
     borderRadius: 12,
@@ -383,7 +460,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   checkboxContainer: {
-    justifyContent: 'center',
+    justifyContent: "center",
     marginRight: 12,
   },
   productImage: {
@@ -396,14 +473,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   itemName: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.dark,
     marginRight: 8,
   },
@@ -412,18 +489,18 @@ const styles = StyleSheet.create({
   },
   itemPrice: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: COLORS.secondary,
     marginVertical: 8,
   },
   itemFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.light,
     borderRadius: 8,
     padding: 4,
@@ -433,7 +510,7 @@ const styles = StyleSheet.create({
   },
   quantityText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.dark,
     marginHorizontal: 12,
   },
@@ -444,32 +521,32 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.light,
   },
   totalContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   totalText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.dark,
   },
   totalAmount: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     color: COLORS.secondary,
   },
   actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingVertical: 14,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 2,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
@@ -479,7 +556,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 8,
   },
   buyNowButton: {

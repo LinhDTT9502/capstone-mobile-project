@@ -44,12 +44,12 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      // if (username && password) {
+      if (username && password) {
        
       
-      // } else {
-      //   Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
-      // }
+      } else {
+        Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
+      }
       const decoded = await authenticateUser(username, password);
       dispatch(login(decoded));
       navigation.navigate('HomeController');

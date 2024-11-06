@@ -56,15 +56,15 @@ export const performPasswordReset = async (data) => {
   }
 };
 
-// export const signOutUser = async (data) => {
-//   try {
-//     const response = await signOut(data);
-//     return response;
-//   } catch (error) {
-//     console.error('Error during sign-out:', error);
-//     throw error;
-//   }
-// };
+export const signOutUser = async (data) => {
+  try {
+    const response = await signOut(data);
+    return response;
+  } catch (error) {
+    console.error('Error during sign-out:', error);
+    throw error;
+  }
+};
 
 
 export const checkAndRefreshToken = async () => {
