@@ -9,39 +9,53 @@ import {
   Alert,
   ScrollView,
   SafeAreaView,
-  Modal,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { updateProfile } from '../../services/userService';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUser, updateUser } from '../../redux/slices/authSlice';
+import { fetchUserProfile, saveUserProfile } from '../../services/userService';
+import { Picker } from '@react-native-picker/picker';
 
 export default function EditProfile() {
   const navigation = useNavigation();
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const [otpField, setOtpField] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-
-  const [formData, setFormData] = useState({
-    UserName: user?.UserName || '',
-    FullName: user?.FullName || '',
-    Email: user?.Email || '',
-    Gender: user?.Gender || '',
-    Phone: user?.Phone || '',
-    BirthDate: user?.BirthDate || '',
-    IsEmailVerified: user?.IsEmailVerified || false,
-    IsPhoneVerified: user?.IsPhoneVerified || false,
-  });
-
+  const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [initialData, setInitialData] = useState(formData);
+  const [initialData, setInitialData] = useState({});
 
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const profileData = await fetchUserProfile(user.UserId);
+        if (profileData) {
+          const newData = {
+            UserName: profileData.userName || '',
+            FullName: profileData.fullName || '',
+            Gender: profileData.gender || '',
+            BirthDate: profileData.dob || '',
+            Email: profileData.email || '',
+            Address: profileData.address || '',
+            Phone: profileData.phoneNumber || '',
+            IsEmailVerified: profileData.emailConfirmed || false,
+            IsPhoneVerified: profileData.phoneConfirmed || false,
+          };
+          setFormData(newData);
+          setInitialData(newData);
+        } else {
+          Alert.alert('Thông báo', 'Không có dữ liệu người dùng.');
+        }
+      } catch (error) {
+        Alert.alert('Lỗi', 'Không thể tải thông tin người dùng.');
+      }
+    };
+  
+    loadUserProfile();
+  }, [user.UserId]);
+  
   const handleChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
   };
@@ -52,19 +66,19 @@ export default function EditProfile() {
 
   const handleSave = async () => {
     if (JSON.stringify(formData) === JSON.stringify(initialData)) {
-      Alert.alert('Warning', 'No changes were made.');
+      Alert.alert('Cảnh báo', 'Không có thay đổi nào được thực hiện.');
       return;
     }
-
+  
     try {
-      await updateProfile(user.UserId, formData);
+      await saveUserProfile(user.UserId, formData);
       setIsEditing(false);
-      setInitialData(formData);
-      Alert.alert('Success', 'Chỉnh sửa thành công');
       dispatch(updateUser(formData));
+      Alert.alert('Thành công', 'Thông tin đã được cập nhật.');
+      setInitialData(formData);
     } catch (error) {
-      console.error('Error updating profile:', error);
-      Alert.alert('Error', 'Chỉnh sửa thất bại');
+      console.error('Error updating profile:', error.response?.data || error.message);
+      Alert.alert('Lỗi', `Cập nhật thất bại: ${error.response?.data?.message || 'Vui lòng thử lại.'}`);
     }
   };
 
@@ -73,46 +87,23 @@ export default function EditProfile() {
     setIsEditing(false);
   };
 
-  const handleVerify = (field) => {
-    setOtpField(field);
-    setShowNotificationModal(true);
-    // In a real application, you would send the OTP to the user's email or phone here
-  };
-
-  const handleNotificationConfirm = () => {
-    setShowNotificationModal(false);
-    setShowOtpModal(true);
-  };
-
-  const handleOtpComplete = () => {
-    // In a real application, you would verify the OTP here
-    setShowOtpModal(false);
-    setFormData({ ...formData, [`Is${otpField}Verified`]: true });
-    Alert.alert('Success', `${otpField} đã được xác thực thành công.`);
-  };
-
-  useEffect(() => {
-    if (user) {
-      const userData = {
-        UserName: user.UserName,
-        FullName: user.FullName,
-        Email: user.Email,
-        Gender: user.Gender,
-        Phone: user.Phone,
-        BirthDate: user.BirthDate,
-        IsEmailVerified: user.IsEmailVerified || false,
-        IsPhoneVerified: user.IsPhoneVerified || false,
-      };
-      setFormData(userData);
-      setInitialData(userData);
-    }
-  }, [user]);
-
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      handleChange('BirthDate', selectedDate.toISOString().split('T')[0]);
+      const formattedDate = formatDateForAPI(selectedDate);
+      handleChange('BirthDate', formattedDate);
     }
+  };
+
+  const formatDateForAPI = (date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString || dateString === '0001-01-01T00:00:00') return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
   };
 
   const renderInput = (label, name, icon, editable = isEditing, verifiable = false) => (
@@ -123,9 +114,35 @@ export default function EditProfile() {
       </View>
       <View style={styles.inputWrapper}>
         {name === 'BirthDate' && isEditing ? (
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
-            <Text style={styles.dateButtonText}>{formData.BirthDate || 'Select Date'}</Text>
+          <TouchableOpacity 
+          
+            onPress={() => isEditing && setShowDatePicker(true)} 
+            style={[
+              styles.input,
+              !isEditing && styles.disabledInput,
+              isEditing && styles.editableInput
+            ]}
+          >
+            <Text style={styles.dateButtonText}>
+              {formatDateForDisplay(formData.BirthDate) || 'Chọn ngày'}
+            </Text>
           </TouchableOpacity>
+        ) : name === 'Gender' ? (
+          <Picker
+            selectedValue={formData.Gender}
+            onValueChange={(itemValue) => handleChange('Gender', itemValue)}
+            enabled={isEditing}
+            style={[
+              styles.input,
+              !isEditing && styles.disabledInput,
+              isEditing && styles.editableInput
+            ]}
+          >
+            <Picker.Item label="Chọn giới tính" value="" />
+            <Picker.Item label="Nam" value="male" />
+            <Picker.Item label="Nữ" value="female" />
+            <Picker.Item label="Khác" value="other" />
+          </Picker>
         ) : (
           <TextInput
             style={[
@@ -136,22 +153,19 @@ export default function EditProfile() {
             value={formData[name]}
             onChangeText={(value) => handleChange(name, value)}
             editable={editable}
-            placeholder={`Enter your ${label.toLowerCase()}`}
+            placeholder={`Nhập ${label.toLowerCase()}`}
             placeholderTextColor="#A0AEC0"
           />
         )}
-        {verifiable && !formData[`Is${name}Verified`] && (
-          <TouchableOpacity style={styles.verifyButton} onPress={() => handleVerify(name)}>
-            <Text style={styles.verifyButtonText}>Verify</Text>
-          </TouchableOpacity>
-        )}
-        {verifiable && formData[`Is${name}Verified`] && (
-          <FontAwesome name="check-circle" size={24} color="#4CAF50" style={styles.verifiedIcon} />
+        {verifiable && (
+          <FontAwesome
+            name={formData[`Is${name}Verified`] ? "check-circle" : "times-circle"}
+            size={24}
+            color={formData[`Is${name}Verified`] ? "#4CAF50" : "#FF3B30"}
+            style={styles.verifiedIcon}
+          />
         )}
       </View>
-      {verifiable && !formData[`Is${name}Verified`] && (
-        <Text style={styles.verificationText}>Vui lòng xác thực {name.toLowerCase()} để tiếp tục</Text>
-      )}
     </View>
   );
 
@@ -161,7 +175,7 @@ export default function EditProfile() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <FontAwesome name="arrow-left" size={24} color="#0035FF" />
         </TouchableOpacity>
-        <Text style={styles.title}>Edit Profile</Text>
+        <Text style={styles.title}>Chỉnh sửa hồ sơ</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -175,112 +189,44 @@ export default function EditProfile() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
+            <Text style={styles.sectionTitle}>Thông tin cơ bản</Text>
             {isEditing ? (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-                  <Text style={styles.buttonText}>Cancel</Text>
+                  <Text style={styles.buttonText}>Hủy</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                  <Text style={styles.buttonText}>Save</Text>
+                  <Text style={styles.buttonText}>Lưu</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                <Text style={styles.buttonText}>Edit</Text>
+                <Text style={styles.buttonText}>Chỉnh sửa</Text>
               </TouchableOpacity>
             )}
           </View>
-          {renderInput('Username', 'UserName', 'user', false)}
-          {renderInput('Full Name', 'FullName', 'user')}
-          {renderInput('Gender', 'Gender', 'venus-mars')}
-          {renderInput('Birth Date', 'BirthDate', 'calendar')}
+          {renderInput('Tên người dùng', 'UserName', 'user', false)}
+          {renderInput('Họ và tên', 'FullName', 'user')}
+          {renderInput('Giới tính', 'Gender', 'venus-mars')}
+          {renderInput('Ngày sinh', 'BirthDate', 'calendar')}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
+          <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
           {renderInput('Email', 'Email', 'envelope', false, true)}
-          {renderInput('Phone', 'Phone', 'phone', true, true)}
+          {renderInput('Số điện thoại', 'Phone', 'phone', true, true)}
         </View>
       </ScrollView>
 
       {showDatePicker && (
         <DateTimePicker
-          value={new Date(formData.BirthDate || Date.now())}
+          value={new Date(formData.BirthDate && formData.BirthDate !== '0001-01-01T00:00:00' ? formData.BirthDate : Date.now())}
           mode="date"
           display="default"
           onChange={handleDateChange}
           maximumDate={new Date()}
         />
       )}
-
-      <Modal
-        visible={showNotificationModal}
-        transparent={true}
-        animationType="fade"
-      >
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { alignItems: 'flex-start' }]}>
-            <Text style={styles.modalTitle}>Verify</Text>
-            <Text style={[styles.modalSubtitle, { marginBottom: 16, textAlign: 'left' }]}>
-              Mã đã được gửi qua email của bạn.
-            </Text>
-            <TouchableOpacity 
-              style={[styles.modalConfirmButton, { alignSelf: 'flex-end', flex: 0 }]} 
-              onPress={handleNotificationConfirm}
-            >
-              <Text style={styles.modalButtonText}>OK</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal
-        visible={showOtpModal}
-        transparent={true}
-        animationType="slide"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Enter OTP</Text>
-            <Text style={styles.modalSubtitle}>
-              Please enter the 6-digit code sent to your {otpField.toLowerCase()}
-            </Text>
-            <View style={styles.otpContainer}>
-              {otp.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  style={styles.otpInput}
-                  value={digit}
-                  onChangeText={(value) => {
-                    const newOtp = [...otp];
-                    newOtp[index] = value;
-                    setOtp(newOtp);
-                    if (value && index < 5) {
-                      this[`otpInput${index + 1}`].focus();
-                    }
-                  }}
-                  keyboardType="numeric"
-                  maxLength={1}
-                  ref={(input) => { this[`otpInput${index}`] = input; }}
-                />
-              ))}
-            </View>
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setShowOtpModal(false)}>
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.modalConfirmButton} 
-                onPress={handleOtpComplete}
-                disabled={otp.some(digit => digit === '')}
-              >
-                <Text style={styles.modalButtonText}>Confirm</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -372,7 +318,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   saveButton: {
-    backgroundColor: '#0035FF',
+    backgroundColor: '#28A745',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -413,6 +359,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   editableInput: {
     backgroundColor: '#EDF2F7',
@@ -424,103 +372,11 @@ const styles = StyleSheet.create({
   inputIcon: {
     marginRight: 8,
   },
-  
-  verifyButton: {
-    backgroundColor: '#0035FF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginLeft: 12,
-  },
-  verifyButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  dateButton: {
-    flex: 1,
-    backgroundColor: '#EDF2F7',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
   dateButtonText: {
     fontSize: 16,
     color: '#2D3748',
   },
   verifiedIcon: {
     marginLeft: 12,
-  },
-  verificationText: {
-    color: '#FF3B30',
-    fontSize: 12,
-    marginTop: 4,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    width: '80%',
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2D3748',
-    marginBottom: 8,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: '#4A5568',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  otpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  otpInput: {
-    width: 40,
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#CBD5E0',
-    borderRadius: 8,
-    textAlign: 'center',
-    fontSize: 18,
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  modalCancelButton: {
-    backgroundColor: '#FF3B30',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    flex: 1,
-    marginRight: 8,
-    alignItems: 'center',
-  },
-  modalConfirmButton: {
-    backgroundColor: '#0035FF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    flex: 1,
-    marginLeft: 8,
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold',
   },
 });

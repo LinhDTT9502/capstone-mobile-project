@@ -13,12 +13,15 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchProductById } from "../../services/productService";
 import { fetchLikes, handleToggleLike } from "../../services/likeService";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AddToCartButton from "../../components/AddToCardButton";
 import RentButton from "../../components/RentButton";
 import BuyNowButton from "../../components/BuyNowButton";
+
+import styles from "./css/ProductDetailStyles";
 
 const COLORS = {
   primary: "#0035FF",
@@ -40,7 +43,7 @@ export default function ProductDetail() {
   const route = useRoute();
   const { productId } = route.params;
 
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [startDate, setStartDate] = useState(
     new Date(new Date().setDate(new Date().getDate() + 1))
@@ -57,22 +60,23 @@ export default function ProductDetail() {
   const [userComment, setUserComment] = useState("");
   const [userRating, setUserRating] = useState(0);
   const [likes, setLikes] = useState(0);
-
   const [comment, setComment] = useState("");
-
-  const handleSubmitComment = () => {
-    if (!comment.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận.");
-      return;
-    }
-    Alert.alert("Thành công", "Bình luận của bạn đã được gửi");
-    setComment("");
-  };
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     loadProductDetails();
     loadLikes();
+    checkLoginStatus();
   }, [productId]);
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  const checkLoginStatus = async () => {
+    const token = await AsyncStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  };
 
   const loadLikes = async () => {
     try {
@@ -84,16 +88,12 @@ export default function ProductDetail() {
   };
 
   const handleLikeToggle = async () => {
+    if (!isLoggedIn) {
+      Alert.alert("Thông báo", "Bạn vui lòng đăng nhập để thích sản phẩm.");
+      return;
+    }
     try {
       const result = await handleToggleLike(productId, navigation);
-      if (result.error) {
-        Alert.alert("Thông báo", result.error, [
-          { text: "Hủy", style: "cancel" },
-          { text: "Đăng nhập", onPress: () => navigation.navigate("Login") },
-        ]);
-        return;
-      }
-
       setLikes(result.newLikesCount);
       Alert.alert("Thông báo", result.message);
     } catch (error) {
@@ -104,17 +104,22 @@ export default function ProductDetail() {
   const loadProductDetails = async () => {
     try {
       const productData = await fetchProductById(productId);
-      setProduct({
-        ...productData,
-        originalPrice: 1428000,
-        discount: 100,
-        description:
-          "Vợt cầu lông Yonex Astrox 100ZZ là một trong những cây vợt cao cấp nhất của Yonex, được thiết kế cho những người chơi chuyên nghiệp. Với công nghệ VOLUME CUT RESIN và ROTATIONAL GENERATOR SYSTEM, vợt mang lại khả năng đánh cầu mạnh mẽ và chính xác.",
-      });
+      setProduct(productData.$values[0]);
     } catch (error) {
-      Alert.alert("Error", "Failed to load product details.");
-      console.error(error);
+      Alert.alert("Lỗi", "Không thể tải thông tin sản phẩm.");
+      console.error("Error loading product details:", error);
     }
+  };
+
+  
+
+  const handleSubmitComment = () => {
+    if (!comment.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận.");
+      return;
+    }
+    Alert.alert("Thành công", "Bình luận của bạn đã được gửi");
+    setComment("");
   };
 
   const handleAddToCart = (type) => {
@@ -145,7 +150,6 @@ export default function ProductDetail() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  // Helper function to format date as dd/mm/yyyy
   const formatDate = (date) => {
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -206,21 +210,28 @@ export default function ProductDetail() {
           style={styles.productImage}
         />
         <View style={styles.productInfo}>
-          <Text style={styles.productName}>{product.productName}</Text>
+          <Text style={styles.productName}>
+            {product.productName || "Tên sản phẩm không có"}
+          </Text>
           <Text style={styles.productTag}>For exchange</Text>
           <View style={styles.priceContainer}>
             <View>
               <Text style={styles.productPrice}>
-                {product.price.toLocaleString()} ₫
+                {product.price ? `${product.price} ₫` : "Giá không có"}
               </Text>
-              <Text style={styles.originalPrice}>
-                {product.originalPrice.toLocaleString()} ₫
-              </Text>
-              <Text style={styles.discount}>Giảm {product.discount}%</Text>
+              {product.discount && product.originalPrice ? (
+                <>
+                  <Text style={styles.originalPrice}>
+                    {product.originalPrice} ₫
+                  </Text>
+                  <Text style={styles.discount}>Giảm {product.discount}%</Text>
+                </>
+              ) : null}
             </View>
             <TouchableOpacity
               style={styles.likeButton}
               onPress={handleLikeToggle}
+              disabled={!isLoggedIn}
             >
               <AntDesign name="like2" size={24} color="#0035FF" />
               <Text style={styles.likeCount}>{likes}</Text>
@@ -271,7 +282,7 @@ export default function ProductDetail() {
             ))}
           </View>
           <View style={styles.addToCartContainer}>
-            <AddToCartButton onAddToCart={() => handleAddToCart("add")} />
+          <AddToCartButton product={product} onAddToCart={() => handleAddToCart("add")} />
           </View>
         </View>
 
@@ -288,21 +299,15 @@ export default function ProductDetail() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ưu đãi</Text>
           <View style={styles.promotionContainer}>
-            <Text style={styles.promotionItem}>
-              ✓ Tặng 2 Quấn cán vợt Cầu Lông: VNB 001, VS002 hoặc Joto 001
-            </Text>
-            <Text style={styles.promotionItem}>
-              ✓ Sơn logo mặt vợt miễn phí
-            </Text>
-            <Text style={styles.promotionItem}>
-              ✓ Bảo hành lưới đan trong 72 giờ
-            </Text>
-            <Text style={styles.promotionItem}>
-              ✓ Thay gen vợt miễn phí trọn đời
-            </Text>
-            <Text style={styles.promotionItem}>
-              ✓ Tích luỹ điểm thành viên Premium
-            </Text>
+            {product.offers && product.offers.length > 0 ? (
+              product.offers.map((offer, index) => (
+                <Text key={index} style={styles.promotionItem}>
+                  ✓ {offer.description}
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.promotionItem}>Không có ưu đãi</Text>
+            )}
           </View>
         </View>
 
@@ -372,7 +377,6 @@ export default function ProductDetail() {
         </View>
       </View>
 
-      {/* Rent Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -450,305 +454,3 @@ export default function ProductDetail() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 30,
-    backgroundColor: "#F8F9FA",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.dark,
-  },
-  placeholder: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-  },
-  productImage: {
-    width: "100%",
-    height: 300,
-    resizeMode: "cover",
-  },
-  productInfo: {
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
-  },
-  productName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: COLORS.dark,
-    marginBottom: 8,
-  },
-  productTag: {
-    backgroundColor: COLORS.light,
-    color: COLORS.primary,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-    marginBottom: 8,
-  },
-  priceContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  productPrice: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: COLORS.secondary,
-  },
-  originalPrice: {
-    fontSize: 16,
-    color: COLORS.dark,
-    textDecorationLine: "line-through",
-  },
-  discount: {
-    fontSize: 14,
-    color: COLORS.secondary,
-    fontWeight: "bold",
-  },
-  section: {
-    padding: 16,
-    backgroundColor: COLORS.white,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-    color: COLORS.dark,
-  },
-  specificationText: {
-    fontSize: 14,
-    color: COLORS.dark,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  promotionContainer: {
-    backgroundColor: "#FFF5F5",
-    padding: 12,
-    borderRadius: 8,
-  },
-  promotionItem: {
-    fontSize: 14,
-    color: COLORS.dark,
-    marginBottom: 8,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: COLORS.dark,
-    lineHeight: 20,
-  },
-  rowContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 16,
-  },
-  leftColumn: {
-    flex: 1.5,
-  },
-  rightColumn: {
-    flex: 1,
-  },
-  quantityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.light,
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  quantityButton: {
-    padding: 12,
-  },
-  quantityText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    paddingHorizontal: 20,
-    color: COLORS.dark,
-  },
-  colorSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  colorButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  activeColor: {
-    borderColor: COLORS.dark,
-  },
-
-  commentInputContainer: {
-    marginBottom: 16,
-  },
-  commentInput: {
-    borderWidth: 1,
-    borderColor: COLORS.light,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    minHeight: 80,
-    textAlignVertical: "top",
-    color: COLORS.dark,
-  },
-  commentSubmitButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignSelf: "flex-end",
-  },
-  commentSubmitText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  actionButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
-
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    width: "90%",
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 20,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: COLORS.dark,
-  },
-  dateInput: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: COLORS.light,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    color: COLORS.dark,
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  checkbox: {
-    marginRight: 10,
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    flex: 1,
-    color: COLORS.dark,
-  },
-  submitButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 8,
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  submitButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  cancelButton: {
-    backgroundColor: COLORS.white,
-    paddingVertical: 12,
-    borderRadius: 8,
-    width: "100%",
-    alignItems: "center",
-    borderColor: COLORS.secondary,
-    borderWidth: 1,
-  },
-  cancelButtonText: {
-    color: COLORS.secondary,
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  likeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 8,
-  },
-  likeCount: {
-    marginLeft: 4,
-    fontSize: 16,
-    color: COLORS.primary,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-
-  bottomNav: {
-    flexDirection: "row",
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.light,
-  },
-  buyNowContainer: {
-    flex: 1,
-    marginRight: 8,
-  },
-  rentContainer: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  addToCartContainer: {
-    marginTop: 16,
-  },
-});

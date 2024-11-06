@@ -1,6 +1,6 @@
 import { jwtDecode } from 'jwt-decode';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { signIn, refreshTokenAPI , signUp } from '../api/apiAuth';
+import { signIn, refreshTokenAPI , signUp, sendForgotPasswordRequest, validateResetToken, resetPassword } from '../api/apiAuth';
 
 export const authenticateUser = async ( username, password) => {
   
@@ -23,6 +23,36 @@ export const signUpUser = async (userData) => {
   } catch (error) {
     console.error('Error during sign-up:', error);
     throw error;
+  }
+};
+
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await sendForgotPasswordRequest(email);
+    return response.data;
+  } catch (error) {
+    console.error('Error requesting password reset:', error);
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const verifyResetToken = async (token, email) => {
+  try {
+    const response = await validateResetToken(token, email);
+    return response.data;
+  } catch (error) {
+    console.error('Error validating reset token:', error);
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const performPasswordReset = async (data) => {
+  try {
+    const response = await resetPassword(data);
+    return response.data;
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    throw error.response ? error.response.data : error;
   }
 };
 
@@ -68,5 +98,15 @@ export const checkAndRefreshToken = async () => {
   } catch (error) {
     console.error('Error checking or refreshing token:', error);
     throw error;
+  }
+};
+
+export const changeUserPassword = async (data) => {
+  try {
+    const response = await changePassword(data);
+    return response.data;
+  } catch (error) {
+    console.error('Error changing password:', error);
+    throw error.response ? error.response.data : error;
   }
 };

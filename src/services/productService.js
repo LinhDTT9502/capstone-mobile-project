@@ -46,3 +46,4 @@ export const fetchProductById = async (id) => {
     throw error;
   }
 };
+

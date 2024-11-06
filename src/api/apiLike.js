@@ -11,7 +11,7 @@ export const getLikesAPI = () => {
   });
 };
 
-export const toggleLikeProductAPI = (productId) => {
+export const toggleLikeProductAPI = (productId, token) => {
   return axiosInstance.post(
     `${API_BASE_URL}/like-product/${productId}`,
     {},

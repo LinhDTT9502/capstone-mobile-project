@@ -3,10 +3,10 @@ import axiosInstance from './axiosInstance';
 
 const API_BASE_URL = 'https://twosportapi-295683427295.asia-southeast2.run.app/api/Cart';
 
-export const addToCartAPI = (productId, quantity, token) => {
+export const addToCartAPI = (warehouseId, quantity, token) => {
 
   return axiosInstance.post(`${API_BASE_URL}/add-to-cart`, {
-    productId,
+    warehouseId,
     quantity,
   }, {
     headers: {
@@ -17,20 +17,36 @@ export const addToCartAPI = (productId, quantity, token) => {
   });
 };
 
+// export const getCartAPI = (sortBy = '') => {
+//   const url = `${API_BASE_URL}/get-cart`;
+//   const data = {
+//     perPage: 2,
+//     currentPage: 0,
+//     sortBy: sortBy,
+//     isAscending: true
+//   };
+//   return axiosInstance.get(url, {
+//     headers: {
+//       'Accept': '*/*',
+//       'Content-Type': 'application/json'
+//     },
+//     data: JSON.stringify(data)
+//   });
+// };
+
 export const getCartAPI = (sortBy = '') => {
   const url = `${API_BASE_URL}/get-cart`;
-  const data = {
-    perPage: 2,
-    currentPage: 0,
-    sortBy: sortBy,
-    isAscending: true
-  };
-  return axiosInstance.get(url, {
+  return axios.get(url, {
+    params: {
+      perPage: 2,
+      currentPage: 0,
+      sortBy: sortBy,
+      isAscending: true
+    },
     headers: {
       'Accept': '*/*',
       'Content-Type': 'application/json'
-    },
-    data: JSON.stringify(data)
+    }
   });
 };
 

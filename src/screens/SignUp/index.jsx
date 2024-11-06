@@ -49,15 +49,16 @@ const SignUpScreen = () => {
     try {
       const userData = { fullName, username, email, password };
       const response = await signUpUser(userData);
-      Alert.alert("Thành công", "Tài khoản đã được tạo thành công!");
+      Alert.alert(
+        "Thành công",
+        "Tài khoản đã được tạo thành công! Một email xác thực đã được gửi. Vui lòng kiểm tra hộp thư của bạn."
+      );
       navigation.navigate("Login");
     } catch (error) {
       if (error.response) {
         Alert.alert(
           "Lỗi",
-          `Lỗi từ máy chủ: ${
-            error.response.data.message || "Vui lòng thử lại sau."
-          }`
+          `Lỗi từ máy chủ: ${error.response.data.message || "Vui lòng thử lại sau."}`
         );
       } else if (error.request) {
         Alert.alert("Lỗi", "Không thể kết nối đến máy chủ.");
@@ -68,6 +69,7 @@ const SignUpScreen = () => {
       setLoading(false);
     }
   };
+  
   return (
     <View style={styles.container}>
       <View style={styles.shape1} />

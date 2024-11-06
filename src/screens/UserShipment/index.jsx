@@ -139,6 +139,7 @@ export default function UserShipment() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop:30,
     backgroundColor: '#F0F4F8',
   },
   scrollView: {

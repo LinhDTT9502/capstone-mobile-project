@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect  } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { selectUser } from '../../redux/slices/authSlice';
 import LogoutButton from '../../components/LogoutButton';
@@ -20,6 +20,7 @@ import LogoutButton from '../../components/LogoutButton';
 export default function Account() {
   const navigation = useNavigation();
   const user = useSelector(selectUser);
+  const [noTokenModalVisible, setNoTokenModalVisible] = useState(false);
 
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
@@ -47,38 +48,97 @@ export default function Account() {
     navigation.navigate('AccountResetPassword');
   };
 
-  useEffect(() => {
-    const checkToken = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          navigation.navigate('Login'); 
+  // useEffect(() => {
+  //   const checkToken = async () => {
+  //     try {
+  //       const token = await AsyncStorage.getItem('token');
+  //       if (!token) {
+  //         navigation.navigate('Login'); 
+  //       }
+  //     } catch (error) {
+  //       console.error('Error checking token:', error);
+  //     }
+  //   };
+
+  //   checkToken();
+  // }, [navigation]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkToken = async () => {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          if (!token) {
+            setNoTokenModalVisible(true);
+          }
+        } catch (error) {
+          console.error('Error checking token:', error);
         }
-      } catch (error) {
-        console.error('Error checking token:', error);
-      }
-    };
+      };
 
-    checkToken();
-  }, [navigation]);
+      checkToken();
+    }, [])
+  );
 
+  const handleLogin = () => {
+    setNoTokenModalVisible(false);
+    navigation.navigate('Login');
+  };
+
+  const handleCancel = () => {
+    setNoTokenModalVisible(false);
+    navigation.navigate('LandingPage');
+  };
+
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <Modal
+          visible={noTokenModalVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setNoTokenModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Bạn chưa có tài khoản</Text>
+              <Text style={styles.modalText}>Vui lòng đăng nhập để tiếp tục.</Text>
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity 
+                  style={styles.cancelButton} 
+                  onPress={handleCancel}
+                >
+                  <Text style={styles.cancelButtonText}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.loginButton} 
+                  onPress={handleLogin}
+                >
+                  <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, styles.whiteBackground]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Quản lý tài khoản</Text>
         </View>
 
         <View style={styles.profileSection}>
-
-      <Image
-        source={{ uri: user.profileImage || 'https://via.placeholder.com/100' }}
-        style={styles.profileImage}
-      />
-      <Text style={styles.profileName}>{user.FullName}</Text>
-      <Text style={styles.profileId}>Mã tài khoản: {user.UserId}</Text>
-</View>
+          <Image
+            source={{ uri: user.profileImage || 'https://via.placeholder.com/100' }}
+            style={styles.profileImage}
+          />
+          <Text style={styles.profileName}>{user.FullName}</Text>
+          <Text style={styles.profileId}>Mã tài khoản: {user.UserId}</Text>
+        </View>
 
         <View style={styles.orderSection}>
           <Text style={styles.sectionTitle}>Đơn hàng của tôi</Text>
@@ -139,12 +199,40 @@ export default function Account() {
           </TouchableOpacity>
         </View>
 
+        <Modal
+          visible={noTokenModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setNoTokenModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Bạn chưa có tài khoản</Text>
+              <Text style={styles.modalText}>Vui lòng đăng nhập để tiếp tục.</Text>
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.cancelButton]} 
+                  onPress={handleCancel}
+                >
+                  <Text style={styles.cancelButtonText}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.loginButton]} 
+                  onPress={handleLogin}
+                >
+                  <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         {user && (
           <LogoutButton />
         )}
       </ScrollView>
 
-{/* change language */}
+      {/* change language */}
       {/* <Modal
         visible={languageModalVisible}
         transparent={true}
@@ -184,7 +272,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 30,
-    backgroundColor: '#F5F7FA',
+  },
+  whiteBackground: {
+    backgroundColor: '#FFFFFF',
   },
   scrollContent: {
     paddingBottom: 30,
@@ -335,62 +425,55 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 20,
     borderRadius: 10,
-    width: '80%',
-    elevation: 5,
+    width:  '80%',
+    alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 22,
+    fontSize:  20,
     fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
     marginBottom: 20,
     textAlign: 'center',
-    color: '#333',
-  },
-  languageOption: {
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  languageText: {
-    fontSize: 18,
-    color: '#333',
-  },
-  modalCloseButton: {
-    marginTop: 20,
-    backgroundColor: '#FF9900',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  modalCloseButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  notLoggedInText: {
-    fontSize: 16,
     color: '#666',
-    marginBottom: 20,
-    textAlign: 'center',
   },
-  authButtonsContainer: {
+  modalButtonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     width: '100%',
+    marginTop: 10,
   },
-  authButton: {
-    backgroundColor: '#4A90E2',
+  modalButton: {
     padding: 12,
     borderRadius: 8,
+    width: '45%',
     alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 5,
   },
-  authButtonText: {
+  cancelButton: {
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  loginButton: {
+    backgroundColor: '#FF9900',
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  loginButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  statusIcon: {
-    marginBottom: 8,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -1,17 +1,20 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const loadCustomerCart = () => {
+export const loadCustomerCartState = createAsyncThunk('customerCart/loadState', async () => {
   try {
-    const serializedState = localStorage.getItem('customerCart');
+    const serializedState = await AsyncStorage.getItem('customerCart');
     if (serializedState === null) {
+      // console.log("Customer cart state is null");
       return [];
     }
+    // console.log("Loaded customer cart state:", JSON.parse(serializedState));
     return JSON.parse(serializedState);
   } catch (err) {
+    // console.error('Error loading customer cart:', err);
     return [];
   }
-};
+});
 
 const saveCustomerCart = async (state) => {
   try {
@@ -22,13 +25,11 @@ const saveCustomerCart = async (state) => {
   }
 };
 
-const initialState = {
-  items: loadCustomerCart(),
-};
-
 const customerCartSlice = createSlice({
   name: 'customerCart',
-  initialState,
+  initialState: {
+    items: [],
+  },
   reducers: {
     addCusCart: (state, action) => {
       const product = state.items.find(item => item.id === action.payload.id);
@@ -57,10 +58,14 @@ const customerCartSlice = createSlice({
       saveCustomerCart(state.items);
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase(loadCustomerCartState.fulfilled, (state, action) => {
+      state.items = action.payload;
+    });
+  },
 });
 
 export const { addCusCart, removeFromCusCart, decreaseCusQuantity, clearCusCart } = customerCartSlice.actions;
-
-export const selectCustomerCartItems = (state) => state.customerCart.items;
+export const selectCustomerCartItems = state => state.customerCart.items;
 
 export default customerCartSlice.reducer;

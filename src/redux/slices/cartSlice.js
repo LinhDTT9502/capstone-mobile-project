@@ -1,19 +1,20 @@
-// cartSlice.js
-
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const loadState = () => {
+export const loadCartState = createAsyncThunk('cart/loadState', async () => {
   try {
-    const serializedState = localStorage.getItem('cart');
+    const serializedState = await AsyncStorage.getItem('cart');
     if (serializedState === null) {
-      return undefined;
+      // console.log("Cart state is null");
+      return [];
     }
+    // console.log("Loaded cart state:", JSON.parse(serializedState));
     return JSON.parse(serializedState);
   } catch (err) {
-    return undefined;
+    console.error('Error loading cart state:', err);
+    return [];
   }
-};
+});
 
 const saveState = async (state) => {
   try {
@@ -24,13 +25,11 @@ const saveState = async (state) => {
   }
 };
 
-const initialState = {
-  items: loadState() || [],
-};
-
 const cartSlice = createSlice({
   name: 'cart',
-  initialState,
+  initialState: {
+    items: [],
+  },
   reducers: {
     addCart: (state, action) => {
       const product = state.items.find(item => item.id === action.payload.id);
@@ -57,12 +56,16 @@ const cartSlice = createSlice({
     clearCart: (state) => {
       state.items = [];
       saveState(state.items);
-    }
-  }
+    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(loadCartState.fulfilled, (state, action) => {
+      state.items = action.payload;
+    });
+  },
 });
 
 export const { addCart, removeFromCart, decreaseQuantity, clearCart } = cartSlice.actions;
-
 export const selectCartItems = state => state.cart.items;
 
 export default cartSlice.reducer;

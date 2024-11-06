@@ -1,181 +1,219 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Modal,
+  Pressable,
   Alert,
-} from "react-native";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import { useNavigation } from "@react-navigation/native";
+  Animated,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { performPasswordReset } from '../../services/authService';
+import { useNavigation } from '@react-navigation/native';
+import { Feather } from '@expo/vector-icons';
 
-const AccountResetPassword = () => {
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
-  const [confirmSecureTextEntry, setConfirmSecureTextEntry] = useState(true);
+const { width } = Dimensions.get('window');
+
+const ResetPasswordScreen = ({ route }) => {
+  const { token, email } = route.params;
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [animation] = useState(new Animated.Value(0));
   const navigation = useNavigation();
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (newPassword !== confirmPassword) {
-      Alert.alert("Lỗi", "Mật khẩu không khớp");
-    } else {
-      Alert.alert("Thành công", "Mật khẩu của bạn đã được thay đổi!");
-      navigation.navigate("HomeController");
+      Alert.alert('Lỗi', 'Mật khẩu không khớp!');
+      return;
+    }
+
+    try {
+      await performPasswordReset({ token, email, newPassword });
+      setModalVisible(true);
+      Animated.timing(animation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } catch (error) {
+      Alert.alert('Lỗi', error.message || 'Có lỗi xảy ra trong quá trình đặt lại mật khẩu.');
     }
   };
 
+  const closeModal = () => {
+    Animated.timing(animation, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisible(false);
+      navigation.navigate('Login');
+    });
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={styles.backButton}
-      >
-        <Text style={styles.backText}>←</Text>
-      </TouchableOpacity>
-
-      {/* Illustration */}
-      <View style={styles.imageContainer}>
-        <Text style={styles.imagePlaceholder}>[Illustration]</Text>
-      </View>
-
-      {/* Title */}
-      <Text style={styles.title}>Đặt lại mật khẩu của bạn</Text>
-
-      {/* Old Password Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Mật khẩu cũ"
-          value={oldPassword}
-          onChangeText={setOldPassword}
-          secureTextEntry={secureTextEntry}
-        />
-        <TouchableOpacity
-          onPress={() => setSecureTextEntry(!secureTextEntry)}
-          style={styles.eyeIcon}
-        >
-          <FontAwesomeIcon
-            icon={secureTextEntry ? faEyeSlash : faEye}
-            size={20}
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* New Password Input */}
-      <View style={styles.inputContainer}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <View style={styles.content}>
+        <Feather name="lock" size={64} color="#FFA500" style={styles.icon} />
+        <Text style={styles.title}>Đặt lại mật khẩu mới</Text>
+        <Text style={styles.subtitle}>Vui lòng nhập mật khẩu mới của bạn</Text>
         <TextInput
           style={styles.input}
           placeholder="Mật khẩu mới"
+          secureTextEntry
           value={newPassword}
           onChangeText={setNewPassword}
-          secureTextEntry={secureTextEntry}
         />
-        <TouchableOpacity
-          onPress={() => setSecureTextEntry(!secureTextEntry)}
-          style={styles.eyeIcon}
-        >
-          <FontAwesomeIcon
-            icon={secureTextEntry ? faEyeSlash : faEye}
-            size={20}
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Confirm New Password Input */}
-      <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Xác nhận mật khẩu mới"
+          placeholder="Xác nhận mật khẩu"
+          secureTextEntry
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          secureTextEntry={confirmSecureTextEntry}
         />
-        <TouchableOpacity
-          onPress={() =>
-            setConfirmSecureTextEntry(!confirmSecureTextEntry)
-          }
-          style={styles.eyeIcon}
-        >
-          <FontAwesomeIcon
-            icon={confirmSecureTextEntry ? faEyeSlash : faEye}
-            size={20}
-          />
+        <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
+          <Text style={styles.buttonText}>Đặt lại mật khẩu</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Save Changes Button */}
-      <TouchableOpacity style={styles.saveButton} onPress={handleResetPassword}>
-        <Text style={styles.saveButtonText}>Tiếp tục</Text>
-      </TouchableOpacity>
-    </View>
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <Animated.View 
+          style={[
+            styles.modalOverlay,
+            {
+              opacity: animation,
+              transform: [
+                {
+                  scale: animation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1.1, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.modalContainer}>
+            <Feather name="check-circle" size={64} color="#4CAF50" style={styles.modalIcon} />
+            <Text style={styles.modalText}>Mật khẩu đã được thay đổi thành công!</Text>
+            <Pressable style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.closeButtonText}>Đăng nhập</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </Modal>
+    </KeyboardAvoidingView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
-    justifyContent: "center",
-    backgroundColor: "#FFF",
   },
-  backButton: {
-    position: "absolute",
-    top: 40,
-    left: 20,
-  },
-  backText: {
-    fontSize: 24,
-  },
-  imageContainer: {
-    alignItems: "center",
+  icon: {
     marginBottom: 20,
   },
-  imagePlaceholder: {
-    fontSize: 18,
-    color: "#888",
-  },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
     marginBottom: 30,
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
   input: {
-    flex: 1,
     height: 50,
-    borderColor: "#E0E0E0",
+    width: width * 0.9,
+    maxWidth: 400,
+    borderColor: '#ddd',
     borderWidth: 1,
     borderRadius: 25,
-    paddingHorizontal: 15,
-  },
-  eyeIcon: {
-    position: "absolute",
-    right: 15,
-  },
-  saveButton: {
-    backgroundColor: "#FFA500",
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 25,
-    marginTop: 20,
-  },
-  saveButtonText: {
-    color: "#FFF",
+    paddingHorizontal: 20,
+    marginBottom: 20,
     fontSize: 16,
-    fontWeight: "bold",
+    backgroundColor: '#FFF',
+  },
+  button: {
+    backgroundColor: '#FFA500',
+    padding: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+    width: width * 0.9,
+    maxWidth: 400,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    backgroundColor: '#FFF',
+    padding: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    width: width * 0.9,
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalIcon: {
+    marginBottom: 20,
+  },
+  modalText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
+  },
+  closeButton: {
+    backgroundColor: '#FFA500',
+    padding: 12,
+    borderRadius: 25,
+    alignItems: 'center',
+    width: '100%',
+  },
+  closeButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
-export default AccountResetPassword;
+export default ResetPasswordScreen;

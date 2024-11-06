@@ -22,20 +22,17 @@ export const searchUsers = (fullName, username) => {
 
 // GET user profile
 export const getUserProfile = (userId) => {
-  return axios.get(`${API_BASE_URL}/get-users-detail?userId=${userId}`);
+  return axiosInstance.get(`${API_BASE_URL}/get-profile?userId=${userId}`);
 };
+
 
 // PUT update user profile
 export const updateProfileApi = (userId, profileData) => {
-  return axiosInstance.put(
-    `${API_BASE_URL}/update-profile?id=${userId}`,
-    profileData,
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  return axiosInstance.put(`${API_BASE_URL}/update-profile?id=${userId}`, profileData, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 };
 
 // DELETE user
