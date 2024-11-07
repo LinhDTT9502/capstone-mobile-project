@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   productImage: {
     width: "100%",
     height: 300,
-    resizeMode: "cover",
+    resizeMode: "contain",
   },
   productInfo: {
     padding: 16,
@@ -142,13 +142,15 @@ const styles = StyleSheet.create({
   },
   colorSelector: {
     flexDirection: "row",
-    alignItems: "center",
+    flexWrap: "wrap",
+    marginBottom: 16,
   },
   colorButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     marginRight: 12,
+    marginBottom: 12,
     borderWidth: 2,
     borderColor: "transparent",
   },
@@ -293,6 +295,58 @@ const styles = StyleSheet.create({
   },
   addToCartContainer: {
     marginTop: 16,
+  },
+  cartButton: {
+    padding: 8,
+  },
+  sizeSelector: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  sizeButton: {
+    borderWidth: 1,
+    borderColor: COLORS.light,
+    marginRight: 16,
+    borderRadius: 8,
+    padding: 10,
+    minWidth: 50,
+    alignItems: 'center',
+  },
+  activeSize: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  sizeButtonText: {
+    color: COLORS.dark,
+    fontWeight: 'bold',
+  },
+  activeSizeText: {
+    color: COLORS.white,
+  },
+  conditionSelector: {
+    flexDirection: 'row',
+    // justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  conditionButton: {
+    borderWidth: 1,
+    borderColor: COLORS.light,
+    marginRight: 16,
+    borderRadius: 8,
+    padding: 10,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  activeCondition: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  conditionButtonText: {
+    color: COLORS.dark,
+    fontWeight: 'bold',
+  },
+  activeConditionText: {
+    color: COLORS.white,
   },
 });
 

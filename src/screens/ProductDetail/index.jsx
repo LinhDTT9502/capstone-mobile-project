@@ -38,6 +38,9 @@ const PRODUCT_COLORS = [
   { id: 3, name: "Đen", code: "#000000" },
 ];
 
+const PRODUCT_SIZES = ["3U5", "3U6", "4U5", "4U6"];
+const PRODUCT_CONDITIONS = ["Mới", "Như mới", "Đã sử dụng"];
+
 export default function ProductDetail() {
   const navigation = useNavigation();
   const route = useRoute();
@@ -57,9 +60,12 @@ export default function ProductDetail() {
   const [isAgreed, setIsAgreed] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [color, setColor] = useState("Blue");
+  const [size, setSize] = useState("");
+  const [condition, setCondition] = useState("Mới");
   const [userComment, setUserComment] = useState("");
   const [userRating, setUserRating] = useState(0);
   const [likes, setLikes] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
   const [comment, setComment] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -86,40 +92,37 @@ export default function ProductDetail() {
   const loadLikes = async () => {
     try {
       const likesData = await fetchLikes();
-      // console.log("Full likes response:", likesData); 
-      setLikes(likesData.likes || 0); 
+      setLikes(likesData.likes || 0);
     } catch (error) {
       console.error("Error fetching likes:", error);
     }
   };
-  
 
   const handleLikeToggle = async () => {
     if (!isLoggedIn) {
       return;
     }
-  
-    const previousLikes = likes;
-    const newLikesCount = likes === 0 ? likes + 1 : likes - 1;
+
+    const newLikesCount = isLiked ? likes - 1 : likes + 1;
     setLikes(newLikesCount);
-  
+    setIsLiked(!isLiked);
+
     try {
-      // console.log("Sending like toggle request...");
-      await handleToggleLike(productId, navigation); 
-      await loadProductDetails(); 
+      await handleToggleLike(productId, navigation);
+      await loadProductDetails();
     } catch (error) {
-      setLikes(previousLikes); 
+      setLikes(likes);
+      setIsLiked(!isLiked);
       Alert.alert("Lỗi", "Không thể thực hiện hành động like.");
     }
   };
-  
-  
 
   const loadProductDetails = async () => {
     try {
       const productData = await fetchProductById(productId);
       setProduct(productData.$values[0]);
       setLikes(productData.$values[0]?.likes || 0);
+      setSize(productData.$values[0]?.size || "");
     } catch (error) {
       Alert.alert("Lỗi", "Không thể tải thông tin sản phẩm.");
       console.error("Error loading product details:", error);
@@ -200,6 +203,10 @@ export default function ProductDetail() {
     setUserRating(0);
   };
 
+  const formatCurrency = (amount) => {
+    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
   if (!product) return <Text>Loading...</Text>;
 
   return (
@@ -212,7 +219,12 @@ export default function ProductDetail() {
           <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
         </TouchableOpacity>
         <Text style={styles.title}>Chi tiết sản phẩm</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Cart")}
+          style={styles.cartButton}
+        >
+          <Ionicons name="cart-outline" size={24} color={COLORS.dark} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -230,12 +242,12 @@ export default function ProductDetail() {
           <View style={styles.priceContainer}>
             <View>
               <Text style={styles.productPrice}>
-                {product.price ? `${product.price} ₫` : "Giá không có"}
+                {product.price ? `${formatCurrency(product.price)} ₫` : "Giá không có"}
               </Text>
-              {product.discount && product.originalPrice ? (
+              {product.discount && product.listedPrice ? (
                 <>
                   <Text style={styles.originalPrice}>
-                    {product.originalPrice} ₫
+                    {formatCurrency(product.listedPrice)} ₫
                   </Text>
                   <Text style={styles.discount}>Giảm {product.discount}%</Text>
                 </>
@@ -244,9 +256,13 @@ export default function ProductDetail() {
             <TouchableOpacity
               style={styles.likeButton}
               onPress={handleLikeToggle}
-              disabled={!isLoggedIn} 
+              disabled={!isLoggedIn}
             >
-              <AntDesign name="like2" size={24} color="#0035FF" />
+              <AntDesign
+                name={isLiked ? "like1" : "like2"}
+                size={24}
+                color={isLiked ? COLORS.primary : COLORS.dark}
+              />
               {likes !== null && <Text style={styles.likeCount}>{likes}</Text>}
             </TouchableOpacity>
           </View>
@@ -294,9 +310,53 @@ export default function ProductDetail() {
               />
             ))}
           </View>
+
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Kích thước</Text>
+          <View style={styles.sizeSelector}>
+            {PRODUCT_SIZES.map((sizeOption) => (
+              <TouchableOpacity
+                key={sizeOption}
+                onPress={() => setSize(sizeOption)}
+                style={[
+                  styles.sizeButton,
+                  size === sizeOption && styles.activeSize,
+                ]}
+              >
+                <Text style={[
+                  styles.sizeButtonText,
+                  size === sizeOption && styles.activeSizeText,
+                ]}>
+                  {sizeOption}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Tình trạng</Text>
+          <View style={styles.conditionSelector}>
+            {PRODUCT_CONDITIONS.map((conditionOption) => (
+              <TouchableOpacity
+                key={conditionOption}
+                onPress={() => setCondition(conditionOption)}
+                style={[
+                  styles.conditionButton,
+                  condition === conditionOption && styles.activeCondition,
+                ]}
+              >
+                <Text style={[
+                  styles.conditionButtonText,
+                  condition === conditionOption && styles.activeConditionText,
+                ]}>
+                  {conditionOption}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           <View style={styles.addToCartContainer}>
             <AddToCartButton
-              product={product} quantity={quantity}
+              product={product}
+              quantity={quantity}
               onAddToCart={() => handleAddToCart("add")}
             />
           </View>
@@ -308,7 +368,10 @@ export default function ProductDetail() {
             Tình trạng: {product.condition}%
           </Text>
           <Text style={styles.specificationText}>
-            Vị trí: {product.location || "Unknown"}
+            Kích thước: {product.size}
+          </Text>
+          <Text style={styles.specificationText}>
+            Màu sắc: {product.color}
           </Text>
         </View>
 
@@ -329,7 +392,7 @@ export default function ProductDetail() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
-          <Text style={styles.descriptionText}>{product.description}</Text>
+          <Text style={styles.descriptionText}>{product.description || "Không có mô tả"}</Text>
         </View>
 
         <View style={styles.section}>

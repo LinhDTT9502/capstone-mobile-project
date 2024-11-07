@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,25 +7,28 @@ import {
   Alert,
   TouchableOpacity,
   ActivityIndicator,
-} from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { selectShipment, selectShipments, setShipment } from '../../redux/slices/shipmentSlice';
-import { getUserShipmentDetails } from '../../services/shipmentService';
-import AddShipment from '../../components/Shipment/AddShipment';
-import UpdateShipment from '../../components/Shipment/UpdateShipment';
-import DeleteShipment from '../../components/Shipment/DeleteShipment';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+} from "react-native";
+import { useSelector, useDispatch } from "react-redux";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import {
+  selectShipment,
+  selectShipments,
+  setShipment,
+} from "../../redux/slices/shipmentSlice";
+import { getUserShipmentDetails } from "../../services/shipmentService";
+import AddShipment from "../../components/Shipment/AddShipment";
+import UpdateShipment from "../../components/Shipment/UpdateShipment";
+import DeleteShipment from "../../components/Shipment/DeleteShipment";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
-export default function UserShipment() {
+export default function UserShipment({ navigation }) {
   const dispatch = useDispatch();
   const shipment = useSelector(selectShipment);
-  const [shipments, setShipments] = useState([])
+  const [shipments, setShipments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentShipment, setCurrentShipment] = useState(null);
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
-  const SM = useSelector(selectShipments)
+  const SM = useSelector(selectShipments);
 
   // const fetchShipments = async () => {
   //   const token = await AsyncStorage.getItem('token');
@@ -51,18 +54,17 @@ export default function UserShipment() {
   //   fetchShipments();
   // }, [dispatch]);
 
-
   useEffect(() => {
     const getShipment = async () => {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       // console.log(token);
       try {
         if (token) {
           const shipmentData = await getUserShipmentDetails(token);
           // console.log(shipmentData);
-          
+
           dispatch(setShipment(shipmentData));
-          setShipments(shipmentData)
+          setShipments(shipmentData);
           setIsLoading(false);
           // console.log(shipments);
         }
@@ -75,10 +77,8 @@ export default function UserShipment() {
     getShipment();
   }, [dispatch]);
 
-  useEffect(() => {
-  }, [shipments, dispatch]);
+  useEffect(() => {}, [shipments, dispatch]);
 
- 
   const handleUpdateShipment = (shipment) => {
     setCurrentShipment(shipment);
     setIsUpdateModalVisible(true);
@@ -91,6 +91,12 @@ export default function UserShipment() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>My Addresses</Text>
+      </View>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FFA500" />
@@ -103,16 +109,17 @@ export default function UserShipment() {
         </View>
       ) : (
         <ScrollView style={styles.scrollView}>
-          <Text style={styles.title}>My Addresses</Text>
           {shipments.map((shipment) => (
             <View key={shipment.id} style={styles.shipmentItem}>
               <View style={styles.shipmentInfo}>
                 <Text style={styles.shipmentName}>{shipment.fullName}</Text>
                 <Text style={styles.shipmentDetails}>
-                  <Icon name="phone" size={16} color="#666" /> {shipment.phoneNumber}
+                  <Icon name="phone" size={16} color="#666" />{" "}
+                  {shipment.phoneNumber}
                 </Text>
                 <Text style={styles.shipmentDetails}>
-                  <Icon name="location-on" size={16} color="#666" /> {shipment.address}
+                  <Icon name="location-on" size={16} color="#666" />{" "}
+                  {shipment.address}
                 </Text>
               </View>
               <View style={styles.buttonContainer}>
@@ -122,13 +129,17 @@ export default function UserShipment() {
                 >
                   <Icon name="edit" size={20} color="#FFF" />
                 </TouchableOpacity>
-                {/* <DeleteShipment id={shipment.id} refreshShipments={fetchShipments} /> */}
+                <DeleteShipment
+                // id={shipment.id} refreshShipments={fetchShipments}
+                />
               </View>
             </View>
           ))}
         </ScrollView>
       )}
-      {/* <AddShipment refreshShipments={fetchShipments} /> */}
+      <AddShipment
+      // refreshShipments={fetchShipments}
+      />
       {isUpdateModalVisible && (
         <UpdateShipment shipment={currentShipment} onClose={closeUpdateModal} />
       )}
@@ -139,8 +150,22 @@ export default function UserShipment() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop:30,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: "#F0F4F8",
+  },
+  header: {
+    backgroundColor: "#FFA500",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    paddingTop: 40, // Adjust for status bar
+  },
+  backButton: {
+    marginRight: 16,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FFF",
   },
   scrollView: {
     flex: 1,
@@ -148,63 +173,63 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 16,
-    color: '#333',
+    color: "#333",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     fontSize: 18,
     marginTop: 10,
-    color: '#666',
+    color: "#666",
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 18,
     marginTop: 10,
-    color: '#666',
+    color: "#666",
   },
   shipmentItem: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   shipmentInfo: {
     flex: 1,
   },
   shipmentName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 4,
-    color: '#333',
+    color: "#333",
   },
   shipmentDetails: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 2,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   updateButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     padding: 8,
     borderRadius: 8,
     marginRight: 8,

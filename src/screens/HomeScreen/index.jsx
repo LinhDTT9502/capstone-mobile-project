@@ -10,7 +10,6 @@ import {
   Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Swiper from "react-native-swiper";
 
 import Header from "../../layouts/Header";
@@ -19,15 +18,6 @@ import { fetchCategories } from "../../services/categoryService";
 import { fetchProducts } from "../../services/productService";
 
 const { width } = Dimensions.get("window");
-
-const categoryIcons = {
-  "Âm nhạc": "musical-notes",
-  "Vợt cầu lông": "badminton",
-  "Bóng rổ": "basketball",
-  "Bóng chuyền": "volleyball",
-  "Bóng đá": "football",
-  "Dụng cụ tập gym": "dumbbell",
-};
 
 const bannerImages = [
   "https://sporthouse.vn/upload_images/images/banner%20KM(1).jpg",
@@ -124,11 +114,14 @@ const HomePage = () => {
     ({ item }) => (
       <TouchableOpacity style={styles.categoryItem}>
         <View style={styles.categoryIcon}>
-          <MaterialCommunityIcons
-            name={categoryIcons[item.categoryName] || "shape-outline"}
-            size={28}
-            color="#4A90E2"
-          />
+          {item.categoryImgPath ? (
+            <Image
+              source={{ uri: item.categoryImgPath }}
+              style={styles.categoryImage}
+            />
+          ) : (
+            <View style={styles.placeholderIcon} />
+          )}
         </View>
         <Text style={styles.categoryName}>{item.categoryName}</Text>
       </TouchableOpacity>
@@ -159,9 +152,6 @@ const HomePage = () => {
       <Text style={styles.productPrice}>
         {typeof product.price === 'number' ? product.price.toLocaleString() : product.price} ₫
       </Text>
-      {/* <TouchableOpacity style={styles.addToCartButton}>
-        <Text style={styles.addToCartText}>Thêm vào giỏ</Text>
-      </TouchableOpacity> */}
     </TouchableOpacity>
   );
 
@@ -336,6 +326,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow: "hidden",
+  },
+  categoryImage: {
+    width: "80%",
+    height: "80%",
+    resizeMode: "cover",
+  },
+  placeholderIcon: {
+    width: 28,
+    height: 28,
+    backgroundColor: "#4A90E2",
+    borderRadius: 14,
   },
   categoryName: {
     fontSize: 14,
@@ -369,6 +371,7 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 12,
     marginBottom: 12,
+    resizeMode:"contain",
   },
   productName: {
     fontSize: 16,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,14 +9,15 @@ import {
   Alert,
   ScrollView,
   SafeAreaView,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+  Modal,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useSelector, useDispatch } from 'react-redux';
-import { selectUser, updateUser } from '../../redux/slices/authSlice';
-import { fetchUserProfile, saveUserProfile } from '../../services/userService';
-import { Picker } from '@react-native-picker/picker';
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser, updateUser } from "../../redux/slices/authSlice";
+import { fetchUserProfile, saveUserProfile } from "../../services/userService";
+import { Picker } from "@react-native-picker/picker";
 
 export default function EditProfile() {
   const navigation = useNavigation();
@@ -26,6 +27,10 @@ export default function EditProfile() {
   const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [initialData, setInitialData] = useState({});
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -33,29 +38,29 @@ export default function EditProfile() {
         const profileData = await fetchUserProfile(user.UserId);
         if (profileData) {
           const newData = {
-            UserName: profileData.userName || '',
-            FullName: profileData.fullName || '',
-            Gender: profileData.gender || '',
-            BirthDate: profileData.dob || '',
-            Email: profileData.email || '',
-            Address: profileData.address || '',
-            Phone: profileData.phoneNumber || '',
+            UserName: profileData.userName || "",
+            FullName: profileData.fullName || "",
+            Gender: profileData.gender || "",
+            BirthDate: profileData.dob || "",
+            Email: profileData.email || "",
+            Address: profileData.address || "",
+            Phone: profileData.phoneNumber || "",
             IsEmailVerified: profileData.emailConfirmed || false,
             IsPhoneVerified: profileData.phoneConfirmed || false,
           };
           setFormData(newData);
           setInitialData(newData);
         } else {
-          Alert.alert('Thông báo', 'Không có dữ liệu người dùng.');
+          Alert.alert("Thông báo", "Không có dữ liệu người dùng.");
         }
       } catch (error) {
-        Alert.alert('Lỗi', 'Không thể tải thông tin người dùng.');
+        Alert.alert("Lỗi", "Không thể tải thông tin người dùng.");
       }
     };
-  
+
     loadUserProfile();
   }, [user.UserId]);
-  
+
   const handleChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
   };
@@ -66,19 +71,27 @@ export default function EditProfile() {
 
   const handleSave = async () => {
     if (JSON.stringify(formData) === JSON.stringify(initialData)) {
-      Alert.alert('Cảnh báo', 'Không có thay đổi nào được thực hiện.');
+      Alert.alert("Cảnh báo", "Không có thay đổi nào được thực hiện.");
       return;
     }
-  
+
     try {
       await saveUserProfile(user.UserId, formData);
       setIsEditing(false);
       dispatch(updateUser(formData));
-      Alert.alert('Thành công', 'Thông tin đã được cập nhật.');
+      Alert.alert("Thành công", "Thông tin đã được cập nhật.");
       setInitialData(formData);
     } catch (error) {
-      console.error('Error updating profile:', error.response?.data || error.message);
-      Alert.alert('Lỗi', `Cập nhật thất bại: ${error.response?.data?.message || 'Vui lòng thử lại.'}`);
+      console.error(
+        "Error updating profile:",
+        error.response?.data || error.message
+      );
+      Alert.alert(
+        "Lỗi",
+        `Cập nhật thất bại: ${
+          error.response?.data?.message || "Vui lòng thử lại."
+        }`
+      );
     }
   };
 
@@ -91,51 +104,85 @@ export default function EditProfile() {
     setShowDatePicker(false);
     if (selectedDate) {
       const formattedDate = formatDateForAPI(selectedDate);
-      handleChange('BirthDate', formattedDate);
+      handleChange("BirthDate", formattedDate);
     }
   };
 
   const formatDateForAPI = (date) => {
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   };
 
   const formatDateForDisplay = (dateString) => {
-    if (!dateString || dateString === '0001-01-01T00:00:00') return '';
+    if (!dateString || dateString === "0001-01-01T00:00:00") return "";
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    if (isNaN(date.getTime())) return "";
+    return `${date.getDate().toString().padStart(2, "0")}/${(
+      date.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}/${date.getFullYear()}`;
   };
 
-  const renderInput = (label, name, icon, editable = isEditing, verifiable = false) => (
+  const handleEmailChange = () => {
+    setNewEmail(formData.Email);
+    setShowEmailModal(true);
+  };
+
+  const handlePhoneChange = () => {
+    setNewPhone(formData.Phone);
+    setShowPhoneModal(true);
+  };
+
+  const handleEmailSave = () => {
+    handleChange("Email", newEmail);
+    setShowEmailModal(false);
+  };
+
+  const handlePhoneSave = () => {
+    handleChange("Phone", newPhone);
+    setShowPhoneModal(false);
+  };
+
+  const renderInput = (
+    label,
+    name,
+    icon,
+    editable = isEditing,
+    verifiable = false
+  ) => (
     <View style={styles.inputContainer}>
       <View style={styles.labelContainer}>
-        <FontAwesome name={icon} size={20} color="#0035FF" style={styles.inputIcon} />
+        <FontAwesome
+          name={icon}
+          size={20}
+          color="#0035FF"
+          style={styles.inputIcon}
+        />
         <Text style={styles.label}>{label}</Text>
       </View>
       <View style={styles.inputWrapper}>
-        {name === 'BirthDate' && isEditing ? (
-          <TouchableOpacity 
-          
-            onPress={() => isEditing && setShowDatePicker(true)} 
+        {name === "BirthDate" && isEditing ? (
+          <TouchableOpacity
+            onPress={() => isEditing && setShowDatePicker(true)}
             style={[
               styles.input,
               !isEditing && styles.disabledInput,
-              isEditing && styles.editableInput
+              isEditing && styles.editableInput,
             ]}
           >
             <Text style={styles.dateButtonText}>
-              {formatDateForDisplay(formData.BirthDate) || 'Chọn ngày'}
+              {formatDateForDisplay(formData.BirthDate) || "Chọn ngày"}
             </Text>
           </TouchableOpacity>
-        ) : name === 'Gender' ? (
+        ) : name === "Gender" ? (
           <Picker
             selectedValue={formData.Gender}
-            onValueChange={(itemValue) => handleChange('Gender', itemValue)}
+            onValueChange={(itemValue) => handleChange("Gender", itemValue)}
             enabled={isEditing}
             style={[
               styles.input,
               !isEditing && styles.disabledInput,
-              isEditing && styles.editableInput
+              isEditing && styles.editableInput,
             ]}
           >
             <Picker.Item label="Chọn giới tính" value="" />
@@ -144,22 +191,38 @@ export default function EditProfile() {
             <Picker.Item label="Khác" value="other" />
           </Picker>
         ) : (
-          <TextInput
-            style={[
-              styles.input,
-              !editable && styles.disabledInput,
-              editable && styles.editableInput
-            ]}
-            value={formData[name]}
-            onChangeText={(value) => handleChange(name, value)}
-            editable={editable}
-            placeholder={`Nhập ${label.toLowerCase()}`}
-            placeholderTextColor="#A0AEC0"
-          />
+          <View style={styles.inputWithButton}>
+            <TextInput
+              style={[
+                styles.input,
+                !editable && styles.disabledInput,
+                editable && styles.editableInput,
+                (name === "Email" || name === "Phone") &&
+                  styles.nonEditableInput,
+              ]}
+              value={formData[name]}
+              onChangeText={(value) => handleChange(name, value)}
+              editable={editable && name !== "Email" && name !== "Phone"}
+              placeholder={`Nhập ${label.toLowerCase()}`}
+              placeholderTextColor="#A0AEC0"
+            />
+            {(name === "Email" || name === "Phone") && (
+              <TouchableOpacity
+                style={styles.changeButtonInline}
+                onPress={
+                  name === "Email" ? handleEmailChange : handlePhoneChange
+                }
+              >
+                <Text style={styles.changeButtonTextInline}>Thay đổi</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         )}
         {verifiable && (
           <FontAwesome
-            name={formData[`Is${name}Verified`] ? "check-circle" : "times-circle"}
+            name={
+              formData[`Is${name}Verified`] ? "check-circle" : "times-circle"
+            }
             size={24}
             color={formData[`Is${name}Verified`] ? "#4CAF50" : "#FF3B30"}
             style={styles.verifiedIcon}
@@ -172,7 +235,10 @@ export default function EditProfile() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <FontAwesome name="arrow-left" size={24} color="#0035FF" />
         </TouchableOpacity>
         <Text style={styles.title}>Chỉnh sửa hồ sơ</Text>
@@ -181,7 +247,10 @@ export default function EditProfile() {
 
       <ScrollView style={styles.content}>
         <View style={styles.profileImageContainer}>
-          <Image source={{ uri: 'https://via.placeholder.com/150' }} style={styles.profileImage} />
+          <Image
+            source={{ uri: "https://via.placeholder.com/150" }}
+            style={styles.profileImage}
+          />
           <TouchableOpacity style={styles.changePhotoButton}>
             <FontAwesome name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
@@ -192,10 +261,16 @@ export default function EditProfile() {
             <Text style={styles.sectionTitle}>Thông tin cơ bản</Text>
             {isEditing ? (
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={handleCancel}
+                >
                   <Text style={styles.buttonText}>Hủy</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSave}
+                >
                   <Text style={styles.buttonText}>Lưu</Text>
                 </TouchableOpacity>
               </View>
@@ -205,28 +280,102 @@ export default function EditProfile() {
               </TouchableOpacity>
             )}
           </View>
-          {renderInput('Tên người dùng', 'UserName', 'user', false)}
-          {renderInput('Họ và tên', 'FullName', 'user')}
-          {renderInput('Giới tính', 'Gender', 'venus-mars')}
-          {renderInput('Ngày sinh', 'BirthDate', 'calendar')}
+          {renderInput("Tên người dùng", "UserName", "user", false)}
+          {renderInput("Họ và tên", "FullName", "user")}
+          {renderInput("Giới tính", "Gender", "venus-mars")}
+          {renderInput("Ngày sinh", "BirthDate", "calendar")}
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
-          {renderInput('Email', 'Email', 'envelope', false, true)}
-          {renderInput('Số điện thoại', 'Phone', 'phone', true, true)}
+          {renderInput("Email", "Email", "envelope", true, true)}
+          {renderInput("Số điện thoại", "Phone", "phone", true, true)}
         </View>
       </ScrollView>
 
       {showDatePicker && (
         <DateTimePicker
-          value={new Date(formData.BirthDate && formData.BirthDate !== '0001-01-01T00:00:00' ? formData.BirthDate : Date.now())}
+          value={
+            new Date(
+              formData.BirthDate && formData.BirthDate !== "0001-01-01T00:00:00"
+                ? formData.BirthDate
+                : Date.now()
+            )
+          }
           mode="date"
           display="default"
           onChange={handleDateChange}
           maximumDate={new Date()}
         />
       )}
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showEmailModal}
+        onRequestClose={() => setShowEmailModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Thay đổi Email</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newEmail}
+              onChangeText={setNewEmail}
+              placeholder="Nhập email mới"
+              keyboardType="email-address"
+            />
+            <View style={styles.navButtonContainer}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowEmailModal(false)}
+              >
+                <Text style={styles.modalButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handleEmailSave}
+              >
+                <Text style={styles.modalButtonText}>Lưu</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showPhoneModal}
+        onRequestClose={() => setShowPhoneModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Thay đổi Số điện thoại</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newPhone}
+              onChangeText={setNewPhone}
+              placeholder="Nhập số điện thoại mới"
+              keyboardType="phone-pad"
+            />
+            <View style={styles.navButtonContainer}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowPhoneModal(false)}
+              >
+                <Text style={styles.modalButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handlePhoneSave}
+              >
+                <Text style={styles.modalButtonText}>Lưu</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -238,13 +387,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0F4F8",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: "#E2E8F0",
     elevation: 2,
   },
   backButton: {
@@ -252,8 +401,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2D3748',
+    fontWeight: "bold",
+    color: "#2D3748",
   },
   placeholder: {
     width: 40,
@@ -262,7 +411,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileImageContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 24,
   },
   profileImage: {
@@ -270,22 +419,22 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 3,
-    borderColor: '#0035FF',
+    borderColor: "#0035FF",
   },
   changePhotoButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
-    right: '35%',
-    backgroundColor: '#0035FF',
+    right: "35%",
+    backgroundColor: "#0035FF",
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   section: {
     marginBottom: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 16,
     shadowColor: "#000",
@@ -298,85 +447,173 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2D3748',
+    fontWeight: "bold",
+    color: "#2D3748",
   },
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   editButton: {
-    backgroundColor: '#0035FF',
+    backgroundColor: "#0035FF",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   saveButton: {
-    backgroundColor: '#28A745',
+    backgroundColor: "#28A745",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginLeft: 8,
   },
   cancelButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: "#FF3B30",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   inputContainer: {
     marginBottom: 16,
   },
   labelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   label: {
     fontSize: 16,
-    color: '#4A5568',
+    color: "#4A5568",
     marginLeft: 8,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#2D3748',
+    color: "#2D3748",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: "#E2E8F0",
   },
   editableInput: {
-    backgroundColor: '#EDF2F7',
+    backgroundColor: "#EDF2F7",
   },
   disabledInput: {
-    backgroundColor: '#F7FAFC',
-    color: '#718096',
+    backgroundColor: "#F7FAFC",
+    color: "#718096",
   },
   inputIcon: {
     marginRight: 8,
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#2D3748',
+    color: "#2D3748",
   },
   verifiedIcon: {
     marginLeft: 12,
+  },
+
+  inputWithButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  nonEditableInput: {
+    flex: 1,
+    backgroundColor: "#F7FAFC",
+    color: "#718096",
+    paddingRight: 80, // Make room for the inline button
+  },
+  changeButtonInline: {
+    position: "absolute",
+    right: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  changeButtonTextInline: {
+    color: "#0035FF",
+    fontSize: 14,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "80%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+    width: "100%",
+  },
+  modalButton: {
+    backgroundColor: "#0035FF",
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  modalCancelButton: {
+    backgroundColor: "#FF3B30",
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  modalButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+  navButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 12,
+    width: "100%",
   },
 });

@@ -100,8 +100,6 @@ export default function Cart() {
     );
   };
 
-
-
   const handleRemoveItem = (itemId) => {
     if (token) {
       dispatch(removeFromCusCart(itemId));
@@ -110,7 +108,7 @@ export default function Cart() {
     }
   };
 
-const handleIncreaseQuantity = (item) => {
+  const handleIncreaseQuantity = (item) => {
     if (token) {
       dispatch(addCusCart({ ...item, quantity: 1 })); 
     } else {
@@ -125,7 +123,6 @@ const handleIncreaseQuantity = (item) => {
       dispatch(decreaseQuantity(item.id)); 
     }
   };
-  
 
   const calculateTotal = () => {
     return selectedItems
@@ -134,6 +131,10 @@ const handleIncreaseQuantity = (item) => {
         return sum + (item ? parseFloat(item.price) * item.quantity : 0);
       }, 0)
       .toFixed(0);
+  };
+
+  const calculateItemTotal = (item) => {
+    return (parseFloat(item.price) * item.quantity).toFixed(0);
   };
 
   const formatCurrency = (amount) => {
@@ -196,18 +197,6 @@ const handleIncreaseQuantity = (item) => {
             <Text style={styles.badgeText}>{cartItems.length}</Text>
           </View>
         </View>
-
-        <TouchableOpacity
-          style={styles.selectAllContainer}
-          onPress={handleSelectAll}
-        >
-          <View style={[styles.checkbox, selectAll && styles.checkboxSelected]}>
-            {selectAll && (
-              <Ionicons name="checkmark" size={16} color={COLORS.white} />
-            )}
-          </View>
-          <Text style={styles.selectAllText}>Chọn tất cả</Text>
-        </TouchableOpacity>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {cartItems.map((item) => (
@@ -274,14 +263,28 @@ const handleIncreaseQuantity = (item) => {
                       <Ionicons name="add" size={20} color={COLORS.primary} />
                     </TouchableOpacity>
                   </View>
+                  <Text style={styles.itemTotalPrice}>
+                    {formatCurrency(calculateItemTotal(item))}
+                  </Text>
                 </View>
               </View>
             </View>
           ))}
         </ScrollView>
 
-        {selectedItems.length > 0 && (
+        {cartItems.length > 0 && (
           <View style={styles.bottomNav}>
+            <TouchableOpacity
+              style={styles.selectAllContainer}
+              onPress={handleSelectAll}
+            >
+              <View style={[styles.checkbox, selectAll && styles.checkboxSelected]}>
+                {selectAll && (
+                  <Ionicons name="checkmark" size={16} color={COLORS.white} />
+                )}
+              </View>
+              <Text style={styles.selectAllText}>Chọn tất cả</Text>
+            </TouchableOpacity>
             <View style={styles.totalContainer}>
               <Text style={styles.totalText}>Tổng cộng:</Text>
               <Text style={styles.totalAmount}>
@@ -428,7 +431,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 4, 
     borderWidth: 2,
     borderColor: COLORS.primary,
     alignItems: "center",
@@ -438,14 +441,15 @@ const styles = StyleSheet.create({
   checkboxSelected: {
     backgroundColor: COLORS.primary,
   },
+  selectAllContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
   selectAllText: {
     fontSize: 16,
     fontWeight: "500",
     color: COLORS.dark,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
   },
   cartItem: {
     flexDirection: "row",
@@ -468,6 +472,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     marginRight: 16,
+    resizeMode: "contain",
   },
   itemDetails: {
     flex: 1,
@@ -619,5 +624,10 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  itemTotalPrice: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.secondary,
   },
 });
