@@ -242,7 +242,9 @@ export default function ProductDetail() {
           <View style={styles.priceContainer}>
             <View>
               <Text style={styles.productPrice}>
-                {product.price ? `${formatCurrency(product.price)} ₫` : "Giá không có"}
+                {product.price
+                  ? `${formatCurrency(product.price)} ₫`
+                  : "Giá không có"}
               </Text>
               {product.discount && product.listedPrice ? (
                 <>
@@ -311,7 +313,9 @@ export default function ProductDetail() {
             ))}
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Kích thước</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
+            Kích thước
+          </Text>
           <View style={styles.sizeSelector}>
             {PRODUCT_SIZES.map((sizeOption) => (
               <TouchableOpacity
@@ -322,17 +326,21 @@ export default function ProductDetail() {
                   size === sizeOption && styles.activeSize,
                 ]}
               >
-                <Text style={[
-                  styles.sizeButtonText,
-                  size === sizeOption && styles.activeSizeText,
-                ]}>
+                <Text
+                  style={[
+                    styles.sizeButtonText,
+                    size === sizeOption && styles.activeSizeText,
+                  ]}
+                >
                   {sizeOption}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Tình trạng</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
+            Tình trạng
+          </Text>
           <View style={styles.conditionSelector}>
             {PRODUCT_CONDITIONS.map((conditionOption) => (
               <TouchableOpacity
@@ -343,10 +351,12 @@ export default function ProductDetail() {
                   condition === conditionOption && styles.activeCondition,
                 ]}
               >
-                <Text style={[
-                  styles.conditionButtonText,
-                  condition === conditionOption && styles.activeConditionText,
-                ]}>
+                <Text
+                  style={[
+                    styles.conditionButtonText,
+                    condition === conditionOption && styles.activeConditionText,
+                  ]}
+                >
                   {conditionOption}
                 </Text>
               </TouchableOpacity>
@@ -370,12 +380,10 @@ export default function ProductDetail() {
           <Text style={styles.specificationText}>
             Kích thước: {product.size}
           </Text>
-          <Text style={styles.specificationText}>
-            Màu sắc: {product.color}
-          </Text>
+          <Text style={styles.specificationText}>Màu sắc: {product.color}</Text>
         </View>
 
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ưu đãi</Text>
           <View style={styles.promotionContainer}>
             {product.offers && product.offers.length > 0 ? (
@@ -388,11 +396,34 @@ export default function ProductDetail() {
               <Text style={styles.promotionItem}>Không có ưu đãi</Text>
             )}
           </View>
+        </View> */}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Ưu đãi</Text>
+          <View style={styles.promotionContainer}>
+            <Text style={styles.promotionItem}>
+              ✓ Tặng 2 Quấn cán vợt Cầu Lông: VNB 001, VS002 hoặc Joto 001
+            </Text>
+            <Text style={styles.promotionItem}>
+              ✓ Sơn logo mặt vợt miễn phí
+            </Text>
+            <Text style={styles.promotionItem}>
+              ✓ Bảo hành lưới đan trong 72 giờ
+            </Text>
+            <Text style={styles.promotionItem}>
+              ✓ Thay gen vợt miễn phí trọn đời
+            </Text>
+            <Text style={styles.promotionItem}>
+              ✓ Tích luỹ điểm thành viên Premium
+            </Text>
+          </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
-          <Text style={styles.descriptionText}>{product.description || "Không có mô tả"}</Text>
+          <Text style={styles.descriptionText}>
+            {product.description || "Không có mô tả"}
+          </Text>
         </View>
 
         <View style={styles.section}>
