@@ -91,7 +91,8 @@ const HomePage = () => {
     const loadCategories = async () => {
       try {
         const data = await fetchCategories();
-        setCategories(data);
+        const activeCategories = data.filter(category => category.status === true);
+        setCategories(activeCategories);
       } catch (error) {
         console.error("Failed to load categories:", error);
       }
@@ -112,7 +113,15 @@ const HomePage = () => {
 
   const renderCategory = useCallback(
     ({ item }) => (
-      <TouchableOpacity style={styles.categoryItem}>
+      <TouchableOpacity
+        style={styles.categoryItem}
+        onPress={() =>
+          navigation.navigate("CategoryProduct", {
+            categoryId: item.id,
+            categoryName: item.categoryName,
+          })
+        }
+      >
         <View style={styles.categoryIcon}>
           {item.categoryImgPath ? (
             <Image
