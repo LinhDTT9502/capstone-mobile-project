@@ -73,7 +73,7 @@ export default function Cart() {
         const storedToken = await AsyncStorage.getItem("token");
         setToken(storedToken);
       } catch (error) {
-        console.log("Error retrieving token:", error);
+        // console.log("Error retrieving token:", error);
       }
     };
     fetchToken();

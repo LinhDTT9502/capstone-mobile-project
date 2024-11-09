@@ -53,7 +53,7 @@ export const updateCartItemQuantity = async (cartItemId, quantity, token) => {
       quantity,
       token
     );
-    console.log("Cart item quantity updated successfully");
+    // console.log("Cart item quantity updated successfully");
     return response.data;
   } catch (error) {
     console.error("Error updating cart item quantity:", error);

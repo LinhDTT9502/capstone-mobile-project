@@ -1,5 +1,5 @@
 // src/services/productService.js
-import { getProductList, getProductById, getProductFilterBy } from '../api/apiProduct';
+import { getProductList, getProductById, getProductFilterBy, searchProducts as searchProductsAPI } from '../api/apiProduct';
 
 export const fetchProducts = async (currentPage) => {
   try {
@@ -46,4 +46,34 @@ export const fetchProductById = async (id) => {
     throw error;
   }
 };
+
+export const fetchProductsByCategory = async (categoryId, currentPage) => {
+  try {
+    const response = await getProductList(currentPage);
+    const { total, data } = response.data;
+    // console.log("API Response Data:", data.$values);
+
+    // Lọc sản phẩm theo `categoryId`
+    const filteredProducts = data.$values.filter(
+      (product) => product.categoryID === categoryId
+    );
+
+    return { total, products: filteredProducts };
+  } catch (error) {
+    console.error('Error fetching products by category:', error);
+    throw error;
+  }
+};
+
+export const searchProducts = async (keywords) => {
+  try {
+    const response = await searchProductsAPI(keywords);
+    return response.data;
+  } catch (error) {
+    console.error('Error in searchProducts:', error);
+    throw error;
+  }
+};
+
+
 

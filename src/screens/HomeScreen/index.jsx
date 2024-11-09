@@ -13,7 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import Swiper from "react-native-swiper";
 
 import Header from "../../layouts/Header";
-import ScrollingLogos from "../../components/ScrollingLogos";
+import ScrollingLogos from "../../components/HomeScreen/ScrollingLogos";
 import { fetchCategories } from "../../services/categoryService";
 import { fetchProducts } from "../../services/productService";
 
@@ -30,14 +30,16 @@ const flashSaleProducts = [
     id: 1,
     name: "Giày chạy bộ Nike Air Zoom",
     price: "2.000.000 ₫",
-    image: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/skwgyqrbfvnt6ux4ssap/air-zoom-pegasus-37-running-shoe-mwrTCc.png",
+    image:
+      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/skwgyqrbfvnt6ux4ssap/air-zoom-pegasus-37-running-shoe-mwrTCc.png",
     discount: "20%",
   },
   {
     id: 2,
     name: "Áo thể thao Adidas Climacool",
     price: "800.000 ₫",
-    image: "https://assets.adidas.com/images/w_600,f_auto,q_auto/5ce17825f3bd4bbd90f9ab9600a3f64c_9366/Ao_Thun_3_Soc_DJen_GN3495_01_laydown.jpg",
+    image:
+      "https://assets.adidas.com/images/w_600,f_auto,q_auto/5ce17825f3bd4bbd90f9ab9600a3f64c_9366/Ao_Thun_3_Soc_DJen_GN3495_01_laydown.jpg",
     discount: "15%",
   },
 ];
@@ -47,19 +49,22 @@ const recentlyViewedProducts = [
     id: 1,
     name: "Bóng đá Nike Strike",
     price: "750.000 ₫",
-    image: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/17e7e6e4-5795-4c75-80a5-7d3c4ea4d6b3/strike-soccer-ball-GnljN8.png",
+    image:
+      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/17e7e6e4-5795-4c75-80a5-7d3c4ea4d6b3/strike-soccer-ball-GnljN8.png",
   },
   {
     id: 2,
     name: "Túi đựng vợt tennis Wilson",
     price: "1.200.000 ₫",
-    image: "https://www.wilson.com/en-us/media/catalog/product/W/R/WR8002001001_0_Tour_2_Comp_Large_RD_BL.jpg",
+    image:
+      "https://www.wilson.com/en-us/media/catalog/product/W/R/WR8002001001_0_Tour_2_Comp_Large_RD_BL.jpg",
   },
   {
     id: 3,
     name: "Túi đựng vợt tennis Wilson",
     price: "1.200.000 ₫",
-    image: "https://www.wilson.com/en-us/media/catalog/product/W/R/WR8002001001_0_Tour_2_Comp_Large_RD_BL.jpg",
+    image:
+      "https://www.wilson.com/en-us/media/catalog/product/W/R/WR8002001001_0_Tour_2_Comp_Large_RD_BL.jpg",
   },
 ];
 
@@ -76,7 +81,8 @@ const promotionalContent = [
     id: "2",
     title: "Ưu đãi độc quyền",
     subtitle: "Giảm đến 50%",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaCjmMQYNQMkh-OXsGyKcbOb-Tg216WjI3gA&s",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaCjmMQYNQMkh-OXsGyKcbOb-Tg216WjI3gA&s",
     backgroundColor: "#FF6B6B",
     textColor: "#FFFFFF",
   },
@@ -91,8 +97,7 @@ const HomePage = () => {
     const loadCategories = async () => {
       try {
         const data = await fetchCategories();
-        const activeCategories = data.filter(category => category.status === true);
-        setCategories(activeCategories);
+        setCategories(data);
       } catch (error) {
         console.error("Failed to load categories:", error);
       }
@@ -115,12 +120,12 @@ const HomePage = () => {
     ({ item }) => (
       <TouchableOpacity
         style={styles.categoryItem}
-        onPress={() =>
+        onPress={() => {
+          // console.log("Navigating to CategoryProduct with:", item.id, item.categoryName);
           navigation.navigate("CategoryProduct", {
-            categoryId: item.id,
             categoryName: item.categoryName,
-          })
-        }
+          });
+        }}
       >
         <View style={styles.categoryIcon}>
           {item.categoryImgPath ? (
@@ -159,7 +164,10 @@ const HomePage = () => {
         {product.name || product.productName}
       </Text>
       <Text style={styles.productPrice}>
-        {typeof product.price === 'number' ? product.price.toLocaleString() : product.price} ₫
+        {typeof product.price === "number"
+          ? product.price.toLocaleString()
+          : product.price}{" "}
+        ₫
       </Text>
     </TouchableOpacity>
   );
@@ -216,11 +224,19 @@ const HomePage = () => {
             contentContainerStyle={styles.categoryContainer}
           />
         </View>
-
-        <ScrollingLogos />
+        <View>
+          <Text style={styles.sectionTitle}>Thương hiệu</Text>
+          <ScrollingLogos />
+        </View>
 
         <View style={styles.featuredSection}>
-          <Text style={styles.sectionTitle}>Sản phẩm mới</Text>
+        <View style={styles.sectionHeader}>
+    <Text style={styles.sectionTitle}>Sản phẩm mới</Text>
+    <TouchableOpacity onPress={() => navigation.navigate("ProductList")}>
+      <Text style={styles.viewAllText}>Xem tất cả</Text>
+    </TouchableOpacity>
+  </View>
+          
           <View style={styles.featuredProductsContainer}>
             {products.map((product) => renderProductCard(product))}
           </View>
@@ -241,7 +257,9 @@ const HomePage = () => {
         <View style={styles.flashSaleSection}>
           <Text style={styles.sectionTitle}>Flash Sale</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {flashSaleProducts.map((product) => renderProductCard(product, true))}
+            {flashSaleProducts.map((product) =>
+              renderProductCard(product, true)
+            )}
           </ScrollView>
         </View>
 
@@ -254,12 +272,12 @@ const HomePage = () => {
           </ScrollView>
         </View>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.viewAllButton}
           onPress={() => navigation.navigate("ProductList")}
         >
           <Text style={styles.viewAllText}>Xem tất cả sản phẩm</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </ScrollView>
     </View>
   );
@@ -380,7 +398,7 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 12,
     marginBottom: 12,
-    resizeMode:"contain",
+    resizeMode: "contain",
   },
   productName: {
     fontSize: 16,
@@ -440,7 +458,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   viewAllText: {
-    
     color: "#FFFFFF",
     fontWeight: "bold",
     fontSize: 16,
@@ -474,7 +491,6 @@ const styles = StyleSheet.create({
   promotionalTextContainer: {
     flex: 1,
     justifyContent: "center",
-    
   },
   promotionalTitle: {
     fontSize: 26,
@@ -489,6 +505,19 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 16,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#4A90E2",
   },
 });
 

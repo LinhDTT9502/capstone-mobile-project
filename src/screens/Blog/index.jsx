@@ -1,336 +1,174 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
   StyleSheet,
-  TextInput,
-  Modal,
-  Alert,
-  ActivityIndicator,
   SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
   Image,
+  Dimensions,
+  TouchableOpacity,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import {
-  fetchAllBlogs,
-  createNewBlog,
-  removeBlog,
-} from "../../services/blogService";
+import { Feather } from '@expo/vector-icons';
+import { useNavigation } from "@react-navigation/native";
 
-export default function BlogScreen() {
-  const [blogs, setBlogs] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [currentBlog, setCurrentBlog] = useState({ title: "", content: "" });
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState({ id: "1", name: "Current User" }); // Simulated current user
+const screenWidth = Dimensions.get("window").width;
 
-  useEffect(() => {
-    loadBlogs();
-  }, []);
-
-  const loadBlogs = async () => {
-    setIsLoading(true);
-    try {
-      const blogsData = await fetchAllBlogs();
-      setBlogs(blogsData);
-    } catch (error) {
-      Alert.alert("Error", "Failed to load blogs");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCreateBlog = async () => {
-    if (!currentBlog.title.trim() || !currentBlog.content.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const newBlog = await createNewBlog({ ...currentBlog, userId: currentUser.id });
-      setBlogs([newBlog, ...blogs]);
-      setModalVisible(false);
-      setCurrentBlog({ title: "", content: "" });
-    } catch (error) {
-      Alert.alert("Error", "Failed to create blog");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteBlog = async (id) => {
-    Alert.alert(
-      "Confirm Delete",
-      "Are you sure you want to delete this blog?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setIsLoading(true);
-            try {
-              await removeBlog(id);
-              setBlogs(blogs.filter(blog => blog.id !== id));
-            } catch (error) {
-              Alert.alert("Error", "Failed to delete blog");
-            } finally {
-              setIsLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
+export default function Blog() {
+  const navigation = useNavigation();
+  const [blogs] = useState([
+    {
+      id: "1",
+      title: "Lợi ích của việc chơi thể thao",
+      subtitle: "Tập luyện thể thao giúp cải thiện sức khỏe",
+      content: "Tham gia các môn thể thao giúp bạn cải thiện sức khỏe, tăng cường thể lực và tinh thần...",
+      coverImage: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZXhlcmNpc2V8ZW58MHx8MHx8fDA%3D",
+      createdByStaffFullName: "Nguyễn Văn A",
+      createdByStaffId: "1",
+      createdAt: new Date().toString(),
+    },
+    {
+      id: "2",
+      title: "Hướng dẫn chọn dụng cụ thể thao phù hợp",
+      subtitle: "Lựa chọn dụng cụ thể thao tối ưu cho từng môn",
+      content: "Việc chọn dụng cụ thể thao phù hợp là rất quan trọng để đảm bảo hiệu quả và an toàn...",
+      coverImage: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGhlYWx0aHklMjBmb29kfGVufDB8fDB8fHww",
+      createdByStaffFullName: "Trần Thị B",
+      createdByStaffId: "2",
+      createdAt: new Date().toString(),
+    },
+    {
+      id: "3",
+      title: "Các môn thể thao tốt nhất để tăng cường thể lực",
+      subtitle: "Khám phá các môn thể thao giúp bạn khỏe mạnh hơn",
+      content: "Chạy bộ, bơi lội, bóng rổ là những môn thể thao giúp tăng cường thể lực một cách hiệu quả...",
+      coverImage: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bWVkaXRhdGlvbnxlbnwwfHwwfHx8MA%3D%3D",
+      createdByStaffFullName: "Lê Văn C",
+      createdByStaffId: "3",
+      createdAt: new Date().toString(),
+    },
+  ]);
 
   const renderBlogItem = ({ item }) => (
-    <View style={styles.blogItem}>
-      <View style={styles.blogHeader}>
-        <Image
-          style={styles.avatar}
-          source={{ uri: `https://i.pravatar.cc/100?u=${item.createdByStaffId}` }}
-        />
-        <View>
-          <Text style={styles.userName}>{item.createdByStaffFullName}</Text>
-          <Text style={styles.blogTime}>{new Date(item.createdAt).toLocaleString()}</Text>
+    <TouchableOpacity 
+      style={styles.blogItem}
+      onPress={() => navigation.navigate("BlogDetail", { blog: item })}
+    >
+      {item.coverImage && <Image style={styles.coverImage} source={{ uri: item.coverImage }} />}
+      <View style={styles.blogContent}>
+        <Text style={styles.blogTitle} numberOfLines={2}>{item.title}</Text>
+        <Text style={styles.blogSubtitle} numberOfLines={1}>{item.subtitle}</Text>
+        <View style={styles.blogFooter}>
+          <Image style={styles.avatar} source={{ uri: `https://i.pravatar.cc/100?u=${item.createdByStaffId}` }} />
+          <View style={styles.authorInfo}>
+            <Text style={styles.userName} numberOfLines={1}>{item.createdByStaffFullName}</Text>
+            <Text style={styles.blogTime}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+          </View>
         </View>
       </View>
-      <Text style={styles.blogTitle}>{item.title}</Text>
-      <Text style={styles.blogContent} numberOfLines={3}>{item.content}</Text>
-      {item.createdByStaffId === currentUser.id && (
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteBlog(item.id)}
-        >
-          <Ionicons name="trash-outline" size={20} color="#FA7D0B" />
-          <Text style={styles.deleteButtonText}>Delete</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Blog Feed</Text>
+        {/* <TouchableOpacity style={styles.searchButton}>
+          <Feather name="search" size={24} color="#050505" />
+        </TouchableOpacity> */}
       </View>
 
-      {/* <TouchableOpacity
-        style={styles.createBlogButton}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.createBlogButtonText}>Write a new blog post...</Text>
-      </TouchableOpacity> */}
-
-      {isLoading ? (
-        <ActivityIndicator size="large" color="#0035FF" style={styles.loader} />
-      ) : (
-        <FlatList
-          data={blogs}
-          renderItem={renderBlogItem}
-          keyExtractor={(item) => item.blogId.toString()}
-          contentContainerStyle={styles.listContainer}
-        />
-      )}
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalContainer}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create New Blog Post</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Blog Title"
-              value={currentBlog.title}
-              onChangeText={(text) =>
-                setCurrentBlog({ ...currentBlog, title: text })
-              }
-              placeholderTextColor="#2C323A"
-            />
-            <TextInput
-              style={[styles.input, styles.contentInput]}
-              placeholder="Blog Content"
-              multiline
-              value={currentBlog.content}
-              onChangeText={(text) =>
-                setCurrentBlog({ ...currentBlog, content: text })
-              }
-              placeholderTextColor="#2C323A"
-            />
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleCreateBlog}
-            >
-              <Text style={styles.submitButtonText}>Post</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+      <FlatList
+        data={blogs}
+        renderItem={renderBlogItem}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContainer}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    paddingTop:30,
+    flex: 1,    paddingTop:30,
+
     backgroundColor: "#F0F2F5",
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E4E6EB",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#050505",
   },
-  createBlogButton: {
-    backgroundColor: "#FFFFFF",
-    padding: 12,
-    margin: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E4E6EB",
-  },
-  createBlogButtonText: {
-    color: "#65676B",
-    fontSize: 16,
+  searchButton: {
+    padding: 8,
   },
   listContainer: {
-    padding: 16,
+    padding: 14,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
   },
   blogItem: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 12,
     marginBottom: 16,
+    overflow: 'hidden',
     elevation: 3,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    width: (screenWidth - 32) / 2 - 8,
   },
-  blogHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
+  coverImage: {
+    width: "100%",
+    height: 120,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
+  blogContent: {
+    padding: 12,
   },
-  userName: {
+  blogTitle: {
     fontSize: 16,
     fontWeight: "bold",
+    color: "#050505",
+    marginBottom: 4,
+  },
+  blogSubtitle: {
+    fontSize: 12,
+    color: "#65676B",
+    marginBottom: 8,
+  },
+  blogFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  authorInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 12,
+    fontWeight: "500",
     color: "#050505",
   },
   blogTime: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#65676B",
-  },
-  blogTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#050505",
-    marginBottom: 8,
-  },
-  blogContent: {
-    fontSize: 16,
-    color: "#050505",
-    marginBottom: 12,
-  },
-  deleteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-end",
-  },
-  deleteButtonText: {
-    color: "#FA7D0B",
-    marginLeft: 4,
-    fontSize: 14,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    padding: 20,
-    width: "90%",
-    maxWidth: 400,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 16,
-    textAlign: "center",
-    color: "#050505",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E4E6EB",
-    borderRadius: 4,
-    padding: 10,
-    marginBottom: 16,
-    fontSize: 16,
-    color: "#050505",
-    backgroundColor: "#FFFFFF",
-  },
-  contentInput: {
-    height: 120,
-    textAlignVertical: "top",
-  },
-  submitButton: {
-    backgroundColor: "#1877F2",
-    padding: 12,
-    borderRadius: 4,
-    alignItems: "center",
-  },
-  submitButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  cancelButton: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 4,
-    alignItems: "center",
-    backgroundColor: "#E4E6EB",
-  },
-  cancelButtonText: {
-    color: "#050505",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

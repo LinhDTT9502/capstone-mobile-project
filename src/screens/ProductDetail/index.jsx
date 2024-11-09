@@ -10,18 +10,30 @@ import {
   Alert,
   ScrollView,
   SafeAreaView,
+  Dimensions,
 } from "react-native";
 import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fetchProductById } from "../../services/productService";
-import { fetchLikes, handleToggleLike } from "../../services/likeService";
 import DateTimePicker from "@react-native-community/datetimepicker";
+
 import AddToCartButton from "../../components/AddToCardButton";
 import RentButton from "../../components/RentButton";
 import BuyNowButton from "../../components/BuyNowButton";
+import Comment from "../../components/ProductDetail/Comment";
+import LikeButton from "../../components/ProductDetail/LikeBButton";
 
+import {
+  fetchComments,
+  postComment,
+  editComment,
+  deleteComment,
+  replyComment,
+} from "../../services/commentService";
+import { fetchProductById } from "../../services/productService";
+import { fetchLikes, handleToggleLike } from "../../services/likeService";
 import styles from "./css/ProductDetailStyles";
+const screenWidth = Dimensions.get("window").width;
 
 const COLORS = {
   primary: "#0035FF",
@@ -64,20 +76,23 @@ export default function ProductDetail() {
   const [condition, setCondition] = useState("Mới");
   const [userComment, setUserComment] = useState("");
   const [userRating, setUserRating] = useState(0);
+
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
-  const [comment, setComment] = useState("");
+
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     loadProductDetails();
     loadLikes();
     checkLoginStatus();
+    loadComments();
   }, [productId]);
-
-  useEffect(() => {
-    checkLoginStatus();
-  }, []);
 
   const checkLoginStatus = async () => {
     try {
@@ -129,13 +144,44 @@ export default function ProductDetail() {
     }
   };
 
-  const handleSubmitComment = () => {
-    if (!comment.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận.");
-      return;
+  const loadComments = async () => {
+    try {
+      const data = await fetchComments(productId);
+      setComments(data);
+    } catch (error) {
+      console.error("Error loading comments:", error);
     }
-    Alert.alert("Thành công", "Bình luận của bạn đã được gửi");
-    setComment("");
+  };
+
+  const handlePostComment = async (newComment) => {
+    try {
+      await postComment(productId, newComment);
+      loadComments();
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể đăng bình luận");
+    }
+  };
+
+  const handleEditComment = async (commentId, newContent) => {
+    try {
+      await editComment(commentId, newContent);
+      loadComments();
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể sửa bình luận");
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await deleteComment(commentId);
+      loadComments();
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể xóa bình luận");
+    }
+  };
+
+  const handleReplyComment = async (commentId) => {
+    Alert.alert("Thông báo", "Chức năng trả lời bình luận chưa được triển khai");
   };
 
   const handleAddToCart = (type) => {
@@ -207,8 +253,6 @@ export default function ProductDetail() {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  if (!product) return <Text>Loading...</Text>;
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -255,18 +299,12 @@ export default function ProductDetail() {
                 </>
               ) : null}
             </View>
-            <TouchableOpacity
-              style={styles.likeButton}
+            <LikeButton
+              isLiked={isLiked}
+              likes={likes}
               onPress={handleLikeToggle}
               disabled={!isLoggedIn}
-            >
-              <AntDesign
-                name={isLiked ? "like1" : "like2"}
-                size={24}
-                color={isLiked ? COLORS.primary : COLORS.dark}
-              />
-              {likes !== null && <Text style={styles.likeCount}>{likes}</Text>}
-            </TouchableOpacity>
+            />
           </View>
         </View>
 
@@ -383,21 +421,6 @@ export default function ProductDetail() {
           <Text style={styles.specificationText}>Màu sắc: {product.color}</Text>
         </View>
 
-        {/* <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ưu đãi</Text>
-          <View style={styles.promotionContainer}>
-            {product.offers && product.offers.length > 0 ? (
-              product.offers.map((offer, index) => (
-                <Text key={index} style={styles.promotionItem}>
-                  ✓ {offer.description}
-                </Text>
-              ))
-            ) : (
-              <Text style={styles.promotionItem}>Không có ưu đãi</Text>
-            )}
-          </View>
-        </View> */}
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ưu đãi</Text>
           <View style={styles.promotionContainer}>
@@ -457,25 +480,14 @@ export default function ProductDetail() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Bình luận</Text>
-          <View style={styles.commentInputContainer}>
-            <TextInput
-              style={styles.commentInput}
-              placeholder="Nhập bình luận của bạn..."
-              value={comment}
-              onChangeText={setComment}
-              multiline
-              numberOfLines={3}
-            />
-            <TouchableOpacity
-              style={styles.commentSubmitButton}
-              onPress={handleSubmitComment}
-            >
-              <Text style={styles.commentSubmitText}>Gửi bình luận</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <Comment
+          comments={comments}
+          isLoggedIn={isLoggedIn}
+          onPostComment={handlePostComment}
+          onEditComment={handleEditComment}
+          onDeleteComment={handleDeleteComment}
+          onReplyComment={handleReplyComment}
+        />
       </ScrollView>
 
       <View style={styles.bottomNav}>
@@ -564,3 +576,4 @@ export default function ProductDetail() {
     </SafeAreaView>
   );
 }
+

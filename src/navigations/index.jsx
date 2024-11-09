@@ -20,6 +20,7 @@ import MyOrder from '../screens/MyOrder/index';
 import Policy from '../screens/Policy/index';
 import UserShipment from '../screens/UserShipment/index';
 import CategoryProduct from '../screens/CategoryProduct/index';
+import BlogDetail from '../screens/Blog/BlogDetail/index';
 
 const Stack = createStackNavigator();
 
@@ -44,6 +45,7 @@ export default function MainContainer() {
       <Stack.Screen name="Policy" component={Policy} />
       <Stack.Screen name="UserShipment" component={UserShipment} />
       <Stack.Screen name="CategoryProduct" component={CategoryProduct} />
+      <Stack.Screen name="BlogDetail" component={BlogDetail} />
     </Stack.Navigator>
   );
 }

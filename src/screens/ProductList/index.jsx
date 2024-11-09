@@ -10,13 +10,14 @@ import {
   Modal,
   FlatList,
   SafeAreaView,
+  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
-// api
-import { fetchProducts, fetchProductsFiltered } from "../../services/productService";
+import { fetchProducts, fetchProductsFiltered, searchProducts } from "../../services/productService";
 
+const { width } = Dimensions.get('window');
 const logoImage = require("../Logo/2sport_logo.png");
 
 export default function ProductListing() {
@@ -26,15 +27,12 @@ export default function ProductListing() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Add filter states
-  const [sortBy, setSortBy] = useState("");
-  const [isAscending, setIsAscending] = useState(true);
-  const [selectedBrands, setSelectedBrands] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [sortOrder, setSortOrder] = useState('default');
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(1000000000);
 
@@ -42,36 +40,44 @@ export default function ProductListing() {
     loadProducts();
   }, [currentPage]);
 
+  useEffect(() => {
+    filterAndSortProducts();
+  }, [products, searchQuery, sortOrder, minPrice, maxPrice]);
+
   const loadProducts = async () => {
     setLoading(true);
     try {
-      if (selectedFilters.length > 0) {
-        // Apply filters
-        const { total, products: fetchedProducts } = await fetchProductsFiltered(
-          sortBy,
-          isAscending,
-          selectedBrands,
-          selectedCategories,
-          minPrice,
-          maxPrice
-        );
-        setProducts(prevProducts => 
-          currentPage === 1 ? fetchedProducts : [...prevProducts, ...fetchedProducts]
-        );
-        setTotalProducts(total);
-      } else {
-        // Load without filters
-        const { total, products: fetchedProducts } = await fetchProducts(currentPage);
-        setProducts(prevProducts => 
-          currentPage === 1 ? fetchedProducts : [...prevProducts, ...fetchedProducts]
-        );
-        setTotalProducts(total);
-      }
+      const { total, products: fetchedProducts } = await fetchProducts(currentPage);
+      setProducts(prevProducts => 
+        currentPage === 1 ? fetchedProducts : [...prevProducts, ...fetchedProducts]
+      );
+      setTotalProducts(total);
     } catch (error) {
       console.error("Error loading products:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterAndSortProducts = () => {
+    let filtered = products.filter(product => 
+      product.price >= minPrice &&
+      product.price <= maxPrice
+    );
+
+    switch (sortOrder) {
+      case 'highToLow':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'lowToHigh':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      default:
+        // Keep original order
+        break;
+    }
+
+    setFilteredProducts(filtered);
   };
 
   const loadMoreProducts = () => {
@@ -82,30 +88,38 @@ export default function ProductListing() {
 
   const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
 
-  const filters = [
-    { label: "Mới nhất", value: "newest", sortBy: "createdDate", ascending: false },
-    { label: "Cũ nhất", value: "oldest", sortBy: "createdDate", ascending: true },
-    { label: "Giá thấp đến cao", value: "priceAsc", sortBy: "price", ascending: true },
-    { label: "Giá cao đến thấp", value: "priceDesc", sortBy: "price", ascending: false },
-  ];
-
-  const toggleFilter = (filter) => {
-    // Update selected filters
-    setSelectedFilters(prevFilters =>
-      prevFilters.includes(filter.value)
-        ? prevFilters.filter(f => f !== filter.value)
-        : [...prevFilters, filter.value]
-    );
-
-    // Update sort parameters
-    setSortBy(filter.sortBy);
-    setIsAscending(filter.ascending);
+  const toggleSortOrder = () => {
+    setSortOrder((prevOrder) => {
+      if (prevOrder === 'default') return 'highToLow';
+      if (prevOrder === 'highToLow') return 'lowToHigh';
+      return 'default';
+    });
   };
 
   const applyFilters = () => {
-    setCurrentPage(1); // Reset to first page
-    loadProducts();
+    filterAndSortProducts();
     toggleFilterModal();
+  };
+
+  const handleSearch = async () => {
+    if (searchQuery.trim() === "") {
+      loadProducts();
+      return;
+    }
+  
+    setLoading(true);
+    try {
+      const response = await searchProducts(searchQuery);
+      console.log("API Response:", response); // Add this line
+      const searchResults = response.data?.$values || []; // Handle cases where $values might be undefined
+      const uniqueResults = [...new Map(searchResults.map(item => [item.id, item])).values()];
+      setProducts(uniqueResults);
+      setTotalProducts(uniqueResults.length);
+    } catch (error) {
+      console.error("Error searching products:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderProduct = ({ item }) => (
@@ -125,55 +139,50 @@ export default function ProductListing() {
           {item.categoryName} 
         </Text>
         <Text style={styles.productPrice}>{item.price} ₫</Text>
-
       </View>
     </TouchableOpacity>
   );
-  
   
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Image source={logoImage} style={styles.logoImage} />
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#999" />
-          <TextInput
+        <TextInput
             style={styles.searchInput}
             placeholder="Tìm kiếm sản phẩm..."
             placeholderTextColor="#999"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+          <TouchableOpacity onPress={handleSearch}>
+            <Ionicons name="search" size={20} color="#999" />
+          </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={toggleFilterModal}>
           <Ionicons name="options-outline" size={24} color="#4A90E2" />
         </TouchableOpacity>
       </View>
 
-      {selectedFilters.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterChips}
-        >
-          {selectedFilters.map((filterValue) => {
-            const filter = filters.find(f => f.value === filterValue);
-            return (
-              <TouchableOpacity
-                key={filterValue}
-                style={styles.filterChip}
-                onPress={() => toggleFilter(filter)}
-              >
-                <Text style={styles.filterChipText}>{filter.label}</Text>
-                <Ionicons name="close-circle" size={18} color="#4A90E2" />
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      )}
+      <View style={styles.sortContainer}>
+        <TouchableOpacity onPress={toggleSortOrder} style={styles.sortButton}>
+          <Ionicons
+            name={sortOrder === 'lowToHigh' ? 'arrow-up' : 'arrow-down'}
+            size={20}
+            color="#333"
+          />
+          <Text style={styles.sortButtonText}>
+            {sortOrder === 'default'
+              ? 'Mặc định'
+              : sortOrder === 'highToLow'
+              ? 'Giá cao → thấp'
+              : 'Giá thấp → cao'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
-        data={products}
+        data={filteredProducts}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
@@ -203,30 +212,26 @@ export default function ProductListing() {
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            {filters.map((filter) => (
-              <TouchableOpacity
-                key={filter.value}
-                style={[
-                  styles.filterOption,
-                  selectedFilters.includes(filter.value) &&
-                    styles.filterOptionSelected,
-                ]}
-                onPress={() => toggleFilter(filter)}
-              >
-                <Text
-                  style={[
-                    styles.filterOptionText,
-                    selectedFilters.includes(filter.value) &&
-                      styles.filterOptionTextSelected,
-                  ]}
-                >
-                  {filter.label}
-                </Text>
-                {selectedFilters.includes(filter.value) && (
-                  <Ionicons name="checkmark" size={20} color="#FFF" />
-                )}
-              </TouchableOpacity>
-            ))}
+            <View style={styles.priceFilterContainer}>
+              <Text style={styles.priceFilterTitle}>Khoảng giá</Text>
+              <View style={styles.priceInputContainer}>
+                <TextInput
+                  style={styles.priceInput}
+                  placeholder="Giá thấp nhất"
+                  keyboardType="numeric"
+                  value={minPrice.toString()}
+                  onChangeText={(text) => setMinPrice(parseInt(text) || 0)}
+                />
+                <Text style={styles.priceSeparator}>-</Text>
+                <TextInput
+                  style={styles.priceInput}
+                  placeholder="Giá cao nhất"
+                  keyboardType="numeric"
+                  value={maxPrice.toString()}
+                  onChangeText={(text) => setMaxPrice(parseInt(text) || 1000000000)}
+                />
+              </View>
+            </View>
             <TouchableOpacity
               style={styles.applyButton}
               onPress={applyFilters}
@@ -272,26 +277,27 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     paddingVertical: 8,
-    marginLeft: 8,
     fontSize: 16,
   },
-  filterChips: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#FFF",
+  sortContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 8,
+    backgroundColor: '#FFF',
   },
-  filterChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E6F0FF",
-    paddingVertical: 6,
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
-    borderRadius: 16,
-    marginRight: 8,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    borderRadius: 4,
   },
-  filterChipText: {
-    color: "#4A90E2",
-    marginRight: 4,
+  sortButtonText: {
+    marginLeft: 4,
+    fontSize: 14,
+    color: '#333',
   },
   productList: {
     padding: 8,
@@ -300,7 +306,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   productCard: {
-    width: "48%",
+    width: (width - 48) / 2,
     backgroundColor: "#FFF",
     borderRadius: 12,
     marginBottom: 16,
@@ -313,7 +319,7 @@ const styles = StyleSheet.create({
   productImage: {
     width: "100%",
     height: 150,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
@@ -331,24 +337,10 @@ const styles = StyleSheet.create({
     color: "#4A90E2",
     marginBottom: 8,
   },
-  addToCartButton: {
-    backgroundColor: "#FF9900",
-    borderRadius: 6,
-    paddingVertical: 8,
-    alignItems: "center",
-  },
-  addToCartText: {
-    color: "#FFF",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  wishlistButton: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    borderRadius: 20,
-    padding: 6,
+  productCategory: {
+    fontSize: 12,
+    color: "#999",
+    marginBottom: 4,
   },
   modalContainer: {
     flex: 1,
@@ -371,23 +363,32 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
-  filterOption: {
+  priceFilterContainer: {
+    marginTop: 20,
+  },
+  priceFilterTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  priceInputContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    justifyContent: "space-between",
   },
-  filterOptionSelected: {
-    backgroundColor: "#4A90E2",
+  priceInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 14,
   },
-  filterOptionText: {
+  priceSeparator: {
+    marginHorizontal: 10,
     fontSize: 16,
     color: "#333",
-  },
-  filterOptionTextSelected: {
-    color: "#FFF",
   },
   applyButton: {
     backgroundColor: "#4A90E2",
@@ -401,10 +402,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  productCategory: {
-    fontSize: 12,
-    color: "#999",
-    marginBottom: 4,
-  },
-  
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center'
+  }
 });
