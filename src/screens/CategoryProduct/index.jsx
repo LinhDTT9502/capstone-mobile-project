@@ -99,8 +99,8 @@ export default function CategoryProduct() {
     setLoading(true);
     try {
       const response = await searchProducts(searchQuery);
-      console.log("API Response:", response); // Add this line
-      const searchResults = response.data?.$values || []; // Handle cases where $values might be undefined
+      // console.log("API Response:", response);
+      const searchResults = response.data?.$values || []; 
       const uniqueResults = [...new Map(searchResults.map(item => [item.id, item])).values()];
       setProducts(uniqueResults);
       setTotalProducts(uniqueResults.length);

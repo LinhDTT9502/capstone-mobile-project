@@ -110,7 +110,7 @@ export default function ProductListing() {
     setLoading(true);
     try {
       const response = await searchProducts(searchQuery);
-      console.log("API Response:", response); // Add this line
+      // console.log("API Response:", response); // Add this line
       const searchResults = response.data?.$values || []; // Handle cases where $values might be undefined
       const uniqueResults = [...new Map(searchResults.map(item => [item.id, item])).values()];
       setProducts(uniqueResults);

@@ -8,10 +8,9 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // To store and check token
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authenticateUser } from '@/src/services/authService';
 import { useSelector, useDispatch } from "react-redux";
 import { login, selectUser } from '@/src/redux/slices/authSlice';
@@ -22,10 +21,9 @@ const LoginScreen = () => {
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
-  const user = useSelector(selectUser)
+  const user = useSelector(selectUser);
   const dispatch = useDispatch();
 
-  // Check if user is already logged in
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
@@ -45,18 +43,14 @@ const LoginScreen = () => {
     setLoading(true);
     try {
       if (username && password) {
-       
-      
+        const decoded = await authenticateUser(username, password);
+        dispatch(login(decoded));
+        navigation.navigate('HomeController');
       } else {
         Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
       }
-      const decoded = await authenticateUser(username, password);
-      dispatch(login(decoded));
-      navigation.navigate('HomeController');
     } catch (error) {
       Alert.alert('Lỗi', 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');
-      console.log(error);
-      
     } finally {
       setLoading(false);
     }
@@ -66,20 +60,25 @@ const LoginScreen = () => {
     setSecureTextEntry(!secureTextEntry);
   };
 
+  const handleSocialLogin = (platform) => {
+    Alert.alert(`Đăng nhập bằng ${platform}`, 'Chức năng này chưa được triển khai.');
+  };
+
+  const handleGuestLogin = () => {
+    Alert.alert('Đăng nhập khách', 'Chức năng này chưa được triển khai.');
+  };
+
   return (
     <View style={styles.container}>
-      {/* Background shapes */}
       <View style={styles.shape1} />
       <View style={styles.shape2} />
 
-      {/* Login form */}
       <View style={styles.formContainer}>
         <Text style={styles.title}>Đăng nhập vào Goods Exchange</Text>
         <Text style={styles.subtitle}>
           Chào mừng bạn trở lại! Đăng nhập bằng tài khoản xã hội hoặc email để tiếp tục
         </Text>
 
-        {/* Username input */}
         <TextInput
           style={styles.input}
           placeholder="Số điện thoại, email hoặc tên người dùng"
@@ -87,7 +86,6 @@ const LoginScreen = () => {
           onChangeText={setUsername}
         />
 
-        {/* Password input */}
         <View style={styles.passwordContainer}>
           <TextInput
             style={styles.passwordInput}
@@ -97,16 +95,18 @@ const LoginScreen = () => {
             onChangeText={setPassword}
           />
           <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIconContainer}>
-            <FontAwesomeIcon icon={secureTextEntry ? faEyeSlash : faEye} size={20} style={styles.eyeIcon} />
+            <Ionicons 
+              name={secureTextEntry ? "eye-off" : "eye"} 
+              size={24} 
+              color="#888" 
+            />
           </TouchableOpacity>
         </View>
 
-        {/* Forgot Password */}
         <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
           <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
         </TouchableOpacity>
 
-        {/* Login button */}
         <TouchableOpacity
           style={styles.loginButton}
           onPress={handleLogin}
@@ -119,7 +119,27 @@ const LoginScreen = () => {
           )}
         </TouchableOpacity>
 
-        {/* Register */}
+        <View style={styles.socialLoginContainer}>
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={() => handleSocialLogin('Google')}
+          >
+            <Ionicons name="logo-google" size={24} color="#FFA500" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={() => handleSocialLogin('Facebook')}
+          >
+            <Ionicons name="logo-facebook" size={24} color="#FFA500" />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={styles.guestButton}
+          onPress={() => navigation.navigate('LandingPage')}        >
+          <Text style={styles.guestButtonText}>Xem với vai trò là khách</Text>
+        </TouchableOpacity>
+
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>Bạn chưa có tài khoản?</Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
@@ -132,7 +152,6 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  // Add your styles here
   container: {
     flex: 1,
     justifyContent: "center",
@@ -182,9 +201,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
-  eyeIcon: {
-    color: '#888',
-  },
   forgotPassword: {
     color: "#FFA500",
     textAlign: "right",
@@ -203,6 +219,40 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  socialLoginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  socialButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  guestButton: {
+    backgroundColor: '#FFF',
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 25,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#FFA500',
+  },
+  guestButtonText: {
+    color: '#FFA500',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   registerContainer: {
     flexDirection: "row",
@@ -241,4 +291,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-  
