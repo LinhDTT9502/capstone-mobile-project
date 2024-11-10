@@ -18,8 +18,7 @@ export const getUserShipmentDetails = async (token) => {
 export const addUserShipmentDetail = async (token, data) => {
   try {
     const response = await addShipmentDetail(token, data);
-    return response;
-  } catch (error) {
+return response.data.data;  } catch (error) {
     console.error("Error saving shipment details:", error);
     throw new Error("Error saving shipment details");
   }

@@ -457,11 +457,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  viewAllText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
   promotionalSection: {
     marginTop: 24,
     paddingBottom: 16,
@@ -516,7 +511,13 @@ const styles = StyleSheet.create({
   viewAllText: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#4A90E2",
+    color: "#FF6347", 
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 13,
+    textAlign: "center",
+    overflow: "hidden",
   },
 });
 
