@@ -22,8 +22,10 @@ const Comment = ({ comments, isLoggedIn, onPostComment, onEditComment, onDeleteC
 
   const renderCommentItem = ({ item }) => (
     <View style={styles.commentItem}>
-      <Text style={styles.commentAuthor}>{item.authorName}</Text>
-      <Text style={styles.commentContent}>{item.content}</Text>
+      <Text style={styles.commentAuthor}>{item.username}</Text>
+        <Text style={styles.commentContent}>{item.content}</Text>
+        <Text style={styles.commentDate}>{new Date(item.createdAt).toLocaleString()}</Text>
+    
       {isLoggedIn && (
         <View style={styles.commentActions}>
           <TouchableOpacity onPress={() => onEditComment(item.id, item.content)}>
@@ -46,11 +48,12 @@ const Comment = ({ comments, isLoggedIn, onPostComment, onEditComment, onDeleteC
       {comments.length === 0 ? (
         <Text style={styles.noComments}>Chưa có bình luận</Text>
       ) : (
-        <FlatList
-          data={comments}
-          renderItem={renderCommentItem}
-          keyExtractor={(item) => item.id.toString()}
-        />
+<FlatList
+    data={comments}
+    renderItem={renderCommentItem}
+    keyExtractor={(item) => item.userId.toString()}
+/>
+
       )}
       {isLoggedIn && (
         <View style={styles.inputContainer}>

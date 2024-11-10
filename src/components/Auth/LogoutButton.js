@@ -3,9 +3,9 @@ import { TouchableOpacity, Text, Alert, StyleSheet, } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch } from "react-redux";
-import { logout } from "../redux/slices/authSlice";
-import { signOutUser } from "../services/authService";
-import { signOut } from "../api/apiAuth";
+import { logout } from "../../redux/slices/authSlice";
+import { signOutUser } from "../../services/authService";
+import { signOut } from "../../api/apiAuth";
 
 const LogoutButton = () => {
   const navigation = useNavigation();

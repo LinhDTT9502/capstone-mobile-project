@@ -21,7 +21,7 @@ import AddToCartButton from "../../components/AddToCardButton";
 import RentButton from "../../components/RentButton";
 import BuyNowButton from "../../components/BuyNowButton";
 import Comment from "../../components/ProductDetail/Comment";
-import LikeButton from "../../components/ProductDetail/LikeBButton";
+import LikeButton from "../../components/ProductDetail/LikeButton";
 
 import {
   fetchComments,
@@ -145,22 +145,37 @@ export default function ProductDetail() {
   };
 
   const loadComments = async () => {
+    console.log("Product ID:", productId); // Kiểm tra productId mỗi lần gọi hàm
     try {
-      const data = await fetchComments(productId);
-      setComments(data);
+        const response = await fetchComments(productId);
+        const commentsData = response.data?.data?.$values || [];
+        setComments(commentsData);
     } catch (error) {
-      console.error("Error loading comments:", error);
+        console.error("Error loading comments:", error);
+        Alert.alert("Lỗi", "Không thể tải bình luận");
     }
-  };
+};
+
 
   const handlePostComment = async (newComment) => {
     try {
-      await postComment(productId, newComment);
-      loadComments();
+      const token = await AsyncStorage.getItem("token");
+      console.log("Token:", token);
+      if (!token) {
+        Alert.alert("Lỗi", "Vui lòng đăng nhập để bình luận.");
+        return;
+      }
+      const response = await postComment(productId, newComment, token);
+      console.log("Response:", response);
+      loadComments();  // Tải lại danh sách bình luận sau khi đăng thành công
+      setNewComment('');  // Xóa nội dung sau khi gửi bình luận
     } catch (error) {
+      console.error("Error posting comment:", error);
       Alert.alert("Lỗi", "Không thể đăng bình luận");
     }
   };
+  
+  
 
   const handleEditComment = async (commentId, newContent) => {
     try {

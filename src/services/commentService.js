@@ -10,13 +10,14 @@ import {
   
   export const fetchComments = async (productId) => {
     try {
-      const response = await fetchCommentsAPI(productId);
-      return response.data;
+        const response = await fetchCommentsAPI(productId);
+        console.log("Fetched comments:", response.data);
+        return response.data;
     } catch (error) {
-      console.error("Error fetching comments:", error);
-      throw error;
+        console.error("Error fetching comments:", error);
+        throw error;
     }
-  };
+};
   
   export const postComment = async (productId, content) => {
     try {

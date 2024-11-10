@@ -6,18 +6,19 @@ export const fetchCommentsAPI = (productId) => {
     return axiosInstance.get(`${API_BASE_URL}/get-all-comments/${productId}`);
   };
 
-export const postCommentAPI = (productId, content, token) => {
-  return axiosInstance.post(
-    `${API_BASE_URL}/product/${productId}/comment`,
-    { content },
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-};
+  export const postCommentAPI = (productId, content, token) => {
+    return axiosInstance.post(
+      `${API_BASE_URL}/comment/${productId}`,
+      { content },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  };
+  
 
 export const editCommentAPI = (commentId, content, token) => {
   return axiosInstance.put(
