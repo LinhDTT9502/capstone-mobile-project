@@ -7,13 +7,12 @@ import {
   StyleSheet,
   Alert,
   Modal,
-  Pressable,
   Animated,
   Dimensions,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { requestPasswordReset } from '../../services/authService';
+import { requestPasswordReset, performPasswordReset } from '../../services/authService';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -21,14 +20,16 @@ const { width } = Dimensions.get('window');
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isOtpModalVisible, setOtpModalVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const navigation = useNavigation();
 
   const handleSendResetLink = async () => {
     try {
       await requestPasswordReset(email);
-      setModalVisible(true);
+      setOtpModalVisible(true);
       Animated.timing(animation, {
         toValue: 1,
         duration: 300,
@@ -39,16 +40,23 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  const closeModal = () => {
+  const handleResetPassword = async () => {
+    try {
+      await performPasswordReset({ otpCode, email, newPassword });
+      Alert.alert('Thành công', 'Mật khẩu của bạn đã được đặt lại!');
+      closeOtpModal();
+      navigation.navigate('Login');
+    } catch (error) {
+      Alert.alert('Lỗi', error.message || 'Không thể đặt lại mật khẩu.');
+    }
+  };
+
+  const closeOtpModal = () => {
     Animated.timing(animation, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => setModalVisible(false));
-  };
-
-  const handleBackToLogin = () => {
-    navigation.goBack(); // Assuming the login screen is the previous screen
+    }).start(() => setOtpModalVisible(false));
   };
 
   return (
@@ -71,16 +79,17 @@ export default function ForgotPasswordScreen() {
         <TouchableOpacity style={styles.button} onPress={handleSendResetLink}>
           <Text style={styles.buttonText}>Gửi liên kết đặt lại</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.backButton} onPress={handleBackToLogin}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Quay lại đăng nhập</Text>
         </TouchableOpacity>
       </View>
 
+      {/* OTP and Password Modal */}
       <Modal
         animationType="none"
         transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
+        visible={isOtpModalVisible}
+        onRequestClose={closeOtpModal}
       >
         <Animated.View 
           style={[
@@ -100,10 +109,28 @@ export default function ForgotPasswordScreen() {
         >
           <View style={styles.modalContainer}>
             <Feather name="check-circle" size={64} color="#4CAF50" style={styles.modalIcon} />
-            <Text style={styles.modalText}>Vui lòng kiểm tra email để lấy liên kết đặt lại mật khẩu.</Text>
-            <Pressable style={styles.closeButton} onPress={closeModal}>
+            <Text style={styles.modalText}>Nhập mã OTP và mật khẩu mới</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Mã OTP"
+              value={otpCode}
+              onChangeText={setOtpCode}
+              keyboardType="numeric"
+              maxLength={6}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Mật khẩu mới"
+              secureTextEntry
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
+              <Text style={styles.buttonText}>Đặt lại mật khẩu</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.closeButton} onPress={closeOtpModal}>
               <Text style={styles.closeButtonText}>Đóng</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </Animated.View>
       </Modal>

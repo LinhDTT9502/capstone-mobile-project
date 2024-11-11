@@ -78,3 +78,46 @@ export const resetPassword = (data) => {
 // }, (error) => {
 //   return Promise.reject(error);
 // });
+
+export const mobileSignUp = (userData) => {
+  return axios.post(`${API_BASE_URL}/sign-up-mobile`, userData, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
+
+export const verifyAccountMobileAPI = (data) => {
+  return axios.post(`${API_BASE_URL}/verify-account-mobile`, data, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+export const forgotPasswordRequestMobile = (email) => {
+  return axios.post(`${API_BASE_URL}/forgot-password-request-mobile`, { email }, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
+
+export const resetPasswordMobile = ({ otpCode, email, newPassword }) => {
+  return axios.post(`${API_BASE_URL}/reset-password-mobile`, {
+    otpCode,
+    email,
+    newPassword,
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+export const sendOtpRequestMobile = (data) => {
+  return axios.post(`${API_BASE_URL}/send-otp-request-mobile`, data, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};

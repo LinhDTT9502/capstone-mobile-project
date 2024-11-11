@@ -19,7 +19,7 @@ import { Feather } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-const ResetPasswordScreen = ({ route }) => {
+const ResetPasswordProfile = ({ route }) => {
   const { token, email } = route.params;
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -216,4 +216,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ResetPasswordScreen;
+export default ResetPasswordProfile;

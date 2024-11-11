@@ -53,7 +53,7 @@ export default function Account() {
   // };
 
   const handleChangePassword = () => {
-    navigation.navigate("AccountResetPassword");
+    navigation.navigate("AccountResetPassword", { otpCode, email });
   };
 
   // useEffect(() => {
