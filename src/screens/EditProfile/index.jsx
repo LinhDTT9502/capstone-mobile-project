@@ -1,99 +1,382 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  SafeAreaView,
+  Modal,
+} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { updateProfile } from "../../api/apiUser";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser, updateUser } from "../../redux/slices/authSlice";
+import { fetchUserProfile, saveUserProfile } from "../../services/userService";
+import { Picker } from "@react-native-picker/picker";
 
 export default function EditProfile() {
   const navigation = useNavigation();
+  const user = useSelector(selectUser);
+  const dispatch = useDispatch();
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    UserName: "Maint_123",
-    FullName: "Maint_123",
-    Email: "M******3@gmail.com",
-    Phone: "*****02",
-    BirthDate: "2001-01-01"
-  });
-  const [initialData, setInitialData] = useState(formData);
+  const [initialData, setInitialData] = useState({});
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
 
-  const handleEditClick = () => setIsEditing(true);
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const profileData = await fetchUserProfile(user.UserId);
+        if (profileData) {
+          const newData = {
+            UserName: profileData.userName || "",
+            FullName: profileData.fullName || "",
+            Gender: profileData.gender || "",
+            BirthDate: profileData.dob || "",
+            Email: profileData.email || "",
+            Address: profileData.address || "",
+            Phone: profileData.phoneNumber || "",
+            IsEmailVerified: profileData.emailConfirmed || false,
+            IsPhoneVerified: profileData.phoneConfirmed || false,
+          };
+          setFormData(newData);
+          setInitialData(newData);
+        } else {
+          Alert.alert("Thông báo", "Không có dữ liệu người dùng.");
+        }
+      } catch (error) {
+        Alert.alert("Lỗi", "Không thể tải thông tin người dùng.");
+      }
+    };
 
-  const handleSaveClick = () => {
-    if (JSON.stringify(formData) === JSON.stringify(initialData)) {
-      Alert.alert("No changes", "No changes to save");
-      return;
-    }
-    updateProfile(formData.UserName, formData)
-      .then(() => {
-        setIsEditing(false);
-        Alert.alert("Success", "Profile updated successfully");
-        setInitialData(formData);
-      })
-      .catch((err) => {
-        console.error("Error updating profile:", err);
-        Alert.alert("Error", "Failed to save changes");
-      });
+    loadUserProfile();
+  }, [user.UserId]);
+
+  const handleChange = (name, value) => {
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleCancelClick = () => {
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (JSON.stringify(formData) === JSON.stringify(initialData)) {
+      Alert.alert("Cảnh báo", "Không có thay đổi nào được thực hiện.");
+      return;
+    }
+
+    try {
+      await saveUserProfile(user.UserId, formData);
+      setIsEditing(false);
+      dispatch(updateUser(formData));
+      Alert.alert("Thành công", "Thông tin đã được cập nhật.");
+      setInitialData(formData);
+    } catch (error) {
+      console.error(
+        "Error updating profile:",
+        error.response?.data || error.message
+      );
+      Alert.alert(
+        "Lỗi",
+        `Cập nhật thất bại: ${
+          error.response?.data?.message || "Vui lòng thử lại."
+        }`
+      );
+    }
+  };
+
+  const handleCancel = () => {
     setFormData(initialData);
     setIsEditing(false);
   };
 
-  const handleChange = (name, value) => setFormData({ ...formData, [name]: value });
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const formattedDate = formatDateForAPI(selectedDate);
+      handleChange("BirthDate", formattedDate);
+    }
+  };
 
-  const renderInput = (label, name, icon) => (
+  const formatDateForAPI = (date) => {
+    return date.toISOString().split("T")[0];
+  };
+
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString || dateString === "0001-01-01T00:00:00") return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+    return `${date.getDate().toString().padStart(2, "0")}/${(
+      date.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}/${date.getFullYear()}`;
+  };
+
+  const handleEmailChange = () => {
+    setNewEmail(formData.Email);
+    setShowEmailModal(true);
+  };
+
+  const handlePhoneChange = () => {
+    setNewPhone(formData.Phone);
+    setShowPhoneModal(true);
+  };
+
+  const handleEmailSave = () => {
+    handleChange("Email", newEmail);
+    setShowEmailModal(false);
+  };
+
+  const handlePhoneSave = () => {
+    handleChange("Phone", newPhone);
+    setShowPhoneModal(false);
+  };
+
+  const renderInput = (
+    label,
+    name,
+    icon,
+    editable = isEditing,
+    verifiable = false
+  ) => (
     <View style={styles.inputContainer}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputWrapper}>
-        <FontAwesome name={icon} size={20} color="#4A90E2" style={styles.inputIcon} />
-        <TextInput
-          style={styles.input}
-          value={formData[name]}
-          onChangeText={(value) => handleChange(name, value)}
-          editable={isEditing}
+      <View style={styles.labelContainer}>
+        <FontAwesome
+          name={icon}
+          size={20}
+          color="#0035FF"
+          style={styles.inputIcon}
         />
+        <Text style={styles.label}>{label}</Text>
+      </View>
+      <View style={styles.inputWrapper}>
+        {name === "BirthDate" && isEditing ? (
+          <TouchableOpacity
+            onPress={() => isEditing && setShowDatePicker(true)}
+            style={[
+              styles.input,
+              !isEditing && styles.disabledInput,
+              isEditing && styles.editableInput,
+            ]}
+          >
+            <Text style={styles.dateButtonText}>
+              {formatDateForDisplay(formData.BirthDate) || "Chọn ngày"}
+            </Text>
+          </TouchableOpacity>
+        ) : name === "Gender" ? (
+          <Picker
+            selectedValue={formData.Gender}
+            onValueChange={(itemValue) => handleChange("Gender", itemValue)}
+            enabled={isEditing}
+            style={[
+              styles.input,
+              !isEditing && styles.disabledInput,
+              isEditing && styles.editableInput,
+            ]}
+          >
+            <Picker.Item label="Chọn giới tính" value="" />
+            <Picker.Item label="Nam" value="male" />
+            <Picker.Item label="Nữ" value="female" />
+            <Picker.Item label="Khác" value="other" />
+          </Picker>
+        ) : (
+          <View style={styles.inputWithButton}>
+            <TextInput
+              style={[
+                styles.input,
+                !editable && styles.disabledInput,
+                editable && styles.editableInput,
+                (name === "Email" || name === "Phone") &&
+                  styles.nonEditableInput,
+              ]}
+              value={formData[name]}
+              onChangeText={(value) => handleChange(name, value)}
+              editable={editable && name !== "Email" && name !== "Phone"}
+              placeholder={`Nhập ${label.toLowerCase()}`}
+              placeholderTextColor="#A0AEC0"
+            />
+            {(name === "Email" || name === "Phone") && (
+              <TouchableOpacity
+                style={styles.changeButtonInline}
+                onPress={
+                  name === "Email" ? handleEmailChange : handlePhoneChange
+                }
+              >
+                <Text style={styles.changeButtonTextInline}>Thay đổi</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+        {verifiable && (
+          <FontAwesome
+            name={
+              formData[`Is${name}Verified`] ? "check-circle" : "times-circle"
+            }
+            size={24}
+            color={formData[`Is${name}Verified`] ? "#4CAF50" : "#FF3B30"}
+            style={styles.verifiedIcon}
+          />
+        )}
       </View>
     </View>
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <FontAwesome name="arrow-left" size={24} color="#4A90E2" />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <FontAwesome name="arrow-left" size={24} color="#0035FF" />
         </TouchableOpacity>
-        <Text style={styles.title}>Thông tin người dùng</Text>
+        <Text style={styles.title}>Chỉnh sửa hồ sơ</Text>
+        <View style={styles.placeholder} />
       </View>
 
-      <View style={styles.profileSection}>
-        <Image source={{ uri: "https://via.placeholder.com/150" }} style={styles.profileImage} />
-        <TouchableOpacity style={styles.cameraIconWrapper}>
-          <FontAwesome name="camera" size={20} color="#FFF" />
-        </TouchableOpacity>
-      </View>
-
-      {renderInput("Tên đăng nhập", "UserName", "user")}
-      {renderInput("Họ và tên", "FullName", "user")}
-      {renderInput("Email", "Email", "envelope")}
-      {renderInput("Số điện thoại", "Phone", "phone")}
-      {renderInput("Ngày sinh", "BirthDate", "calendar")}
-
-      {isEditing ? (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSaveClick}>
-            <Text style={styles.buttonText}>Lưu thay đổi</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancelClick}>
-            <Text style={styles.buttonText}>Hủy</Text>
+      <ScrollView style={styles.content}>
+        <View style={styles.profileImageContainer}>
+          <Image
+            source={{ uri: "https://via.placeholder.com/150" }}
+            style={styles.profileImage}
+          />
+          <TouchableOpacity style={styles.changePhotoButton}>
+            <FontAwesome name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      ) : (
-        <TouchableOpacity style={styles.editButton} onPress={handleEditClick}>
-          <Text style={styles.buttonText}>Chỉnh sửa</Text>
-        </TouchableOpacity>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Thông tin cơ bản</Text>
+            {isEditing ? (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={handleCancel}
+                >
+                  <Text style={styles.buttonText}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSave}
+                >
+                  <Text style={styles.buttonText}>Lưu</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+                <Text style={styles.buttonText}>Chỉnh sửa</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {renderInput("Tên người dùng", "UserName", "user", false)}
+          {renderInput("Họ và tên", "FullName", "user")}
+          {renderInput("Giới tính", "Gender", "venus-mars")}
+          {renderInput("Ngày sinh", "BirthDate", "calendar")}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
+          {renderInput("Email", "Email", "envelope", true, true)}
+          {renderInput("Số điện thoại", "Phone", "phone", true, true)}
+        </View>
+      </ScrollView>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={
+            new Date(
+              formData.BirthDate && formData.BirthDate !== "0001-01-01T00:00:00"
+                ? formData.BirthDate
+                : Date.now()
+            )
+          }
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+        />
       )}
-    </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showEmailModal}
+        onRequestClose={() => setShowEmailModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Thay đổi Email</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newEmail}
+              onChangeText={setNewEmail}
+              placeholder="Nhập email mới"
+              keyboardType="email-address"
+            />
+            <View style={styles.navButtonContainer}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowEmailModal(false)}
+              >
+                <Text style={styles.modalButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handleEmailSave}
+              >
+                <Text style={styles.modalButtonText}>Lưu</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showPhoneModal}
+        onRequestClose={() => setShowPhoneModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Thay đổi Số điện thoại</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newPhone}
+              onChangeText={setNewPhone}
+              placeholder="Nhập số điện thoại mới"
+              keyboardType="phone-pad"
+            />
+            <View style={styles.navButtonContainer}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowPhoneModal(false)}
+              >
+                <Text style={styles.modalButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handlePhoneSave}
+              >
+                <Text style={styles.modalButtonText}>Lưu</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
@@ -101,13 +384,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 30,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "#F0F4F8",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
     elevation: 2,
   },
   backButton: {
@@ -116,10 +402,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
-    marginLeft: 16,
+    color: "#2D3748",
   },
-  profileSection: {
+  placeholder: {
+    width: 40,
+  },
+  content: {
+    flex: 1,
+  },
+  profileImageContainer: {
     alignItems: "center",
     marginVertical: 24,
   },
@@ -128,75 +419,201 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 3,
-    borderColor: "#4A90E2",
+    borderColor: "#0035FF",
   },
-  cameraIconWrapper: {
+  changePhotoButton: {
     position: "absolute",
     bottom: 0,
     right: "35%",
-    backgroundColor: "#4A90E2",
+    backgroundColor: "#0035FF",
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    padding: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  inputContainer: {
-    marginHorizontal: 16,
+  section: {
+    marginBottom: 24,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
-  label: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#2D3748",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+  },
+  editButton: {
+    backgroundColor: "#0035FF",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  saveButton: {
+    backgroundColor: "#28A745",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginLeft: 8,
+  },
+  cancelButton: {
+    backgroundColor: "#FF3B30",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  buttonText: {
+    color: "#FFFFFF",
     fontSize: 14,
-    color: "#666",
+    fontWeight: "bold",
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  labelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
+  },
+  label: {
+    fontSize: 16,
+    color: "#4A5568",
+    marginLeft: 8,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    elevation: 2,
-  },
-  inputIcon: {
-    marginRight: 12,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: "#333",
+    color: "#2D3748",
     paddingVertical: 12,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: 16,
-    marginTop: 24,
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: "#4A90E2",
-    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderRadius: 8,
-    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  editableInput: {
+    backgroundColor: "#EDF2F7",
+  },
+  disabledInput: {
+    backgroundColor: "#F7FAFC",
+    color: "#718096",
+  },
+  inputIcon: {
     marginRight: 8,
   },
-  cancelButton: {
+  dateButtonText: {
+    fontSize: 16,
+    color: "#2D3748",
+  },
+  verifiedIcon: {
+    marginLeft: 12,
+  },
+
+  inputWithButton: {
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
-    backgroundColor: "#FF6B6B",
-    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     borderRadius: 8,
-    alignItems: "center",
-    marginLeft: 8,
+    overflow: "hidden",
   },
-  editButton: {
-    backgroundColor: "#4A90E2",
-    paddingVertical: 14,
+  nonEditableInput: {
+    flex: 1,
+    backgroundColor: "#F7FAFC",
+    color: "#718096",
+    paddingRight: 80, // Make room for the inline button
+  },
+  changeButtonInline: {
+    position: "absolute",
+    right: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  changeButtonTextInline: {
+    color: "#0035FF",
+    fontSize: 14,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "80%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     borderRadius: 8,
-    alignItems: "center",
-    marginHorizontal: 16,
-    marginTop: 24,
+    padding: 10,
+    marginBottom: 15,
+    width: "100%",
   },
-  buttonText: {
-    color: "#FFF",
+  modalButton: {
+    backgroundColor: "#0035FF",
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  modalCancelButton: {
+    backgroundColor: "#FF3B30",
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  modalButtonText: {
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+
+  navButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 12,
+    width: "100%",
   },
 });

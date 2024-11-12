@@ -1,12 +1,13 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import LandingPage from '../screens/HomeScreen/index';
 import ProductList from '../screens/ProductList/index';
-import Cart from '../screens/CartList';
-import Account from '../screens/Profile';
+import Cart from '../screens/CartList/index';
+import Account from '../screens/Profile/index';
+import Blog from '../screens/Blog/index';
 
 const Tab = createBottomTabNavigator();
 
@@ -40,6 +41,8 @@ export default function HomeController() {
             iconName = focused ? 'search' : 'search-outline';
           } else if (route.name === 'Cart') {
             iconName = focused ? 'cart' : 'cart-outline';
+          } else if (route.name === 'Blog') {
+            iconName = focused ? 'newspaper' : 'newspaper-outline';
           } else if (route.name === 'Account') {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -57,6 +60,7 @@ export default function HomeController() {
           <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>
             {route.name === 'LandingPage' ? 'Trang chủ' : 
              route.name === 'ProductList' ? 'Sản phẩm' : 
+             route.name === 'Blog' ? 'Blog' : 
              route.name === 'Cart' ? 'Giỏ hàng' : 'Tài khoản'}
           </Text>
         ),
@@ -69,6 +73,7 @@ export default function HomeController() {
       <Tab.Screen name="LandingPage" component={LandingPage} />
       <Tab.Screen name="ProductList" component={ProductList} />
       <Tab.Screen name="Cart" component={Cart} />
+      <Tab.Screen name="Blog" component={Blog} />
       <Tab.Screen name="Account" component={Account} />
     </Tab.Navigator>
   );

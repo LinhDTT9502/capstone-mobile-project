@@ -1,85 +1,155 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
-  Alert,
-  StyleSheet,
-  Modal,
   ScrollView,
   SafeAreaView,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
-import { signOut } from '../../api/apiAuth';
+  Animated,
+  Modal,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSelector } from "react-redux";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { selectUser } from "../../redux/slices/authSlice";
+import LogoutButton from "../../components/Auth/LogoutButton";
+import styles from "./css/AcouuntStyles";
 
 export default function Account() {
   const navigation = useNavigation();
+  const user = useSelector(selectUser);
+  const [noTokenModalVisible, setNoTokenModalVisible] = useState(false);
+
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
+  const [scaleAnim] = useState(new Animated.Value(1));
 
   const statuses = [
-    { label: 'Chờ xác nhận', icon: 'time-outline', value: 'pending' },
-    { label: 'Chờ lấy hàng', icon: 'cube-outline', value: 'pickup' },
-    { label: 'Đang giao', icon: 'bicycle-outline', value: 'shipping' },
-    { label: 'Đánh giá', icon: 'star-outline', value: 'review' },
+    { label: "Chờ xác nhận", icon: "time-outline", value: "pending" },
+    { label: "Chờ lấy hàng", icon: "cube-outline", value: "pickup" },
+    { label: "Đang giao", icon: "bicycle-outline", value: "shipping" },
+    { label: "Đánh giá", icon: "star-outline", value: "review" },
   ];
 
   const handleStatusClick = (status) => {
-    navigation.navigate('MyOrder', { status });
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start(() => navigation.navigate("MyOrder", { status }));
   };
 
-  const changeLanguage = (language) => {
-    setLanguageModalVisible(false);
-    // Implement language change logic here
-  };
+  // const changeLanguage = (language) => {
+  //   setLanguageModalVisible(false);
+  //   // Implement language change logic here
+  // };
 
   const handleChangePassword = () => {
-    navigation.navigate('AccountResetPassword');
+    navigation.navigate("AccountResetPassword", { otpCode, email });
   };
 
-  const handleLogout = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('Thiếu thông tin đăng xuất');
-      }
-      navigation.navigate('Login');
-      // const response = await signOut({
-      //   token,
-      //   refreshToken,
-      //   userId: parseInt(userId),
-      // });
-      await AsyncStorage.removeItem('token');
-      Alert.alert('Thành công', 'Đăng xuất thành công!');
-      // if (response.status === 200) {
-      //   await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userId']);
-      //   navigation.navigate('Login');
-      //   Alert.alert('Thành công', 'Đăng xuất thành công!');
-      // } else {
-      //   throw new Error('Đăng xuất thất bại');
-      // }
-    } catch (error) {
-      console.error('Logout error:', error);
-      Alert.alert('Lỗi', 'Có lỗi xảy ra khi đăng xuất');
-    }
+  // useEffect(() => {
+  //   const checkToken = async () => {
+  //     try {
+  //       const token = await AsyncStorage.getItem('token');
+  //       if (!token) {
+  //         navigation.navigate('Login');
+  //       }
+  //     } catch (error) {
+  //       console.error('Error checking token:', error);
+  //     }
+  //   };
+
+  //   checkToken();
+  // }, [navigation]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkToken = async () => {
+        try {
+          const token = await AsyncStorage.getItem("token");
+          if (!token) {
+            setNoTokenModalVisible(true);
+          }
+        } catch (error) {
+          console.error("Error checking token:", error);
+        }
+      };
+
+      checkToken();
+    }, [])
+  );
+
+  const handleLogin = () => {
+    setNoTokenModalVisible(false);
+    navigation.navigate("Login");
   };
+
+  const handleCancel = () => {
+    setNoTokenModalVisible(false);
+    navigation.navigate("LandingPage");
+  };
+
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <Modal
+          visible={noTokenModalVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setNoTokenModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Bạn chưa có tài khoản</Text>
+              <Text style={styles.modalText}>
+                Vui lòng đăng nhập để tiếp tục.
+              </Text>
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={handleCancel}
+                >
+                  <Text style={styles.cancelButtonText}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.loginButton}
+                  onPress={handleLogin}
+                >
+                  <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
+    <SafeAreaView style={[styles.container, styles.whiteBackground]}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Quản lý tài khoản</Text>
         </View>
 
         <View style={styles.profileSection}>
           <Image
-            source={{ uri: 'https://via.placeholder.com/100' }}
+            source={{
+              uri: user.profileImage || "https://via.placeholder.com/100",
+            }}
             style={styles.profileImage}
           />
-          <Text style={styles.profileName}>Melissa Mayer</Text>
-          <Text style={styles.profileId}>Mã tài khoản: 954-810</Text>
+          <Text style={styles.profileName}>{user.FullName}</Text>
+          <Text style={styles.profileId}>Mã tài khoản: {user.UserId}</Text>
         </View>
 
         <View style={styles.orderSection}>
@@ -91,36 +161,49 @@ export default function Account() {
                 style={styles.statusButton}
                 onPress={() => handleStatusClick(item.value)}
               >
-                <Ionicons name={item.icon} size={24} color="#FF9900" />
+                <Ionicons
+                  name={item.icon}
+                  size={28}
+                  color="#FF9900"
+                  style={styles.statusIcon}
+                />
                 <Text style={styles.statusText}>{item.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
           <TouchableOpacity
             style={styles.viewAllOrders}
-            onPress={() => navigation.navigate('MyOrder', { status: 'all' })}
+            onPress={() => navigation.navigate("MyOrder", { status: "all" })}
           >
             <Text style={styles.viewAllOrdersText}>Xem tất cả đơn hàng</Text>
-            <Ionicons name="chevron-forward" size={20} color="#888" />
+            <Ionicons name="chevron-forward" size={20} color="#FF9900" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.settingsSection}>
           <Text style={styles.sectionTitle}>Cài đặt tài khoản</Text>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.settingItem}
             onPress={() => setLanguageModalVisible(true)}
           >
             <Ionicons name="language-outline" size={24} color="#4A90E2" />
             <Text style={styles.settingText}>Ngôn ngữ</Text>
             <Ionicons name="chevron-forward" size={20} color="#888" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity
             style={styles.settingItem}
-            onPress={() => navigation.navigate('EditProfile')}
+            onPress={() => navigation.navigate("EditProfile")}
           >
             <Ionicons name="person-outline" size={24} color="#4A90E2" />
             <Text style={styles.settingText}>Chỉnh sửa hồ sơ</Text>
+            <Ionicons name="chevron-forward" size={20} color="#888" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => navigation.navigate("UserShipment")}
+          >
+            <Ionicons name="location-outline" size={24} color="#FF9900" />
+            <Text style={styles.settingText}>Địa chỉ của tôi</Text>
             <Ionicons name="chevron-forward" size={20} color="#888" />
           </TouchableOpacity>
           <TouchableOpacity
@@ -133,12 +216,41 @@ export default function Account() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Đăng xuất</Text>
-        </TouchableOpacity>
+        <Modal
+          visible={noTokenModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setNoTokenModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Bạn chưa có tài khoản</Text>
+              <Text style={styles.modalText}>
+                Vui lòng đăng nhập để tiếp tục.
+              </Text>
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={handleCancel}
+                >
+                  <Text style={styles.cancelButtonText}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.loginButton]}
+                  onPress={handleLogin}
+                >
+                  <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {user && <LogoutButton />}
       </ScrollView>
 
-      <Modal
+      {/* change language */}
+      {/* <Modal
         visible={languageModalVisible}
         transparent={true}
         animationType="slide"
@@ -167,152 +279,9 @@ export default function Account() {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop:30,
-    backgroundColor: '#F5F7FA',
-  },
-  header: {
-    padding: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  profileSection: {
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    padding: 20,
-    marginBottom: 10,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  profileId: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
-  },
-  orderSection: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
-  },
-  statusMenu: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-  },
-  statusButton: {
-    alignItems: 'center',
-  },
-  statusText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 5,
-    textAlign: 'center',
-  },
-  viewAllOrders: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-  viewAllOrdersText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  settingsSection: {
-    backgroundColor: '#FFF',
-    padding: 16,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  settingText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 15,
-  },
-  logoutButton: {
-    margin: 16,
-    backgroundColor: '#F44336',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  languageOption: {
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  languageText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  modalCloseButton: {
-    marginTop: 20,
-    backgroundColor: '#FF9900',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  modalCloseButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-});
+

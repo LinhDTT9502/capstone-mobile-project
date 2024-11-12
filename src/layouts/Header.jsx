@@ -108,6 +108,13 @@ export default function Header() {
                 navigation.navigate("ContactUs");
               }}
             />
+            <MenuItem
+              title="Chính sách"
+              onPress={() => {
+                toggleMenu();
+                navigation.navigate("Policy");
+              }}
+            />
           </Animated.View>
         </TouchableOpacity>
       </Modal>
@@ -131,6 +138,7 @@ const styles = StyleSheet.create({
     width: 40,
   },
   logoContainer: {
+    marginLeft:40,
     flex: 1,
     justifyContent: "center",
     alignItems: "center",

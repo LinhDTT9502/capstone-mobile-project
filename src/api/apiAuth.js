@@ -13,40 +13,54 @@ export const signIn = (userName, password) => {
   });
 };
 
-// export const signUp = (userData) => {
-//   return axios.post(`${API_BASE_URL}/sign-up`, userData, {
-//     headers: {
-//       'Content-Type': 'application/json'
-//     }
-//   });
-// };
+export const signUp = (userData) => {
+  return axios.post(`${API_BASE_URL}/sign-up`, userData, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
 
-// export const signOut = (data) => {
-//   return axios.post(`${API_BASE_URL}/sign-out`, data, {
-//     headers: {
-//       'Content-Type': 'application/json'
-//     }
-//   });
-// };
+export const signOut = (data) => {
+  return axios.post(`${API_BASE_URL}/sign-out`, data, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
 
-// export const refreshTokenAPI = (token, refreshToken) => {
-//   return axios.post(`${API_BASE_URL}/refresh-token`, {
-//     token,
-//     refreshToken,
-//   }, {
-//     headers: {
-//       'Content-Type': 'application/json'
-//     }
-//   });
-// };
+export const refreshTokenAPI = (token, refreshToken) => {
+  return axios.post(`${API_BASE_URL}/refresh-token`, {
+    token,
+    refreshToken,
+  }, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
 
-// export const changePassword = (data) => {
-//   return axios.post(`${API_BASE_URL}/change-password`, data, {
-//     headers: {
-//       'Content-Type': 'application/json'
-//     }
-//   });
-// };
+export const sendForgotPasswordRequest = (email) => {
+  return axios.post(`${API_BASE_URL}/forgot-password-request`, { email }, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
+
+export const validateResetToken = (token, email) => {
+  return axios.get(`${API_BASE_URL}/validate-reset-token`, {
+    params: { token, email }
+  });
+};
+
+export const resetPassword = (data) => {
+  return axios.post(`${API_BASE_URL}/reset-password`, data, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
 
 // export const resetPassword = (data) => {
 //   return axios.post(`${API_BASE_URL}/reset-password`, data, {
@@ -64,3 +78,46 @@ export const signIn = (userName, password) => {
 // }, (error) => {
 //   return Promise.reject(error);
 // });
+
+export const mobileSignUp = (userData) => {
+  return axios.post(`${API_BASE_URL}/sign-up-mobile`, userData, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
+
+export const verifyAccountMobileAPI = (data) => {
+  return axios.post(`${API_BASE_URL}/verify-account-mobile`, data, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+export const forgotPasswordRequestMobile = (email) => {
+  return axios.post(`${API_BASE_URL}/forgot-password-request-mobile`, { email }, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
+
+export const resetPasswordMobile = ({ otpCode, email, newPassword }) => {
+  return axios.post(`${API_BASE_URL}/reset-password-mobile`, {
+    otpCode,
+    email,
+    newPassword,
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+export const sendOtpRequestMobile = (data) => {
+  return axios.post(`${API_BASE_URL}/send-otp-request-mobile`, data, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};

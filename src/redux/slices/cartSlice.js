@@ -1,42 +1,43 @@
-// cartSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { createSlice } from '@reduxjs/toolkit';
-
-const loadState = () => {
+export const loadCartState = createAsyncThunk('cart/loadState', async () => {
   try {
-    const serializedState = localStorage.getItem('cart');
+    const serializedState = await AsyncStorage.getItem('cart');
     if (serializedState === null) {
-      return undefined;
+      // console.log("Cart state is null");
+      return [];
     }
+    // console.log("Loaded cart state:", JSON.parse(serializedState));
     return JSON.parse(serializedState);
   } catch (err) {
-    return undefined;
+    console.error('Error loading cart state:', err);
+    return [];
   }
-};
+});
 
-const saveState = (state) => {
+const saveState = async (state) => {
   try {
     const serializedState = JSON.stringify(state);
-    localStorage.setItem('cart', serializedState);
-  } catch {
-    // ignore write errors
+    await AsyncStorage.setItem('cart', serializedState);
+  } catch (err) {
+    console.error('Error saving cart state:', err);
   }
-};
-
-const initialState = {
-  items: loadState() || [],
 };
 
 const cartSlice = createSlice({
   name: 'cart',
-  initialState,
+  initialState: {
+    items: [],
+  },
   reducers: {
     addCart: (state, action) => {
       const product = state.items.find(item => item.id === action.payload.id);
+      const quantityToAdd = action.payload.quantity || 1; // Use specified quantity or default to 1
       if (product) {
-        product.quantity += 1;
+        product.quantity += quantityToAdd;
       } else {
-        state.items.push({ ...action.payload, quantity: 1 });
+        state.items.push({ ...action.payload, quantity: quantityToAdd });
       }
       saveState(state.items);
     },
@@ -56,12 +57,16 @@ const cartSlice = createSlice({
     clearCart: (state) => {
       state.items = [];
       saveState(state.items);
-    }
-  }
+    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(loadCartState.fulfilled, (state, action) => {
+      state.items = action.payload;
+    });
+  },
 });
 
 export const { addCart, removeFromCart, decreaseQuantity, clearCart } = cartSlice.actions;
-
 export const selectCartItems = state => state.cart.items;
 
 export default cartSlice.reducer;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,11 +10,30 @@ import {
   Alert,
   ScrollView,
   SafeAreaView,
+  Dimensions,
 } from "react-native";
 import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { fetchProductById } from "../../services/productService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
+
+import AddToCartButton from "../../components/AddToCardButton";
+import RentButton from "../../components/RentButton";
+import BuyNowButton from "../../components/BuyNowButton";
+import Comment from "../../components/ProductDetail/Comment";
+import LikeButton from "../../components/ProductDetail/LikeButton";
+
+import {
+  fetchComments,
+  postComment,
+  editComment,
+  deleteComment,
+  replyComment,
+} from "../../services/commentService";
+import { fetchProductById } from "../../services/productService";
+import { fetchLikes, handleToggleLike } from "../../services/likeService";
+import styles from "./css/ProductDetailStyles";
+const screenWidth = Dimensions.get("window").width;
 
 const COLORS = {
   primary: "#0035FF",
@@ -28,15 +47,19 @@ const COLORS = {
 const PRODUCT_COLORS = [
   { id: 1, name: "Xanh", code: "#0035FF" },
   { id: 2, name: "Cam", code: "#FA7D0B" },
-  { id: 3, name: "Đen", code: "#000000" }
+  { id: 3, name: "Đen", code: "#000000" },
 ];
+
+const PRODUCT_SIZES = ["3U5", "3U6", "4U5", "4U6"];
+const PRODUCT_CONDITIONS = ["Mới", "Như mới", "Đã sử dụng"];
+const COMMENTS_PER_PAGE = 5;
 
 export default function ProductDetail() {
   const navigation = useNavigation();
   const route = useRoute();
   const { productId } = route.params;
 
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [startDate, setStartDate] = useState(
     new Date(new Date().setDate(new Date().getDate() + 1))
@@ -50,38 +73,151 @@ export default function ProductDetail() {
   const [isAgreed, setIsAgreed] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [color, setColor] = useState("Blue");
+  const [size, setSize] = useState("");
+  const [condition, setCondition] = useState("Mới");
   const [userComment, setUserComment] = useState("");
   const [userRating, setUserRating] = useState(0);
+
   const [likes, setLikes] = useState(0);
-  const [comment, setComment] = useState("");
-  
-  const handleSubmitComment = () => {
-    if (!comment.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận.");
-      return;
-    }
-    Alert.alert("Thành công", "Bình luận của bạn đã được gửi");
-    setComment("");
-  };
+  const [isLiked, setIsLiked] = useState(false);
+
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMoreComments, setHasMoreComments] = useState(true);
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     loadProductDetails();
+    loadLikes();
+    checkLoginStatus();
+    loadComments();
   }, [productId]);
+
+  const checkLoginStatus = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    } catch (error) {
+      console.error("Error retrieving token:", error);
+      setIsLoggedIn(false);
+    }
+  };
+
+  const loadLikes = async () => {
+    try {
+      const likesData = await fetchLikes();
+      setLikes(likesData.likes || 0);
+    } catch (error) {
+      console.error("Error fetching likes:", error);
+    }
+  };
+
+  const handleLikeToggle = async () => {
+    if (!isLoggedIn) {
+      return;
+    }
+
+    const newLikesCount = isLiked ? likes - 1 : likes + 1;
+    setLikes(newLikesCount);
+    setIsLiked(!isLiked);
+
+    try {
+      await handleToggleLike(productId, navigation);
+      await loadProductDetails();
+    } catch (error) {
+      setLikes(likes);
+      setIsLiked(!isLiked);
+      Alert.alert("Lỗi", "Không thể thực hiện hành động like.");
+    }
+  };
 
   const loadProductDetails = async () => {
     try {
       const productData = await fetchProductById(productId);
-      setProduct({
-        ...productData,
-        originalPrice: 1428000,
-        discount: 100,
-        description:
-          "Vợt cầu lông Yonex Astrox 100ZZ là một trong những cây vợt cao cấp nhất của Yonex, được thiết kế cho những người chơi chuyên nghiệp. Với công nghệ VOLUME CUT RESIN và ROTATIONAL GENERATOR SYSTEM, vợt mang lại khả năng đánh cầu mạnh mẽ và chính xác.",
-      });
+      setProduct(productData.$values[0]);
+      setLikes(productData.$values[0]?.likes || 0);
+      setSize(productData.$values[0]?.size || "");
     } catch (error) {
-      Alert.alert("Error", "Failed to load product details.");
-      console.error(error);
+      Alert.alert("Lỗi", "Không thể tải thông tin sản phẩm.");
+      console.error("Error loading product details:", error);
     }
+  };
+
+  const loadComments = async (newPage = 1) => {
+    try {
+      const response = await fetchComments(
+        productId,
+        newPage,
+        COMMENTS_PER_PAGE
+      );
+      const newComments = response.data?.$values || [];
+
+      if (newPage === 1) {
+        setComments(newComments);
+      } else {
+        setComments((prevComments) => [...prevComments, ...newComments]);
+      }
+
+      setHasMoreComments(newComments.length === COMMENTS_PER_PAGE);
+    } catch (error) {
+      console.error("Error loading comments:", error);
+      Alert.alert("Lỗi", "Không thể tải bình luận");
+    }
+  };
+
+  const loadMoreComments = async () => {
+    if (hasMoreComments) {
+      const nextPage = page + 1;
+      await loadComments(nextPage);
+      setPage(nextPage);
+    }
+  };
+
+  const handlePostComment = async (newComment) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      console.log("Token:", token);
+      if (!token) {
+        Alert.alert("Lỗi", "Vui lòng đăng nhập để bình luận.");
+        return;
+      }
+      const response = await postComment(productId, newComment, token);
+      console.log("Response:", response);
+      loadComments();
+      setNewComment("");
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      Alert.alert("Lỗi", "Không thể đăng bình luận");
+    }
+  };
+
+  const handleEditComment = async (commentId, newContent) => {
+    try {
+      await editComment(commentId, newContent);
+      loadComments();
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể sửa bình luận");
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await deleteComment(commentId);
+      loadComments();
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể xóa bình luận");
+    }
+  };
+
+  const handleReplyComment = async (commentId) => {
+    Alert.alert(
+      "Thông báo",
+      "Chức năng trả lời bình luận chưa được triển khai"
+    );
   };
 
   const handleAddToCart = (type) => {
@@ -109,20 +245,19 @@ export default function ProductDetail() {
     setModalVisible(false);
   };
 
-
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  // Helper function to format date as dd/mm/yyyy
   const formatDate = (date) => {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
   const handleDateChange = (event, selectedDate, dateType) => {
-    const selected = selectedDate || (dateType === "start" ? startDate : endDate);
+    const selected =
+      selectedDate || (dateType === "start" ? startDate : endDate);
     if (dateType === "start") {
       setShowStartDatePicker(false);
       if (selected < tomorrow) {
@@ -150,7 +285,9 @@ export default function ProductDetail() {
     setUserRating(0);
   };
 
-  if (!product) return <Text>Loading...</Text>;
+  const formatCurrency = (amount) => {
+    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -162,7 +299,12 @@ export default function ProductDetail() {
           <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
         </TouchableOpacity>
         <Text style={styles.title}>Chi tiết sản phẩm</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Cart")}
+          style={styles.cartButton}
+        >
+          <Ionicons name="cart-outline" size={24} color={COLORS.dark} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -173,25 +315,32 @@ export default function ProductDetail() {
           style={styles.productImage}
         />
         <View style={styles.productInfo}>
-          <Text style={styles.productName}>{product.productName}</Text>
+          <Text style={styles.productName}>
+            {product.productName || "Tên sản phẩm không có"}
+          </Text>
           <Text style={styles.productTag}>For exchange</Text>
           <View style={styles.priceContainer}>
             <View>
               <Text style={styles.productPrice}>
-                {product.price.toLocaleString()} ₫
+                {product.price
+                  ? `${formatCurrency(product.price)} ₫`
+                  : "Giá không có"}
               </Text>
-              <Text style={styles.originalPrice}>
-                {product.originalPrice.toLocaleString()} ₫
-              </Text>
-              <Text style={styles.discount}>Giảm {product.discount}%</Text>
+              {product.discount && product.listedPrice ? (
+                <>
+                  <Text style={styles.originalPrice}>
+                    {formatCurrency(product.listedPrice)} ₫
+                  </Text>
+                  <Text style={styles.discount}>Giảm {product.discount}%</Text>
+                </>
+              ) : null}
             </View>
-            <TouchableOpacity
-              style={styles.likeButton}
-              onPress={() => setLikes(likes + 1)}
-            >
-              <AntDesign name="like2" size={24} color={COLORS.primary} />
-              <Text style={styles.likeCount}>{likes}</Text>
-            </TouchableOpacity>
+            <LikeButton
+              isLiked={isLiked}
+              likes={likes}
+              onPress={handleLikeToggle}
+              disabled={!isLoggedIn}
+            />
           </View>
         </View>
 
@@ -201,14 +350,20 @@ export default function ProductDetail() {
               <Text style={styles.sectionTitle}>Số lượng</Text>
               <View style={styles.quantityContainer}>
                 <TouchableOpacity
-                  style={[styles.quantityButton, { backgroundColor: COLORS.light }]}
+                  style={[
+                    styles.quantityButton,
+                    { backgroundColor: COLORS.light },
+                  ]}
                   onPress={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
                 >
                   <FontAwesome name="minus" size={16} color={COLORS.dark} />
                 </TouchableOpacity>
                 <Text style={styles.quantityText}>{quantity}</Text>
                 <TouchableOpacity
-                  style={[styles.quantityButton, { backgroundColor: COLORS.light }]}
+                  style={[
+                    styles.quantityButton,
+                    { backgroundColor: COLORS.light },
+                  ]}
                   onPress={() => setQuantity(quantity + 1)}
                 >
                   <FontAwesome name="plus" size={16} color={COLORS.dark} />
@@ -226,18 +381,69 @@ export default function ProductDetail() {
                 style={[
                   styles.colorButton,
                   color === colorOption.name && styles.activeColor,
-                  { backgroundColor: colorOption.code }
+                  { backgroundColor: colorOption.code },
                 ]}
               />
             ))}
           </View>
-          <TouchableOpacity 
-            style={[styles.addToCartButton, { backgroundColor: COLORS.secondary, marginTop: 16 }]} 
-            onPress={() => handleAddToCart("buy")}
-          >
-            <FontAwesome name="shopping-cart" size={20} color={COLORS.white} />
-            <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
-          </TouchableOpacity>
+
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
+            Kích thước
+          </Text>
+          <View style={styles.sizeSelector}>
+            {PRODUCT_SIZES.map((sizeOption) => (
+              <TouchableOpacity
+                key={sizeOption}
+                onPress={() => setSize(sizeOption)}
+                style={[
+                  styles.sizeButton,
+                  size === sizeOption && styles.activeSize,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.sizeButtonText,
+                    size === sizeOption && styles.activeSizeText,
+                  ]}
+                >
+                  {sizeOption}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
+            Tình trạng
+          </Text>
+          <View style={styles.conditionSelector}>
+            {PRODUCT_CONDITIONS.map((conditionOption) => (
+              <TouchableOpacity
+                key={conditionOption}
+                onPress={() => setCondition(conditionOption)}
+                style={[
+                  styles.conditionButton,
+                  condition === conditionOption && styles.activeCondition,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.conditionButtonText,
+                    condition === conditionOption && styles.activeConditionText,
+                  ]}
+                >
+                  {conditionOption}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.addToCartContainer}>
+            <AddToCartButton
+              product={product}
+              quantity={quantity}
+              onAddToCart={() => handleAddToCart("add")}
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -246,8 +452,9 @@ export default function ProductDetail() {
             Tình trạng: {product.condition}%
           </Text>
           <Text style={styles.specificationText}>
-            Vị trí: {product.location || "Unknown"}
+            Kích thước: {product.size}
           </Text>
+          <Text style={styles.specificationText}>Màu sắc: {product.color}</Text>
         </View>
 
         <View style={styles.section}>
@@ -273,10 +480,10 @@ export default function ProductDetail() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
-          <Text style={styles.descriptionText}>{product.description}</Text>
+          <Text style={styles.descriptionText}>
+            {product.description || "Không có mô tả"}
+          </Text>
         </View>
-
-
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Đánh giá & Nhận xét</Text>
@@ -309,46 +516,26 @@ export default function ProductDetail() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Bình luận</Text>
-          <View style={styles.commentInputContainer}>
-            <TextInput
-              style={styles.commentInput}
-              placeholder="Nhập bình luận của bạn..."
-              value={comment}
-              onChangeText={setComment}
-              multiline
-              numberOfLines={3}
-            />
-            <TouchableOpacity 
-              style={styles.commentSubmitButton}
-              onPress={handleSubmitComment}
-            >
-              <Text style={styles.commentSubmitText}>Gửi bình luận</Text>
-            </TouchableOpacity>
-          </View>
-          
-        </View>
+        <Comment
+          comments={comments}
+          isLoggedIn={isLoggedIn}
+          onPostComment={handlePostComment}
+          onEditComment={handleEditComment}
+          onDeleteComment={handleDeleteComment}
+          onReplyComment={handleReplyComment}
+          loadMoreComments={loadMoreComments}
+        />
       </ScrollView>
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.buyNowButton]}
-          onPress={handleBuyNow}
-        >
-          <FontAwesome name="shopping-bag" size={20} color={COLORS.white} />
-          <Text style={styles.actionButtonText}>Mua Ngay</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.rentButton]}
-          onPress={() => setModalVisible(true)}
-        >
-          <FontAwesome name="calendar" size={20} color={COLORS.white} />
-          <Text style={styles.actionButtonText}>Thuê</Text>
-        </TouchableOpacity>
+        <View style={styles.buyNowContainer}>
+          <BuyNowButton onPress={() => handleAddToCart("buy")} />
+        </View>
+        <View style={styles.rentContainer}>
+          <RentButton onPress={() => setModalVisible(true)} />
+        </View>
       </View>
 
-      {/* Rent Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -426,316 +613,3 @@ export default function ProductDetail() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 30,
-    backgroundColor: "#F8F9FA",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.dark,
-  },
-  placeholder: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-  },
-  productImage: {
-    width: "100%",
-    height: 300,
-    resizeMode: "cover",
-  },
-  productInfo: {
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
-  },
-  productName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: COLORS.dark,
-    marginBottom: 8,
-  },
-  productTag: {
-    backgroundColor: COLORS.light,
-    color: COLORS.primary,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-    marginBottom: 8,
-  },
-  priceContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  productPrice: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: COLORS.secondary,
-  },
-  originalPrice: {
-    fontSize: 16,
-    color: COLORS.dark,
-    textDecorationLine: "line-through",
-  },
-  discount: {
-    fontSize: 14,
-    color: COLORS.secondary,
-    fontWeight: "bold",
-  },
-  section: {
-    padding: 16,
-    backgroundColor: COLORS.white,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-    color: COLORS.dark,
-  },
-  specificationText: {
-    fontSize: 14,
-    color: COLORS.dark,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  promotionContainer: {
-    backgroundColor: "#FFF5F5",
-    padding: 12,
-    borderRadius: 8,
-  },
-  promotionItem: {
-    fontSize: 14,
-    color: COLORS.dark,
-    marginBottom: 8,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: COLORS.dark,
-    lineHeight: 20,
-  },
-  rowContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 16,
-  },
-  leftColumn: {
-    flex: 1.5,
-  },
-  rightColumn: {
-    flex: 1,
-  },
-  quantityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.light,
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  quantityButton: {
-    padding: 12,
-  },
-  quantityText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    paddingHorizontal: 20,
-    color: COLORS.dark,
-  },
-  colorSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  colorButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  activeColor: {
-    borderColor: COLORS.dark,
-  },
-  addToCartButton: {
-    flexDirection: "row",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  addToCartText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
-  commentInputContainer: {
-    marginBottom: 16,
-  },
-  commentInput: {
-    borderWidth: 1,
-    borderColor: COLORS.light,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    minHeight: 80,
-    textAlignVertical: "top",
-    color: COLORS.dark,
-  },
-  commentSubmitButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignSelf: "flex-end",
-  },
-  commentSubmitText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  bottomNav: {
-    flexDirection: "row",
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.light,
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  actionButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
-  buyNowButton: {
-    backgroundColor: COLORS.primary,
-  },
-  rentButton: {
-    backgroundColor: COLORS.secondary,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    width: "90%",
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 20,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: COLORS.dark,
-  },
-  dateInput: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: COLORS.light,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    color: COLORS.dark,
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  checkbox: {
-    marginRight: 10,
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    flex: 1,
-    color: COLORS.dark,
-  },
-  submitButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 8,
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  submitButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  cancelButton: {
-    backgroundColor: COLORS.white,
-    paddingVertical: 12,
-    borderRadius: 8,
-    width: "100%",
-    alignItems: "center",
-    borderColor: COLORS.secondary,
-    borderWidth: 1,
-  },
-  cancelButtonText: {
-    color: COLORS.secondary,
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  likeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 8,
-  },
-  likeCount: {
-    marginLeft: 4,
-    fontSize: 16,
-    color: COLORS.primary,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-});

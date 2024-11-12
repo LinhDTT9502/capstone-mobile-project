@@ -7,81 +7,62 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { performPasswordReset } from '../../services/authService';
 import { useNavigation } from '@react-navigation/native';
 
-const ResetPasswordScreen = () => {
+export default function ResetPasswordScreen() {
+  const [otpCode, setOtpCode] = useState('');
+  const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
   const navigation = useNavigation();
 
-  const togglePasswordVisibility = () => {
-    setSecureTextEntry(!secureTextEntry);
-  };
+  const handleResetPassword = async () => {
+    if (!otpCode || !email || !newPassword) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin.');
+      return;
+    }
 
-  const handleContinue = () => {
-    if (newPassword === confirmPassword) {
+    try {
+      await performPasswordReset({ otpCode, email, newPassword });
       Alert.alert('Thành công', 'Mật khẩu của bạn đã được đặt lại!');
-      navigation.navigate('Login'); // Navigate back to the login screen
-    } else {
-      Alert.alert('Lỗi', 'Mật khẩu không khớp');
+      navigation.navigate('Login');
+    } catch (error) {
+      Alert.alert('Lỗi', error?.message || 'Không thể đặt lại mật khẩu.');
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Text style={styles.backIcon}>←</Text>
-      </TouchableOpacity>
-
-      {/* Illustration */}
-      <View style={styles.imageContainer}>
-        <Text style={styles.illustration}>[Insert Image Here]</Text>
-      </View>
-
-      {/* Title and inputs */}
       <Text style={styles.title}>Đặt lại mật khẩu của bạn</Text>
-      <Text style={styles.subtitle}>
-        Mẹo: Sử dụng kết hợp số, chữ in hoa, chữ thường và ký tự đặc biệt.
-      </Text>
-
-      <View style={styles.passwordContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Mật khẩu mới"
-          secureTextEntry={secureTextEntry}
-          value={newPassword}
-          onChangeText={setNewPassword}
-        />
-        <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
-          <FontAwesomeIcon icon={secureTextEntry ? faEyeSlash : faEye} size={20} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.passwordContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Xác nhận mật khẩu mới"
-          secureTextEntry={secureTextEntry}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
-        <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
-          <FontAwesomeIcon icon={secureTextEntry ? faEyeSlash : faEye} size={20} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Continue button */}
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueButtonText}>Tiếp tục</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Mã OTP"
+        value={otpCode}
+        onChangeText={setOtpCode}
+        keyboardType="numeric"
+        maxLength={6}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Mật khẩu mới"
+        secureTextEntry
+        value={newPassword}
+        onChangeText={setNewPassword}
+      />
+      <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
+        <Text style={styles.buttonText}>Đặt lại mật khẩu</Text>
       </TouchableOpacity>
     </View>
   );
-};
-
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -90,67 +71,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFF',
   },
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-  },
-  backIcon: {
-    fontSize: 24,
-    color: '#333',
-  },
-  imageContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  illustration: {
-    fontSize: 18,
-    color: '#333',
-  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10,
-  },
-  subtitle: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#888',
     marginBottom: 20,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    position: 'relative',
   },
   input: {
     height: 50,
-    flex: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#ddd',
     borderWidth: 1,
     borderRadius: 25,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
+    marginBottom: 20,
     fontSize: 16,
+    backgroundColor: '#FFF',
   },
-  eyeIcon: {
-    position: 'absolute',
-    right: 15,
-  },
-  continueButton: {
+  button: {
     backgroundColor: '#FFA500',
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 15,
     borderRadius: 25,
-    marginTop: 30,
+    alignItems: 'center',
+    marginTop: 20,
   },
-  continueButtonText: {
+  buttonText: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });
-
-export default ResetPasswordScreen;
