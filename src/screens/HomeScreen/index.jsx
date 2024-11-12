@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
+  Modal,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Swiper from "react-native-swiper";
@@ -89,7 +90,10 @@ const HomePage = () => {
   const navigation = useNavigation();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const toggleModal = () => {
+    setIsModalVisible(!isModalVisible);
+  };
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -118,10 +122,10 @@ const HomePage = () => {
       <TouchableOpacity
         style={styles.categoryItem}
         onPress={() => {
-          // console.log("Navigating to CategoryProduct with:", item.id, item.categoryName);
           navigation.navigate("CategoryProduct", {
             categoryName: item.categoryName,
           });
+          setIsModalVisible(false);
         }}
       >
         <View style={styles.categoryIcon}>
@@ -211,9 +215,14 @@ const HomePage = () => {
         </Swiper>
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Danh mục</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Danh mục</Text>
+            <TouchableOpacity onPress={toggleModal}>
+              <Text style={styles.viewAllText}>Xem tất cả</Text>
+            </TouchableOpacity>
+          </View>
           <FlatList
-            data={categories}
+            data={categories.slice(0, 6)}
             renderItem={renderCategory}
             keyExtractor={(item) => item.id.toString()}
             horizontal
@@ -278,6 +287,30 @@ const HomePage = () => {
           <Text style={styles.viewAllText}>Xem tất cả sản phẩm</Text>
         </TouchableOpacity> */}
       </ScrollView>
+
+      {/* Modal for Viewing All Categories */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={toggleModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Tất cả danh mục</Text>
+            <FlatList
+              data={categories}
+              renderItem={renderCategory}
+              keyExtractor={(item) => item.id.toString()}
+              numColumns={3}
+              contentContainerStyle={styles.allCategoriesContainer}
+            />
+            <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
+              <Text style={styles.closeButtonText}>Đóng</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

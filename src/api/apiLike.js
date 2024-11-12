@@ -3,7 +3,7 @@ import axiosInstance from './axiosInstance';
 const API_BASE_URL = 'https://twosportapi-295683427295.asia-southeast2.run.app/api/Like';
 
 export const getLikesAPI = () => {
-  return axios.get(`${API_BASE_URL}/get-likes`, {
+  return axios.get(`${API_BASE_URL}/get-likes-of-product`, {
     headers: {
       'Accept': '*/*',
       'Content-Type': 'application/json',

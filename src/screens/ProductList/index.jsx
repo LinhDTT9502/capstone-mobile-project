@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  ScrollView,
   Image,
   TextInput,
   TouchableOpacity,
@@ -11,78 +10,108 @@ import {
   FlatList,
   SafeAreaView,
   Dimensions,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { fetchProducts, fetchProductsFiltered, searchProducts } from "../../services/productService";
+import {
+  fetchProductsFiltered,
+  searchProducts,
+} from "../../services/productService";
+import { getBrands } from "../../services/brandService";
+import { fetchCategories } from "../../services/categoryService";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 const logoImage = require("../Logo/2sport_logo.png");
 
 export default function ProductListing() {
   const navigation = useNavigation();
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-
-  const [sortOrder, setSortOrder] = useState('default');
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(1000000000);
+  const [sortOrder, setSortOrder] = useState("default");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [sizeInput, setSizeInput] = useState("");
+  const [brands, setBrands] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    loadProducts();
-  }, [currentPage]);
+    loadInitialProducts();
+  }, [sortOrder]);
 
   useEffect(() => {
-    filterAndSortProducts();
-  }, [products, searchQuery, sortOrder, minPrice, maxPrice]);
+    const fetchBrandsAndCategories = async () => {
+      try {
+        const [brandData, categoryData] = await Promise.all([
+          getBrands(),
+          fetchCategories(),
+        ]);
+        setBrands(brandData);
+        setCategories(categoryData);
+      } catch (error) {
+        console.error("Error fetching brands and categories:", error);
+      }
+    };
+    fetchBrandsAndCategories();
+  }, []);
 
-  const loadProducts = async () => {
-    setLoading(true);
+  const loadInitialProducts = async () => {
+    setCurrentPage(1);
+    setProducts([]);
+    setHasMore(true);
+    await loadFilteredProducts(1);
+  };
+
+  const loadFilteredProducts = async (page = currentPage) => {
+    if (loading || !hasMore) return;
+
+    // setLoading(true);
+    // const timeout = setTimeout(() => setLoading(false), 10000);
     try {
-      const { total, products: fetchedProducts } = await fetchProducts(currentPage);
-      setProducts(prevProducts => 
-        currentPage === 1 ? fetchedProducts : [...prevProducts, ...fetchedProducts]
+      const sortBy = sortOrder === "default" ? "" : "price";
+      const isAscending = sortOrder === "lowToHigh";
+      const { total, products: fetchedProducts } = await fetchProductsFiltered(
+        sortBy,
+        isAscending,
+        selectedBrands,
+        selectedCategories,
+        minPrice ? parseInt(minPrice) : 0,
+        maxPrice ? parseInt(maxPrice) : 1000000000,
+        sizeInput
       );
+
+      // Lọc trùng lặp theo `productCode`
+      const newProducts =
+        page === 1 ? fetchedProducts : [...products, ...fetchedProducts];
+      const uniqueProductsByCode = Array.from(
+        new Map(newProducts.map((item) => [item.productCode, item])).values()
+      );
+
+      setProducts(uniqueProductsByCode);
       setTotalProducts(total);
+      setHasMore(fetchedProducts.length > 0);
     } catch (error) {
       console.error("Error loading products:", error);
     } finally {
-      setLoading(false);
+      // clearTimeout(timeout)
+      // setLoading(false);
     }
-  };
-
-  const filterAndSortProducts = () => {
-    let filtered = products.filter(product => 
-      product.price >= minPrice &&
-      product.price <= maxPrice
-    );
-
-    switch (sortOrder) {
-      case 'highToLow':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'lowToHigh':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      default:
-        // Keep original order
-        break;
-    }
-
-    setFilteredProducts(filtered);
   };
 
   const loadMoreProducts = () => {
-    if (!loading && products.length < totalProducts) {
-      setCurrentPage(prevPage => prevPage + 1);
+    if (!loading && hasMore) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      loadFilteredProducts(nextPage);
     }
   };
 
@@ -90,31 +119,30 @@ export default function ProductListing() {
 
   const toggleSortOrder = () => {
     setSortOrder((prevOrder) => {
-      if (prevOrder === 'default') return 'highToLow';
-      if (prevOrder === 'highToLow') return 'lowToHigh';
-      return 'default';
+      if (prevOrder === "default") return "lowToHigh";
+      if (prevOrder === "lowToHigh") return "highToLow";
+      return "default";
     });
   };
 
   const applyFilters = () => {
-    filterAndSortProducts();
     toggleFilterModal();
+    loadInitialProducts();
   };
 
   const handleSearch = async () => {
-    if (searchQuery.trim() === "") {
-      loadProducts();
-      return;
-    }
-  
     setLoading(true);
     try {
+      if (searchQuery.trim() === "") {
+        await loadInitialProducts();
+        return;
+      }
+
       const response = await searchProducts(searchQuery);
-      // console.log("API Response:", response); // Add this line
       const searchResults = response.data?.$values || [];
-      const uniqueResults = [...new Map(searchResults.map(item => [item.id, item])).values()];
-      setProducts(uniqueResults);
-      setTotalProducts(uniqueResults.length);
+      setProducts(searchResults);
+      setTotalProducts(searchResults.length);
+      setHasMore(false);
     } catch (error) {
       console.error("Error searching products:", error);
     } finally {
@@ -122,80 +150,109 @@ export default function ProductListing() {
     }
   };
 
+  const toggleFilter = (type, id) => {
+    const setterMap = {
+      brand: setSelectedBrands,
+      category: setSelectedCategories,
+    };
+    setterMap[type]((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
   const renderProduct = ({ item }) => (
     <TouchableOpacity
       style={styles.productCard}
-      onPress={() => navigation.navigate("ProductDetail", { productId: item.id })}
+      onPress={() =>
+        navigation.navigate("ProductDetail", { productId: item.id })
+      }
     >
-      <Image
-        source={{ uri: item.imgAvatarPath}}
-        style={styles.productImage}
-      />
+      <Image source={{ uri: item.imgAvatarPath }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productName} numberOfLines={2}>
-          {item.productName} 
+          {item.productName}
         </Text>
         <Text style={styles.productCategory} numberOfLines={1}>
-          {item.categoryName} 
+          {item.categoryName}
         </Text>
-        <Text style={styles.productPrice}>{item.price} ₫</Text>
+        <Text style={styles.productPrice}>
+          {item.price.toLocaleString("vi-VN")} ₫
+        </Text>
       </View>
     </TouchableOpacity>
   );
-  
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Ionicons name="search-outline" size={64} color="#ccc" />
+      <Text style={styles.emptyStateText}>Không tìm thấy sản phẩm phù hợp</Text>
+      <Text style={styles.emptyStateSubtext}>
+        Vui lòng thử lại với bộ lọc khác
+      </Text>
+    </View>
+  );
+
+  const renderFooter = () => {
+    if (!loading) return null;
+    return (
+      <View style={styles.loadingFooter}>
+        <ActivityIndicator size="small" color="#4A90E2" />
+        <Text style={styles.loadingText}>Đang tải...</Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Image source={logoImage} style={styles.logoImage} />
         <View style={styles.searchContainer}>
-        <TextInput
+          <TextInput
             style={styles.searchInput}
             placeholder="Tìm kiếm sản phẩm..."
             placeholderTextColor="#999"
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
           />
           <TouchableOpacity onPress={handleSearch}>
             <Ionicons name="search" size={20} color="#999" />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={toggleFilterModal}>
-          <Ionicons name="options-outline" size={24} color="#4A90E2" />
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={toggleFilterModal}
+        >
+          <Ionicons name="options" size={24} color="#4A90E2" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.sortContainer}>
-        <TouchableOpacity onPress={toggleSortOrder} style={styles.sortButton}>
-          <Ionicons
-            name={sortOrder === 'lowToHigh' ? 'arrow-up' : 'arrow-down'}
-            size={20}
-            color="#333"
-          />
-          <Text style={styles.sortButtonText}>
-            {sortOrder === 'default'
-              ? 'Mặc định'
-              : sortOrder === 'highToLow'
-              ? 'Giá cao → thấp'
-              : 'Giá thấp → cao'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.sortButton} onPress={toggleSortOrder}>
+        <Text style={styles.sortButtonText}>
+          {sortOrder === "default"
+            ? "Mặc định"
+            : sortOrder === "highToLow"
+            ? "Giá cao → thấp"
+            : "Giá thấp → cao"}
+        </Text>
+        <Ionicons name="chevron-down" size={16} color="#333" />
+      </TouchableOpacity>
 
       <FlatList
-        data={filteredProducts}
+        data={products}
         renderItem={renderProduct}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         numColumns={2}
         columnWrapperStyle={styles.productRow}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.productList}
+        contentContainerStyle={[
+          styles.productList,
+          products.length === 0 && styles.emptyList,
+        ]}
         onEndReached={loadMoreProducts}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={loading ? (
-          <View style={styles.loadingContainer}>
-            <Text>Đang tải...</Text>
-          </View>
-        ) : null}
+        ListEmptyComponent={!loading && renderEmptyState()}
+        ListFooterComponent={renderFooter()}
       />
 
       <Modal
@@ -212,32 +269,115 @@ export default function ProductListing() {
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            <View style={styles.priceFilterContainer}>
-              <Text style={styles.priceFilterTitle}>Khoảng giá</Text>
-              <View style={styles.priceInputContainer}>
+
+            <ScrollView style={styles.modalScroll}>
+              <View style={styles.filterSection}>
+                <Text style={styles.filterTitle}>Thương hiệu</Text>
+                <View style={styles.filterGrid}>
+                  {brands.map((brand) => (
+                    <TouchableOpacity
+                      key={brand.id}
+                      style={[
+                        styles.filterChip,
+                        selectedBrands.includes(brand.id) &&
+                          styles.selectedFilterChip,
+                      ]}
+                      onPress={() => toggleFilter("brand", brand.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          selectedBrands.includes(brand.id) &&
+                            styles.selectedFilterChipText,
+                        ]}
+                      >
+                        {brand.brandName}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.filterSection}>
+                <Text style={styles.filterTitle}>Danh mục</Text>
+                <View style={styles.filterGrid}>
+                  {categories.map((category) => (
+                    <TouchableOpacity
+                      key={category.id}
+                      style={[
+                        styles.filterChip,
+                        selectedCategories.includes(category.id) &&
+                          styles.selectedFilterChip,
+                      ]}
+                      onPress={() => toggleFilter("category", category.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          selectedCategories.includes(category.id) &&
+                            styles.selectedFilterChipText,
+                        ]}
+                      >
+                        {category.categoryName}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.filterSection}>
+                <Text style={styles.filterTitle}>Kích thước</Text>
                 <TextInput
-                  style={styles.priceInput}
-                  placeholder="Giá thấp nhất"
+                  style={styles.sizeInput}
+                  placeholder="Nhập kích thước"
+                  value={sizeInput}
+                  onChangeText={setSizeInput}
                   keyboardType="numeric"
-                  value={minPrice.toString()}
-                  onChangeText={(text) => setMinPrice(parseInt(text) || 0)}
-                />
-                <Text style={styles.priceSeparator}>-</Text>
-                <TextInput
-                  style={styles.priceInput}
-                  placeholder="Giá cao nhất"
-                  keyboardType="numeric"
-                  value={maxPrice.toString()}
-                  onChangeText={(text) => setMaxPrice(parseInt(text) || 1000000000)}
                 />
               </View>
+
+              <View style={styles.filterSection}>
+                <Text style={styles.filterTitle}>Khoảng giá</Text>
+                <View style={styles.priceInputContainer}>
+                  <TextInput
+                    style={styles.priceInput}
+                    placeholder="Giá thấp nhất"
+                    keyboardType="numeric"
+                    value={minPrice}
+                    onChangeText={setMinPrice}
+                  />
+                  <Text style={styles.priceSeparator}>-</Text>
+                  <TextInput
+                    style={styles.priceInput}
+                    placeholder="Giá cao nhất"
+                    keyboardType="numeric"
+                    value={maxPrice}
+                    onChangeText={setMaxPrice}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={() => {
+                  setSelectedBrands([]);
+                  setSelectedCategories([]);
+                  setSizeInput("");
+                  setMinPrice("");
+                  setMaxPrice("");
+                }}
+              >
+                <Text style={styles.clearButtonText}>Xóa bộ lọc</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={applyFilters}
+              >
+                <Text style={styles.applyButtonText}>Áp dụng</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.applyButton}
-              onPress={applyFilters}
-            >
-              <Text style={styles.applyButtonText}>Áp dụng</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -270,7 +410,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F0F0F0",
-    borderRadius: 8,
+    borderRadius: 20,
     paddingHorizontal: 12,
     marginRight: 12,
   },
@@ -279,34 +419,34 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     fontSize: 16,
   },
-  sortContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+  filterButton: {
     padding: 8,
-    backgroundColor: '#FFF',
   },
   sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#EEEEEE',
-    borderRadius: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    padding: 12,
+    backgroundColor: "#FFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
   },
   sortButtonText: {
-    marginLeft: 4,
     fontSize: 14,
-    color: '#333',
+    marginRight: 4,
+    color: "#4A90E2",
   },
   productList: {
     padding: 8,
+  },
+  emptyList: {
+    flexGrow: 1,
   },
   productRow: {
     justifyContent: "space-between",
   },
   productCard: {
-    width: (width - 48) / 2,
+    width: (width - 36) / 2,
     backgroundColor: "#FFF",
     borderRadius: 12,
     marginBottom: 16,
@@ -331,16 +471,43 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 4,
   },
-  productPrice: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#4A90E2",
-    marginBottom: 8,
-  },
   productCategory: {
     fontSize: 12,
     color: "#999",
     marginBottom: 4,
+  },
+  productPrice: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#4A90E2",
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 16,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 8,
+  },
+  loadingFooter: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+  loadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#666",
   },
   modalContainer: {
     flex: 1,
@@ -351,59 +518,117 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
+    height: "80%",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
   },
-  priceFilterContainer: {
-    marginTop: 20,
+  modalScroll: {
+    flex: 1,
   },
-  priceFilterTitle: {
+  filterSection: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  filterTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 12,
+  },
+  filterGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -4,
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    marginHorizontal: 4,
+    marginBottom: 8,
+    backgroundColor: "#FFF",
+  },
+  selectedFilterChip: {
+    backgroundColor: "#E8F0FE",
+    borderColor: "#4A90E2",
+  },
+  filterChipText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  selectedFilterChipText: {
+    color: "#4A90E2",
+    fontWeight: "bold",
+  },
+  sizeInput: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
   },
   priceInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
   },
   priceInput: {
     flex: 1,
     borderWidth: 1,
     borderColor: "#E0E0E0",
     borderRadius: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 14,
   },
   priceSeparator: {
-    marginHorizontal: 10,
+    marginHorizontal: 8,
     fontSize: 16,
     color: "#333",
   },
-  applyButton: {
-    backgroundColor: "#4A90E2",
-    borderRadius: 8,
+  modalFooter: {
+    flexDirection: "row",
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+  },
+  clearButton: {
+    flex: 1,
     paddingVertical: 12,
+    marginRight: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
     alignItems: "center",
-    marginTop: 20,
+  },
+  clearButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  applyButton: {
+    flex: 1,
+    backgroundColor: "#4A90E2",
+    paddingVertical: 12,
+    marginLeft: 8,
+    borderRadius: 8,
+    alignItems: "center",
   },
   applyButtonText: {
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
   },
-  loadingContainer: {
-    padding: 20,
-    alignItems: 'center'
-  }
 });

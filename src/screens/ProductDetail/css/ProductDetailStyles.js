@@ -42,10 +42,10 @@ const styles = StyleSheet.create({
   productImage: {
     width: "100%",
     height: 300,
-    resizeMode: "cover",
+    resizeMode: "contain",
   },
   productInfo: {
-    padding: 16,
+    padding: 0,
     backgroundColor: "#FFFFFF",
   },
   productName: {
@@ -114,20 +114,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   colorSelector: {
-    flexDirection: "row",
     marginBottom: 16,
   },
   colorButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 12,
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.light,
+    marginRight: 8,
   },
-  activeColor: {
-    borderColor: "#000000",
+  activeColorButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
+  colorButtonText: {
+    fontSize: 14,
+    color: COLORS.dark,
+  },
+  activeColorButtonText: {
+    color: COLORS.white,
+  },
+
   sizeSelector: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -138,21 +146,24 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E4E6EB",
+    borderColor: COLORS.light,
     marginRight: 8,
     marginBottom: 8,
   },
-  activeSize: {
-    backgroundColor: "#1877F2",
+  activeSizeButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   sizeButtonText: {
     fontSize: 14,
-    color: "#050505",
+    color: COLORS.dark,
   },
-  activeSizeText: {
-    color: "#FFFFFF",
+  activeSizeButtonText: {
+    color: COLORS.white,
   },
-  conditionSelector: {
+
+
+conditionSelector: {
     flexDirection: "row",
     flexWrap: "wrap",
     marginBottom: 16,
@@ -162,20 +173,44 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E4E6EB",
+    borderColor: COLORS.light,
     marginRight: 8,
     marginBottom: 8,
   },
-  activeCondition: {
-    backgroundColor: "#1877F2",
+  activeConditionButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   conditionButtonText: {
     fontSize: 14,
-    color: "#050505",
+    color: COLORS.dark,
   },
-  activeConditionText: {
-    color: "#FFFFFF",
+  activeConditionButtonText: {
+    color: COLORS.white,
   },
+
+  quantitySection: {
+    marginBottom: 16,
+  },
+  quantityContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: COLORS.light,
+    borderRadius: 25,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+  },
+  quantityButton: {
+    padding: 8,
+  },
+  quantityText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginHorizontal: 16,
+  },
+
   addToCartContainer: {
     marginTop: 16,
   },
@@ -301,6 +336,86 @@ const styles = StyleSheet.create({
     color: "#050505",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  optionSection: {
+    marginBottom: 20,
+  },
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    color: '#000',
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  optionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#0035FF',
+    borderRadius: 20,
+  },
+  activeOptionButton: {
+    backgroundColor: '#0035FF',
+  },
+  optionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  activeOptionButtonText: {
+    color: '#FFFFFF',
+  },
+  circleButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  activeCircleButton: {
+    borderColor: '#0035FF',
+    backgroundColor: '#FFFFFF',
+  },
+  circleButtonText: {
+    fontSize: 14,
+    color: '#000000',
+  },
+  activeCircleButtonText: {
+    color: '#0035FF',
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+  },
+  quantityButton: {
+    padding: 8,
+  },
+  quantityText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  addToCartContainer: {
+    marginTop: 16,
+  },
+  totalPriceText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0035FF',
+    marginTop: 8,
   },
 });
 

@@ -1,9 +1,10 @@
 // apiComment.js
+import axios from 'axios';
 import axiosInstance from './axiosInstance';
 const API_BASE_URL = 'https://twosportapi-295683427295.asia-southeast2.run.app/api/Comment';
 
 export const fetchCommentsAPI = (productId) => {
-    return axiosInstance.get(`${API_BASE_URL}/get-all-comments/${productId}`);
+    return axios.get(`${API_BASE_URL}/get-all-comments/${productId}`);
   };
 
   export const postCommentAPI = (productId, content, token) => {

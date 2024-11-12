@@ -237,6 +237,40 @@ const styles = StyleSheet.create({
     textAlign: "center",
     overflow: "hidden",
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "90%",
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    padding: 20,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#333",
+  },
+  allCategoriesContainer: {
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+  },
+  closeButton: {
+    marginTop: 20,
+    backgroundColor: "#FF6347",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+  },
 });
 
 export default styles;

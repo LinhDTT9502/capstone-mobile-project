@@ -4,11 +4,10 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  StyleSheet,
   Modal,
   TextInput,
   Alert,
-  ScrollView,
+  FlatList,
   SafeAreaView,
   Dimensions,
 } from "react-native";
@@ -23,6 +22,7 @@ import BuyNowButton from "../../components/BuyNowButton";
 import Comment from "../../components/ProductDetail/Comment";
 import LikeButton from "../../components/ProductDetail/LikeButton";
 
+import { LogBox } from "react-native";
 import {
   fetchComments,
   postComment,
@@ -30,7 +30,13 @@ import {
   deleteComment,
   replyComment,
 } from "../../services/commentService";
-import { fetchProductById } from "../../services/productService";
+import {
+  fetchProductById,
+  getProductByProductCode,
+  listColorsOfProduct,
+  listSizesOfProduct,
+  listConditionsOfProduct,
+} from "../../services/productService";
 import { fetchLikes, handleToggleLike } from "../../services/likeService";
 import styles from "./css/ProductDetailStyles";
 const screenWidth = Dimensions.get("window").width;
@@ -44,14 +50,10 @@ const COLORS = {
   black: "#000000",
 };
 
-const PRODUCT_COLORS = [
-  { id: 1, name: "Xanh", code: "#0035FF" },
-  { id: 2, name: "Cam", code: "#FA7D0B" },
-  { id: 3, name: "Đen", code: "#000000" },
-];
+LogBox.ignoreLogs([
+  "VirtualizedLists should never be nested inside plain ScrollViews",
+]);
 
-const PRODUCT_SIZES = ["3U5", "3U6", "4U5", "4U6"];
-const PRODUCT_CONDITIONS = ["Mới", "Như mới", "Đã sử dụng"];
 const COMMENTS_PER_PAGE = 5;
 
 export default function ProductDetail() {
@@ -72,9 +74,6 @@ export default function ProductDetail() {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [color, setColor] = useState("Blue");
-  const [size, setSize] = useState("");
-  const [condition, setCondition] = useState("Mới");
   const [userComment, setUserComment] = useState("");
   const [userRating, setUserRating] = useState(0);
 
@@ -87,6 +86,67 @@ export default function ProductDetail() {
   const [editingText, setEditingText] = useState("");
   const [page, setPage] = useState(1);
   const [hasMoreComments, setHasMoreComments] = useState(true);
+
+  // select
+  const [colors, setColors] = useState([]);
+  const [sizes, setSizes] = useState([]);
+  const [conditions, setConditions] = useState([]);
+
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedCondition, setSelectedCondition] = useState(null);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [basePrice, setBasePrice] = useState(0);
+
+  const fetchProductColors = async (productCode) => {
+    try {
+      const response = await listColorsOfProduct(productCode);
+      setColors(response.data.$values.map((item) => item.color)); // Assuming 'color' key
+    } catch (error) {
+      console.error("Error fetching colors:", error);
+    }
+  };
+
+  const fetchProductSizes = async (productCode, color) => {
+    try {
+      const response = await listSizesOfProduct(productCode, color);
+      setSizes(response.data.$values.map((item) => item.size)); // Assuming 'size' key
+    } catch (error) {
+      console.error("Error fetching sizes:", error);
+    }
+  };
+
+  const fetchProductConditions = async (productCode, color, size) => {
+    try {
+      const response = await listConditionsOfProduct(productCode, color, size);
+      setConditions(response.data.$values.map((item) => item.condition)); // Assuming 'condition' key
+    } catch (error) {
+      console.error("Error fetching conditions:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (product.productCode) {
+      fetchProductColors(product.productCode);
+    }
+  }, [product.productCode]);
+
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
+    setSelectedSize(null); // Reset size and condition when color changes
+    setSelectedCondition(null);
+    fetchProductSizes(product.productCode, color);
+  };
+
+  const handleSizeSelect = (size) => {
+    setSelectedSize(size);
+    setSelectedCondition(null); // Reset condition when size changes
+    fetchProductConditions(product.productCode, selectedColor, size);
+  };
+
+  const handleConditionSelect = (condition) => {
+    setSelectedCondition(condition);
+  };
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -138,13 +198,20 @@ export default function ProductDetail() {
   const loadProductDetails = async () => {
     try {
       const productData = await fetchProductById(productId);
+      const productInfo = productData.$values[0];
       setProduct(productData.$values[0]);
       setLikes(productData.$values[0]?.likes || 0);
-      setSize(productData.$values[0]?.size || "");
+      setBasePrice(productInfo.price || 0);
+      setTotalPrice((productInfo.price || 0) * quantity);
     } catch (error) {
       Alert.alert("Lỗi", "Không thể tải thông tin sản phẩm.");
-      console.error("Error loading product details:", error);
     }
+  };
+
+  // Update total price based on quantity and base price
+  const handleQuantityChange = (newQuantity) => {
+    setQuantity(newQuantity);
+    setTotalPrice(basePrice * newQuantity);
   };
 
   const loadComments = async (newPage = 1) => {
@@ -180,13 +247,13 @@ export default function ProductDetail() {
   const handlePostComment = async (newComment) => {
     try {
       const token = await AsyncStorage.getItem("token");
-      console.log("Token:", token);
+      // console.log("Token:", token);
       if (!token) {
         Alert.alert("Lỗi", "Vui lòng đăng nhập để bình luận.");
         return;
       }
       const response = await postComment(productId, newComment, token);
-      console.log("Response:", response);
+      // console.log("Response:", response);
       loadComments();
       setNewComment("");
     } catch (error) {
@@ -222,11 +289,6 @@ export default function ProductDetail() {
 
   const handleAddToCart = (type) => {
     Alert.alert("Thông báo", `Sản phẩm đã được thêm vào giỏ hàng! (${type})`);
-  };
-
-  const handleBuyNow = () => {
-    handleAddToCart("buy");
-    navigation.navigate("Cart");
   };
 
   const handleAddRentToCart = () => {
@@ -289,164 +351,176 @@ export default function ProductDetail() {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Chi tiết sản phẩm</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Cart")}
-          style={styles.cartButton}
-        >
-          <Ionicons name="cart-outline" size={24} color={COLORS.dark} />
-        </TouchableOpacity>
+  const updateProductImage = (color) => {
+    const selectedProduct = productList.find((item) => item.color === color);
+    if (selectedProduct) {
+      setProductImage(selectedProduct.imgAvatarPath);
+    }
+  };
+  const renderItem = ({ item }) => (
+    <View style={styles.section}>
+     {item.type === "image" && (
+      <Image
+        source={{
+          uri: product.imgAvatarPath || "https://via.placeholder.com/300",
+        }}
+        style={styles.productImage}
+      />
+    )}
+    {item.type === "info" && (
+      <View style={styles.productInfo}>
+        <Text style={styles.productName}>
+          {product.productName || "Tên sản phẩm không có"}
+        </Text>
+        <Text style={styles.productTag}>For exchange</Text>
+        <View style={styles.priceContainer}>
+          <View>
+            <Text style={styles.productPrice}>
+              {product.price
+                ? `${formatCurrency(product.price)} ₫`
+                : "Giá không có"}
+            </Text>
+            {product.discount && product.listedPrice ? (
+              <>
+                <Text style={styles.originalPrice}>
+                  {formatCurrency(product.listedPrice)} ₫
+                </Text>
+                <Text style={styles.discount}>Giảm {product.discount}%</Text>
+              </>
+            ) : null}
+          </View>
+          <LikeButton
+            isLiked={isLiked}
+            likes={likes}
+            onPress={handleLikeToggle}
+            disabled={!isLoggedIn}
+          />
+        </View>
       </View>
-
-      <ScrollView style={styles.content}>
-        <Image
-          source={{
-            uri: product.imgAvatarPath || "https://via.placeholder.com/300",
-          }}
-          style={styles.productImage}
-        />
-        <View style={styles.productInfo}>
-          <Text style={styles.productName}>
-            {product.productName || "Tên sản phẩm không có"}
-          </Text>
-          <Text style={styles.productTag}>For exchange</Text>
-          <View style={styles.priceContainer}>
-            <View>
-              <Text style={styles.productPrice}>
-                {product.price
-                  ? `${formatCurrency(product.price)} ₫`
-                  : "Giá không có"}
+    )}
+    {item.type === "selection" && (
+      <View>
+        {/* Color Selection */}
+        <Text style={styles.sectionTitle}>Màu sắc</Text>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={colors}
+          keyExtractor={(color) => color}
+          renderItem={({ item: color }) => (
+            <TouchableOpacity
+              onPress={() => handleColorSelect(color)}
+              style={[
+                styles.colorButton,
+                selectedColor === color && styles.activeColorButton,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.colorButtonText,
+                  selectedColor === color && styles.activeColorButtonText,
+                ]}
+              >
+                {color}
               </Text>
-              {product.discount && product.listedPrice ? (
-                <>
-                  <Text style={styles.originalPrice}>
-                    {formatCurrency(product.listedPrice)} ₫
+            </TouchableOpacity>
+          )}
+        />
+
+        {/* Size Selection (visible after color selection) */}
+        {selectedColor && (
+          <>
+            <Text style={styles.sectionTitle}>Kích thước</Text>
+            <View style={styles.sizeSelector}>
+              {sizes.map((size) => (
+                <TouchableOpacity
+                  key={size}
+                  onPress={() => handleSizeSelect(size)}
+                  style={[
+                    styles.sizeButton,
+                    selectedSize === size && styles.activeSizeButton,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.sizeButtonText,
+                      selectedSize === size && styles.activeSizeButtonText,
+                    ]}
+                  >
+                    {size}
                   </Text>
-                  <Text style={styles.discount}>Giảm {product.discount}%</Text>
-                </>
-              ) : null}
-            </View>
-            <LikeButton
-              isLiked={isLiked}
-              likes={likes}
-              onPress={handleLikeToggle}
-              disabled={!isLoggedIn}
-            />
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.rowContainer}>
-            <View style={styles.columnContainer}>
-              <Text style={styles.sectionTitle}>Số lượng</Text>
-              <View style={styles.quantityContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.quantityButton,
-                    { backgroundColor: COLORS.light },
-                  ]}
-                  onPress={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
-                >
-                  <FontAwesome name="minus" size={16} color={COLORS.dark} />
                 </TouchableOpacity>
-                <Text style={styles.quantityText}>{quantity}</Text>
-                <TouchableOpacity
-                  style={[
-                    styles.quantityButton,
-                    { backgroundColor: COLORS.light },
-                  ]}
-                  onPress={() => setQuantity(quantity + 1)}
-                >
-                  <FontAwesome name="plus" size={16} color={COLORS.dark} />
-                </TouchableOpacity>
-              </View>
+              ))}
             </View>
-          </View>
+          </>
+        )}
 
-          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Màu sắc</Text>
-          <View style={styles.colorSelector}>
-            {PRODUCT_COLORS.map((colorOption) => (
-              <TouchableOpacity
-                key={colorOption.id}
-                onPress={() => setColor(colorOption.name)}
-                style={[
-                  styles.colorButton,
-                  color === colorOption.name && styles.activeColor,
-                  { backgroundColor: colorOption.code },
-                ]}
-              />
-            ))}
-          </View>
-
-          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
-            Kích thước
-          </Text>
-          <View style={styles.sizeSelector}>
-            {PRODUCT_SIZES.map((sizeOption) => (
-              <TouchableOpacity
-                key={sizeOption}
-                onPress={() => setSize(sizeOption)}
-                style={[
-                  styles.sizeButton,
-                  size === sizeOption && styles.activeSize,
-                ]}
-              >
-                <Text
+        {/* Condition Selection (visible after size selection) */}
+        {selectedColor && selectedSize && (
+          <>
+            <Text style={styles.sectionTitle}>Tình trạng</Text>
+            <View style={styles.conditionSelector}>
+              {conditions.map((condition) => (
+                <TouchableOpacity
+                  key={condition}
+                  onPress={() => handleConditionSelect(condition)}
                   style={[
-                    styles.sizeButtonText,
-                    size === sizeOption && styles.activeSizeText,
+                    styles.conditionButton,
+                    selectedCondition === condition &&
+                      styles.activeConditionButton,
                   ]}
                 >
-                  {sizeOption}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+                  <Text
+                    style={[
+                      styles.conditionButtonText,
+                      selectedCondition === condition &&
+                        styles.activeConditionButtonText,
+                    ]}
+                  >
+                    {condition}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
+      </View>
+    )}
 
-          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
-            Tình trạng
+      {item.type === "selection" && (
+        <View style={styles.quantitySection}>
+          <Text style={styles.sectionTitle}>Số lượng</Text>
+          <View style={styles.quantityContainer}>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() =>
+                handleQuantityChange(quantity > 1 ? quantity - 1 : 1)
+              }
+            >
+              <FontAwesome name="minus" size={16} color={COLORS.dark} />
+            </TouchableOpacity>
+            <Text style={styles.quantityText}>{quantity}</Text>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => handleQuantityChange(quantity + 1)}
+            >
+              <FontAwesome name="plus" size={16} color={COLORS.dark} />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.totalPriceText}>
+            Tổng giá: {formatCurrency(totalPrice)} ₫
           </Text>
-          <View style={styles.conditionSelector}>
-            {PRODUCT_CONDITIONS.map((conditionOption) => (
-              <TouchableOpacity
-                key={conditionOption}
-                onPress={() => setCondition(conditionOption)}
-                style={[
-                  styles.conditionButton,
-                  condition === conditionOption && styles.activeCondition,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.conditionButtonText,
-                    condition === conditionOption && styles.activeConditionText,
-                  ]}
-                >
-                  {conditionOption}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
           <View style={styles.addToCartContainer}>
-            <AddToCartButton
-              product={product}
-              quantity={quantity}
-              onAddToCart={() => handleAddToCart("add")}
-            />
-          </View>
+          <AddToCartButton
+            product={product}
+            quantity={quantity}
+            onAddToCart={() => handleAddToCart("add")}
+          />
         </View>
-
-        <View style={styles.section}>
+        </View>
+      )}
+      {item.type === "specifications" && (
+        <View>
           <Text style={styles.sectionTitle}>Thông số kỹ thuật</Text>
           <Text style={styles.specificationText}>
             Tình trạng: {product.condition}%
@@ -456,8 +530,9 @@ export default function ProductDetail() {
           </Text>
           <Text style={styles.specificationText}>Màu sắc: {product.color}</Text>
         </View>
-
-        <View style={styles.section}>
+      )}
+      {item.type === "promotions" && (
+        <View>
           <Text style={styles.sectionTitle}>Ưu đãi</Text>
           <View style={styles.promotionContainer}>
             <Text style={styles.promotionItem}>
@@ -477,15 +552,17 @@ export default function ProductDetail() {
             </Text>
           </View>
         </View>
-
-        <View style={styles.section}>
+      )}
+      {item.type === "description" && (
+        <View>
           <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
           <Text style={styles.descriptionText}>
             {product.description || "Không có mô tả"}
           </Text>
         </View>
-
-        <View style={styles.section}>
+      )}
+      {item.type === "reviews" && (
+        <View>
           <Text style={styles.sectionTitle}>Đánh giá & Nhận xét</Text>
           <View style={styles.ratingContainer}>
             {[1, 2, 3, 4, 5].map((star) => (
@@ -515,7 +592,8 @@ export default function ProductDetail() {
             </TouchableOpacity>
           </View>
         </View>
-
+      )}
+      {item.type === "comments" && (
         <Comment
           comments={comments}
           isLoggedIn={isLoggedIn}
@@ -525,7 +603,45 @@ export default function ProductDetail() {
           onReplyComment={handleReplyComment}
           loadMoreComments={loadMoreComments}
         />
-      </ScrollView>
+      )}
+    </View>
+  );
+
+  const sections = [
+    { type: "image" },
+    { type: "info" },
+    { type: "selection" },
+    { type: "specifications" },
+    { type: "promotions" },
+    { type: "description" },
+    { type: "reviews" },
+    { type: "comments" },
+  ];
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Chi tiết sản phẩm</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Cart")}
+          style={styles.cartButton}
+        >
+          <Ionicons name="cart-outline" size={24} color={COLORS.dark} />
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={sections}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => `section-${index}`}
+        style={styles.content}
+      />
 
       <View style={styles.bottomNav}>
         <View style={styles.buyNowContainer}>

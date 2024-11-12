@@ -1,40 +1,24 @@
-// ScrollingLogos.js
-import React, { useEffect, useRef } from "react";
-import {
-  View,
-  Image,
-  Animated,
-  Easing,
-  StyleSheet,
-  Dimensions,
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Image, Animated, Easing, StyleSheet, Dimensions, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { getBrands } from '../../services/brandService';
 
 const { width } = Dimensions.get("window");
 
 const ScrollingLogos = () => {
+  const [brands, setBrands] = useState([]);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const brands = [
-    {
-      name: "LiNing",
-      logo: "https://seeklogo.com/images/L/li-ning-logo-0C85E3899B-seeklogo.com.png",
-    },
-    {
-      name: "Nike",
-      logo: "https://logos-world.net/wp-content/uploads/2020/04/Nike-Logo.png",
-    },
-    {
-      name: "Puma",
-      logo: "https://www.step.org.uk/app/uploads/2018/07/Puma-logo-PNG-Transparent-Background.png",
-    },
-    {
-      name: "Yonex",
-      logo: "https://download.logo.wine/logo/Yonex/Yonex-Logo.wine.png",
-    },
-  ];
-
-  const totalWidth = brands.length * 100;
+  const navigation = useNavigation();
 
   useEffect(() => {
+    const fetchBrands = async () => {
+      const brandData = await getBrands();
+      setBrands(brandData);
+    };
+    fetchBrands();
+
+    const totalWidth = brands.length * 100;
+
     const scrollAnimation = Animated.loop(
       Animated.timing(scrollX, {
         toValue: -totalWidth,
@@ -46,7 +30,11 @@ const ScrollingLogos = () => {
     scrollAnimation.start();
 
     return () => scrollAnimation.stop();
-  }, [scrollX, totalWidth]);
+  }, [brands]);
+
+  const handleBrandPress = (brandName) => {
+    navigation.navigate("BrandProduct", { brandName });
+  };
 
   return (
     <View style={styles.logoContainer}>
@@ -55,18 +43,22 @@ const ScrollingLogos = () => {
           styles.logoWrapper,
           {
             transform: [{ translateX: scrollX }],
-            width: totalWidth * 2,
+            width: brands.length * 200,
           },
         ]}
       >
         {[...brands, ...brands].map((brand, index) => (
-          <View key={index} style={styles.logo}>
+          <TouchableOpacity
+            key={index}
+            style={styles.logo}
+            onPress={() => handleBrandPress(brand.brandName)}
+          >
             <Image
               source={{ uri: brand.logo }}
               style={styles.brandLogo}
               resizeMode="contain"
             />
-          </View>
+          </TouchableOpacity>
         ))}
       </Animated.View>
     </View>

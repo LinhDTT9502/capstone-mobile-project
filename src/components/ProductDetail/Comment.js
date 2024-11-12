@@ -12,6 +12,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 const MAX_COMMENT_LENGTH = 100;
+const INITIAL_COMMENT_COUNT = 5;
+const LOAD_MORE_COUNT = 3;
 
 const Comment = ({
   comments,
@@ -20,10 +22,14 @@ const Comment = ({
   onEditComment,
   onDeleteComment,
   onReplyComment,
-  loadMoreComments, // Function to load more comments
+  loadMoreComments,
+  currentUserId,
 }) => {
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
+  const [displayedComments, setDisplayedComments] = useState(
+    comments.slice(0, INITIAL_COMMENT_COUNT)
+  );
 
   const handlePostComment = () => {
     if (newComment.trim().length === 0) {
@@ -41,47 +47,61 @@ const Comment = ({
     setNewComment("");
   };
 
-  const renderCommentItem = ({ item }) => (
-    <View style={styles.commentItem}>
-      <View style={styles.commentHeader}>
-        <Text style={styles.commentAuthor}>{item.username}</Text>
-        <Text style={styles.commentDate}>
-          {new Date(item.createdAt).toLocaleString()}
-        </Text>
-      </View>
-      <Text style={styles.commentContent}>{item.content}</Text>
-      {isLoggedIn && (
-        <View style={styles.commentActions}>
-          <TouchableOpacity
-            onPress={() => onEditComment(item.id, item.content)}
-            style={styles.actionButton}
-          >
-            <Ionicons name="pencil-outline" size={16} color="#0035FF" />
-            <Text style={styles.actionText}>Sửa</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => onDeleteComment(item.id)}
-            style={styles.actionButton}
-          >
-            <Ionicons name="trash-outline" size={16} color="#0035FF" />
-            <Text style={styles.actionText}>Xóa</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => onReplyComment(item.id)}
-            style={styles.actionButton}
-          >
-            <Ionicons name="return-up-back-outline" size={16} color="#0035FF" />
-            <Text style={styles.actionText}>Trả lời</Text>
-          </TouchableOpacity>
+  const renderCommentItem = ({ item }) => {
+    const isOwner = item.userId === currentUserId;
+    return (
+      <View style={styles.commentItem}>
+        <View style={styles.commentHeader}>
+          <Text style={styles.commentAuthor}>{item.username}</Text>
+          <Text style={styles.commentDate}>
+            {new Date(item.createdAt).toLocaleString()}
+          </Text>
         </View>
-      )}
-    </View>
-  );
+        <Text style={styles.commentContent}>{item.content}</Text>
+        {isLoggedIn && (
+          <View style={styles.commentActions}>
+            {/* Display "Sửa" and "Xóa" only if the user owns the comment */}
+            {isOwner && (
+              <>
+                <TouchableOpacity
+                  onPress={() => onEditComment(item.id, item.content)}
+                  style={styles.actionButton}
+                >
+                  <Ionicons name="pencil-outline" size={16} color="#007AFF" />
+                  <Text style={styles.actionText}>Sửa</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => onDeleteComment(item.id)}
+                  style={styles.actionButton}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#007AFF" />
+                  <Text style={styles.actionText}>Xóa</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            {/* Display "Trả lời" for all logged-in customers */}
+            <TouchableOpacity
+              onPress={() => onReplyComment(item.id)}
+              style={styles.actionButton}
+            >
+              <Ionicons name="return-up-back-outline" size={16} color="#007AFF" />
+              <Text style={styles.actionText}>Trả lời</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   const handleLoadMore = async () => {
     if (!loading) {
       setLoading(true);
-      await loadMoreComments(); // Fetch the next page of comments
+      await loadMoreComments();
+      const newDisplayedComments = comments.slice(
+        0,
+        displayedComments.length + LOAD_MORE_COUNT
+      );
+      setDisplayedComments(newDisplayedComments);
       setLoading(false);
     }
   };
@@ -89,26 +109,28 @@ const Comment = ({
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Bình luận</Text>
-      {comments.length === 0 ? (
+      {displayedComments.length === 0 ? (
         <Text style={styles.noComments}>Chưa có bình luận</Text>
       ) : (
         <FlatList
-          data={comments}
+          data={displayedComments}
           renderItem={renderCommentItem}
           keyExtractor={(item) =>
             item.id ? item.id.toString() : Math.random().toString()
           }
           style={styles.commentList}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            loading ? (
-              <ActivityIndicator size="small" color="#0035FF" />
-            ) : null
-          }
         />
       )}
-      {isLoggedIn && (
+      {displayedComments.length < comments.length && (
+        <TouchableOpacity onPress={handleLoadMore} style={styles.loadMoreButton}>
+          {loading ? (
+            <ActivityIndicator size="small" color="#007AFF" />
+          ) : (
+            <Text style={styles.loadMoreText}>Tải thêm</Text>
+          )}
+        </TouchableOpacity>
+      )}
+      {isLoggedIn ? (
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -122,11 +144,10 @@ const Comment = ({
             style={styles.sendButton}
             onPress={handlePostComment}
           >
-            <Ionicons name="send" size={24} color="#0035FF" />
+            <Ionicons name="send" size={24} color="#007AFF" />
           </TouchableOpacity>
         </View>
-      )}
-      {!isLoggedIn && (
+      ) : (
         <Text style={styles.loginPrompt}>Đăng nhập để bình luận</Text>
       )}
     </View>
@@ -136,56 +157,67 @@ const Comment = ({
 const styles = StyleSheet.create({
   container: {
     marginTop: 20,
-    padding: 16,
     backgroundColor: "#FFFFFF",
+    paddingBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 16,
-    color: "#050505",
+    marginBottom: 12,
+    color: "#333",
   },
   noComments: {
     fontStyle: "italic",
-    color: "#65676B",
+    color: "#8e8e93",
+    textAlign: "center",
+    paddingVertical: 20,
   },
   commentList: {
-    maxHeight: 400, // Increased maxHeight to accommodate more comments
+    maxHeight: "100%",
   },
   commentItem: {
-    marginBottom: 16,
-    padding: 12,
+    marginBottom: 12,
+    padding: 16,
     backgroundColor: "#F0F2F5",
-    borderRadius: 8,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   commentHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   commentAuthor: {
     fontWeight: "bold",
-    color: "#050505",
+    color: "#007AFF",
+    fontSize: 14,
   },
   commentDate: {
     fontSize: 12,
-    color: "#65676B",
+    color: "#8e8e93",
   },
   commentContent: {
-    marginBottom: 8,
-    color: "#050505",
+    marginBottom: 12,
+    color: "#333",
+    fontSize: 15,
+    lineHeight: 20,
   },
   commentActions: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "flex-start",
+    marginTop: 8,
   },
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 16,
+    marginRight: 20,
   },
   actionText: {
-    color: "#0035FF",
+    color: "#007AFF",
     marginLeft: 4,
     fontSize: 14,
   },
@@ -193,24 +225,41 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 16,
+    borderTopWidth: 1,
+    borderColor: "#E4E6EB",
+    paddingTop: 16,
   },
   input: {
     flex: 1,
     borderWidth: 1,
     borderColor: "#E4E6EB",
     borderRadius: 20,
-    padding: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     marginRight: 8,
-    maxHeight: 100,
-  },
-  sendButton: {
-    padding: 8,
+    fontSize: 14,
+    color: "#333",
   },
   loginPrompt: {
     fontStyle: "italic",
-    color: "#65676B",
+    color: "#8e8e93",
     marginTop: 16,
     textAlign: "center",
+  },
+  loadMoreButton: {
+    alignItems: "center",
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderColor: "#007AFF",
+    borderWidth: 1,
+    backgroundColor: "#E6F0FF",
+  },
+  loadMoreText: {
+    color: "#007AFF",
+    fontSize: 14,
+    fontWeight: "bold",
   },
 });
 
