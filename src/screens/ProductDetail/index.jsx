@@ -52,6 +52,7 @@ const PRODUCT_COLORS = [
 
 const PRODUCT_SIZES = ["3U5", "3U6", "4U5", "4U6"];
 const PRODUCT_CONDITIONS = ["Mới", "Như mới", "Đã sử dụng"];
+const COMMENTS_PER_PAGE = 5;
 
 export default function ProductDetail() {
   const navigation = useNavigation();
@@ -84,6 +85,8 @@ export default function ProductDetail() {
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingText, setEditingText] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMoreComments, setHasMoreComments] = useState(true);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -144,18 +147,35 @@ export default function ProductDetail() {
     }
   };
 
-  const loadComments = async () => {
-    console.log("Product ID:", productId); // Kiểm tra productId mỗi lần gọi hàm
+  const loadComments = async (newPage = 1) => {
     try {
-        const response = await fetchComments(productId);
-        const commentsData = response.data?.data?.$values || [];
-        setComments(commentsData);
-    } catch (error) {
-        console.error("Error loading comments:", error);
-        Alert.alert("Lỗi", "Không thể tải bình luận");
-    }
-};
+      const response = await fetchComments(
+        productId,
+        newPage,
+        COMMENTS_PER_PAGE
+      );
+      const newComments = response.data?.$values || [];
 
+      if (newPage === 1) {
+        setComments(newComments);
+      } else {
+        setComments((prevComments) => [...prevComments, ...newComments]);
+      }
+
+      setHasMoreComments(newComments.length === COMMENTS_PER_PAGE);
+    } catch (error) {
+      console.error("Error loading comments:", error);
+      Alert.alert("Lỗi", "Không thể tải bình luận");
+    }
+  };
+
+  const loadMoreComments = async () => {
+    if (hasMoreComments) {
+      const nextPage = page + 1;
+      await loadComments(nextPage);
+      setPage(nextPage);
+    }
+  };
 
   const handlePostComment = async (newComment) => {
     try {
@@ -167,15 +187,13 @@ export default function ProductDetail() {
       }
       const response = await postComment(productId, newComment, token);
       console.log("Response:", response);
-      loadComments();  // Tải lại danh sách bình luận sau khi đăng thành công
-      setNewComment('');  // Xóa nội dung sau khi gửi bình luận
+      loadComments();
+      setNewComment("");
     } catch (error) {
       console.error("Error posting comment:", error);
       Alert.alert("Lỗi", "Không thể đăng bình luận");
     }
   };
-  
-  
 
   const handleEditComment = async (commentId, newContent) => {
     try {
@@ -196,7 +214,10 @@ export default function ProductDetail() {
   };
 
   const handleReplyComment = async (commentId) => {
-    Alert.alert("Thông báo", "Chức năng trả lời bình luận chưa được triển khai");
+    Alert.alert(
+      "Thông báo",
+      "Chức năng trả lời bình luận chưa được triển khai"
+    );
   };
 
   const handleAddToCart = (type) => {
@@ -502,6 +523,7 @@ export default function ProductDetail() {
           onEditComment={handleEditComment}
           onDeleteComment={handleDeleteComment}
           onReplyComment={handleReplyComment}
+          loadMoreComments={loadMoreComments}
         />
       </ScrollView>
 
@@ -591,4 +613,3 @@ export default function ProductDetail() {
     </SafeAreaView>
   );
 }
-
