@@ -25,11 +25,11 @@ export default function BlogDetail({ route }) {
         <View style={styles.placeholder} />
       </View>
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        {blog.coverImage && (
-          <Image style={styles.coverImage} source={{ uri: blog.coverImage }} />
+        {blog.coverImgPath && (
+          <Image style={styles.coverImage} source={{ uri: blog.coverImgPath }} />
         )}
         <Text style={styles.title}>{blog.title}</Text>
-        <Text style={styles.subtitle}>{blog.subtitle}</Text>
+        <Text style={styles.subtitle}>{blog.subTitle}</Text>
         <View style={styles.authorContainer}>
           <Image
             style={styles.avatar}
@@ -40,7 +40,7 @@ export default function BlogDetail({ route }) {
           <View style={styles.authorInfo}>
             <Text style={styles.authorName}>{blog.createdByStaffFullName}</Text>
             <Text style={styles.date}>
-              {new Date(blog.createdAt).toLocaleDateString()}
+              {new Date(blog.createAt).toLocaleDateString()}
             </Text>
           </View>
         </View>
@@ -53,7 +53,7 @@ export default function BlogDetail({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop:30,
+    paddingTop: 30,
     backgroundColor: "#FFFFFF",
   },
   header: {

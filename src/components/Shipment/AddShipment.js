@@ -12,27 +12,36 @@ import { useDispatch } from 'react-redux';
 import { addUserShipmentDetail } from '../../services/shipmentService';
 import { addShipment } from '../../redux/slices/shipmentSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons} from '@expo/vector-icons';
+import AddressForm from './AddressForm';
 
 export default function AddShipment({ refreshShipments }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     phoneNumber: '',
-    address: '',
-    email: '', 
+    street: '',
+    email: '',
   });
+  const [address, setAddress] = useState('');
   const dispatch = useDispatch();
 
   const handleAddShipment = async () => {
+    if (!validateForm()) return;
+
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         Alert.alert('Error', 'No token found');
         return;
       }
-      const newShipment = await addUserShipmentDetail(token, formData);
-      dispatch(addShipment(newShipment)); // Thêm mới shipment vào state Redux
+      const newShipmentData = {
+        ...formData,
+        address: address, 
+      };
+      const newShipment = await addUserShipmentDetail(token, newShipmentData);
+      dispatch(addShipment(newShipment));
       closeModal();
       refreshShipments();
     } catch (error) {
@@ -40,7 +49,7 @@ export default function AddShipment({ refreshShipments }) {
       Alert.alert('Error', 'Failed to add shipment');
     }
   };
-  
+
   const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
   };
@@ -54,9 +63,58 @@ export default function AddShipment({ refreshShipments }) {
     setFormData({
       fullName: '',
       phoneNumber: '',
-      address: '',
-      email: '', // Reset email
+      street: '',
+      email: '',
     });
+    setAddress('');
+  };
+
+  const openAddressModal = () => {
+    setAddressModalVisible(true);
+  };
+
+  const closeAddressModal = () => {
+    setAddressModalVisible(false);
+  };
+
+  const handleAddressChange = (fullAddress) => {
+    setAddress(fullAddress);
+    setFormData({ ...formData, street: fullAddress });
+    closeAddressModal();
+  };
+
+  const validateForm = () => {
+    if (!formData.fullName.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập họ và tên');
+      return false;
+    }
+
+    if (!validatePhoneNumber(formData.phoneNumber)) {
+      Alert.alert('Lỗi', 'Số điện thoại không hợp lệ');
+      return false;
+    }
+
+    if (!validateEmail(formData.email)) {
+      Alert.alert('Lỗi', 'Email không hợp lệ');
+      return false;
+    }
+
+    if (!address) {
+      Alert.alert('Lỗi', 'Vui lòng chọn địa chỉ');
+      return false;
+    }
+
+    return true;
+  };
+
+  const validatePhoneNumber = (phoneNumber) => {
+    const phoneRegex = /^[0-9]{10,11}$/;
+    return phoneRegex.test(phoneNumber);
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return emailRegex.test(email);
   };
 
   return (
@@ -65,6 +123,7 @@ export default function AddShipment({ refreshShipments }) {
         <Ionicons name="add" size={24} color="#FFF" />
         <Text style={styles.addButtonText}>Thêm mới</Text>
       </TouchableOpacity>
+
       <Modal visible={isOpen} transparent={true} animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -83,17 +142,18 @@ export default function AddShipment({ refreshShipments }) {
               style={styles.input}
             />
             <TextInput
-              placeholder="Địa chỉ"
-              value={formData.address}
-              onChangeText={(text) => handleInputChange('address', text)}
-              style={styles.input}
-            />
-            {/* <TextInput
               placeholder="Email"
               value={formData.email}
               onChangeText={(text) => handleInputChange('email', text)}
+              keyboardType="email-address"
               style={styles.input}
-            /> */}
+            />
+            <TouchableOpacity onPress={openAddressModal} style={styles.addressInput}>
+              <Text style={styles.addressText}>
+                {address ? address : 'Chọn địa chỉ'}
+              </Text>
+            </TouchableOpacity>
+
             <View style={styles.buttonContainer}>
               <TouchableOpacity onPress={closeModal} style={styles.cancelButton}>
                 <Text style={styles.buttonText}>Hủy</Text>
@@ -102,6 +162,19 @@ export default function AddShipment({ refreshShipments }) {
                 <Text style={styles.buttonText}>Xác nhận</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal cho AddressForm */}
+      <Modal visible={addressModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity onPress={closeAddressModal} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Chọn địa chỉ</Text>
+            <AddressForm onAddressChange={handleAddressChange} />
           </View>
         </View>
       </Modal>
@@ -139,6 +212,12 @@ const styles = StyleSheet.create({
     width: '90%',
     maxWidth: 400,
   },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -154,6 +233,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontSize: 16,
     backgroundColor: '#F8F8F8',
+  },
+  addressInput: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    backgroundColor: '#F8F8F8',
+  },
+  addressText: {
+    fontSize: 16,
+    color: '#333',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -182,3 +273,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+

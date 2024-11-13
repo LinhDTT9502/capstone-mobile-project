@@ -10,7 +10,7 @@ import {
   mobileSignUp,
   forgotPasswordRequestMobile,
   verifyAccountMobileAPI,
-  resetPasswordMobile
+  resetPasswordMobile,
 } from "../api/apiAuth";
 
 export const authenticateUser = async (username, password) => {
@@ -46,9 +46,13 @@ export const requestPasswordReset = async (email) => {
   }
 };
 
-export const verifyAccountMobile = async ({ email, otp }) => {
+export const verifyAccountMobile = async ({ username, email, OtpCode }) => {
   try {
-    const response = await verifyAccountMobileAPI({ email, otpCode: otp });
+    const response = await verifyAccountMobileAPI({
+      username,
+      email,
+      otpCode: OtpCode,
+    });
     return response.data;
   } catch (error) {
     console.error(
@@ -69,13 +73,15 @@ export const resendOtpRequest = async (data) => {
   }
 };
 
-
 export const performPasswordReset = async ({ otpCode, email, newPassword }) => {
   try {
     const response = await resetPasswordMobile({ otpCode, email, newPassword });
     return response.data;
   } catch (error) {
-    console.error("Error in performPasswordReset:", error.response?.data || error.message);
+    console.error(
+      "Error in performPasswordReset:",
+      error.response?.data || error.message
+    );
     throw error.response ? error.response.data : error;
   }
 };
@@ -114,7 +120,11 @@ export const checkAndRefreshToken = async () => {
 
     if (decoded.exp < currentTime) {
       try {
-        const response = await refreshTokenAPI(token, refreshToken, decoded.userId);
+        const response = await refreshTokenAPI(
+          token,
+          refreshToken,
+          decoded.userId
+        );
         const newToken = response.data.data.token;
         const newRefreshToken = response.data.data.refreshToken;
 
