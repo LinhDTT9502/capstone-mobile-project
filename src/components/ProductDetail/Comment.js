@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -30,6 +30,9 @@ const Comment = ({
   const [displayedComments, setDisplayedComments] = useState(
     comments.slice(0, INITIAL_COMMENT_COUNT)
   );
+  useEffect(() => {
+    setDisplayedComments(comments.slice(0, INITIAL_COMMENT_COUNT));
+  }, [comments]);
 
   const handlePostComment = () => {
     if (newComment.trim().length === 0) {
@@ -84,7 +87,11 @@ const Comment = ({
               onPress={() => onReplyComment(item.id)}
               style={styles.actionButton}
             >
-              <Ionicons name="return-up-back-outline" size={16} color="#007AFF" />
+              <Ionicons
+                name="return-up-back-outline"
+                size={16}
+                color="#007AFF"
+              />
               <Text style={styles.actionText}>Trả lời</Text>
             </TouchableOpacity>
           </View>
@@ -122,7 +129,10 @@ const Comment = ({
         />
       )}
       {displayedComments.length < comments.length && (
-        <TouchableOpacity onPress={handleLoadMore} style={styles.loadMoreButton}>
+        <TouchableOpacity
+          onPress={handleLoadMore}
+          style={styles.loadMoreButton}
+        >
           {loading ? (
             <ActivityIndicator size="small" color="#007AFF" />
           ) : (

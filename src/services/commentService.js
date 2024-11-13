@@ -12,7 +12,7 @@ const getToken = async () => {
   try {
     const token = await AsyncStorage.getItem("token");
     if (!token) {
-      console.warn("Token not found");
+      // console.warn("Token not found");
       return null; // Trả về null nếu không có token
     }
     return token;

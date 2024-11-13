@@ -195,16 +195,16 @@ const styles = StyleSheet.create({
     cancelButtonText: {
       color: "#666",
       fontSize: 16,
-      paddingHorizontal: 20,
-      paddingVertical: 5,
+      // paddingHorizontal: 20,
+      // paddingVertical: 5,
       fontWeight: "bold",
     },
     loginButtonText: {
       color: "#FFF",
       fontSize: 16,
       fontWeight: "bold",
-      paddingHorizontal: 20,
-      paddingVertical: 5,
+      // paddingHorizontal: 20,
+      // paddingVertical: 5,
     },
     modalOverlay: {
       flex: 1,

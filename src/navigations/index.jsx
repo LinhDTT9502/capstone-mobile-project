@@ -19,6 +19,7 @@ import MyOrder from "../screens/MyOrder/index";
 import Policy from "../screens/Policy/index";
 import UserShipment from "../screens/UserShipment/index";
 import CategoryProduct from "../screens/CategoryProduct/index";
+import VerifyOtpScreen from "../screens/VerifyOtpScreen/index";
 import BrandProduct from "../screens/BrandProduct/index";
 import BlogDetail from "../screens/Blog/BlogDetail/index";
 import ResetPasswordProfile from "../screens/Auth/AccountResetPassword";
@@ -51,6 +52,7 @@ export default function MainContainer() {
       <Stack.Screen name="CategoryProduct" component={CategoryProduct} />
       <Stack.Screen name="BrandProduct" component={BrandProduct} />
       <Stack.Screen name="BlogDetail" component={BlogDetail} />
+      <Stack.Screen name="VerifyOtpScreen " component={VerifyOtpScreen} />
     </Stack.Navigator>
   );
 }
