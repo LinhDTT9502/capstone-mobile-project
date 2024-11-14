@@ -98,13 +98,13 @@ export const fetchSizesOfProduct = async (productCode, color) => {
   }
 };
 
-export const getProductByProductCode = async (productCode) => {
+export const getProductByProductCode = async (productCode, color = null, size = null, condition = null) => {
   try {
-      const response = await getProductByProductCodeAPI(productCode);
-      return response.data;
+    const response = await getProductByProductCodeAPI(productCode, color, size, condition);
+    return response.data;
   } catch (error) {
-      console.error("Error fetching product by code:", error);
-      throw error;
+    console.error("Error fetching product by product code:", error);
+    throw error;
   }
 };
 

@@ -75,6 +75,7 @@ export default function ProductDetail() {
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
@@ -95,10 +96,27 @@ export default function ProductDetail() {
   const [productList, setProductList] = useState([]);
   const [imagesByColor, setImagesByColor] = useState({});
 
+  const [selectedImage, setSelectedImage] = useState("");
+  const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+  const [fullscreenImages, setFullscreenImages] = useState([]);
+
+  useEffect(() => {
+    const fetchCurrentUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("currentUserId");
+        setCurrentUserId(userId ? parseInt(userId, 10) : null); // Ensuring it's a number
+      } catch (error) {
+        console.error("Error fetching current user ID:", error);
+      }
+    };
+
+    fetchCurrentUserId();
+  }, []);
+
   const fetchProductColors = async (productCode) => {
     try {
       const response = await listColorsOfProduct(productCode);
-      setColors(response.data.$values.map((item) => item.color)); // Assuming 'color' key
+      setColors(response.data.$values.map((item) => item.color));
     } catch (error) {
       console.error("Error fetching colors:", error);
     }
@@ -122,22 +140,29 @@ export default function ProductDetail() {
     }
   };
 
-  
   useEffect(() => {
     const loadProductList = async () => {
       try {
         const response = await getProductByProductCode(product.productCode);
         setProductList(response.$values || []);
+
+        // Fetch images for each color from the beginning
+        const initialImages = {};
+        response.$values.forEach((item) => {
+          if (!initialImages[item.color]) {
+            initialImages[item.color] = item.imgAvatarPath; // Store first image per color
+          }
+        });
+        setImagesByColor(initialImages); // Store in state for color-specific display
       } catch (error) {
         console.error("Lỗi khi tải danh sách sản phẩm:", error);
       }
     };
-  
+
     if (product.productCode) {
       loadProductList();
     }
   }, [product.productCode]);
-  
 
   useEffect(() => {
     if (product.productCode) {
@@ -157,55 +182,61 @@ export default function ProductDetail() {
 
       if (matchingProduct) {
         setTotalPrice(matchingProduct.price || 0);
+        setProduct((prevProduct) => ({
+          ...prevProduct,
+          imgAvatarPath: matchingProduct.imgAvatarPath,
+        }));
       } else {
-        setTotalPrice("Hết Hàng/ Chưa có hàng"); 
+        setTotalPrice("Hết Hàng/ Chưa có hàng");
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật giá sản phẩm:", error);
     }
   };
 
-  const fetchImagesByColor = () => {
-    const imagesGroupedByColor = productList.reduce((acc, product) => {
-      const color = product.color;
-      const imagePath = product.imgAvatarPath;
-      
-      if (!acc[color]) {
-        acc[color] = [];
-      }
-      if (imagePath) {
-        acc[color].push(imagePath);
-      }
-      return acc;
-    }, {});
-  
-    setImagesByColor(imagesGroupedByColor);
+  const fetchImagesByColor = (color) => {
+    return productList
+      .filter((product) => product.color === color)
+      .map((product) => product.imgAvatarPath);
   };
-  
 
   const handleColorSelect = (color) => {
     setSelectedColor(color);
     setSelectedSize(null);
     setSelectedCondition(null);
-    fetchProductSizes(product.productCode, color);
-    fetchProductPrice(
-      product.productCode,
-      color,
-      selectedSize,
-      selectedCondition
+
+    // const images = fetchImagesByColor(color);
+    // setFullscreenImages(images);
+    // setSelectedImage(images[0] || "");
+
+    // fetchProductSizes(product.productCode, color);
+
+    const matchingProduct = productList.find(
+      (product) =>
+        product.color === color && product.productCode === product.productCode
     );
+
+    if (matchingProduct) {
+      setProduct((prevProduct) => ({
+        ...prevProduct,
+        imgAvatarPath: matchingProduct.imgAvatarPath,
+        price: matchingProduct.price || 0,
+      }));
+      setTotalPrice(matchingProduct.price || 0);
+      setBasePrice(matchingProduct.price || 0);
+    } else {
+      setTotalPrice("Hết Hàng/ Chưa có hàng");
+      setBasePrice(0);
+    }
+
+    // Tiếp tục lấy danh sách kích thước dựa trên màu đã chọn
+    fetchProductSizes(product.productCode, color);
   };
 
   const handleSizeSelect = (size) => {
     setSelectedSize(size);
     setSelectedCondition(null);
     fetchProductConditions(product.productCode, selectedColor, size);
-    fetchProductPrice(
-      product.productCode,
-      selectedColor,
-      size,
-      selectedCondition
-    );
   };
 
   const handleConditionSelect = (condition) => {
@@ -224,7 +255,7 @@ export default function ProductDetail() {
     loadProductDetails();
     loadLikes();
     checkLoginStatus();
-    loadComments();
+    // loadComments();
   }, [productId]);
 
   const checkLoginStatus = async () => {
@@ -268,7 +299,9 @@ export default function ProductDetail() {
   const loadProductDetails = async () => {
     try {
       const productData = await fetchProductById(productId);
+      // console.log("Fetched Product Data:", productData);
       const productInfo = productData.$values[0];
+      // console.log("First Product in $values:", productInfo);
       setProduct(productData.$values[0]);
       setLikes(productData.$values[0]?.likes || 0);
       setBasePrice(productInfo.price || 0);
@@ -284,78 +317,78 @@ export default function ProductDetail() {
     setTotalPrice(basePrice * newQuantity);
   };
 
-  const loadComments = async (newPage = 1) => {
-    try {
-      const response = await fetchComments(
-        productId,
-        newPage,
-        COMMENTS_PER_PAGE
-      );
-      const newComments = response.data?.$values || [];
+  // const loadComments = async (newPage = 1) => {
+  //   try {
+  //     const response = await fetchComments(
+  //       productId,
+  //       newPage,
+  //       COMMENTS_PER_PAGE
+  //     );
+  //     const newComments = response.data?.$values || [];
 
-      if (newPage === 1) {
-        setComments(newComments);
-      } else {
-        setComments((prevComments) => [...prevComments, ...newComments]);
-      }
+  //     if (newPage === 1) {
+  //       setComments(newComments);
+  //     } else {
+  //       setComments((prevComments) => [...prevComments, ...newComments]);
+  //     }
 
-      setHasMoreComments(newComments.length === COMMENTS_PER_PAGE);
-    } catch (error) {
-      console.error("Error loading comments:", error);
-      Alert.alert("Lỗi", "Không thể tải bình luận");
-    }
-  };
+  //     setHasMoreComments(newComments.length === COMMENTS_PER_PAGE);
+  //   } catch (error) {
+  //     console.error("Error loading comments:", error);
+  //     Alert.alert("Lỗi", "Không thể tải bình luận");
+  //   }
+  // };
 
-  const loadMoreComments = async () => {
-    if (hasMoreComments) {
-      const nextPage = page + 1;
-      await loadComments(nextPage);
-      setPage(nextPage);
-    }
-  };
+  // const loadMoreComments = async () => {
+  //   if (hasMoreComments) {
+  //     const nextPage = page + 1;
+  //     await loadComments(nextPage);
+  //     setPage(nextPage);
+  //   }
+  // };
 
-  const handlePostComment = async (newComment) => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-      // console.log("Token:", token);
-      if (!token) {
-        Alert.alert("Lỗi", "Vui lòng đăng nhập để bình luận.");
-        return;
-      }
-      const response = await postComment(productId, newComment, token);
-      // console.log("Response:", response);
-      loadComments();
-      setNewComment("");
-    } catch (error) {
-      console.error("Error posting comment:", error);
-      Alert.alert("Lỗi", "Không thể đăng bình luận");
-    }
-  };
+  // const handlePostComment = async (newComment) => {
+  //   try {
+  //     const token = await AsyncStorage.getItem("token");
+  //     // console.log("Token:", token);
+  //     if (!token) {
+  //       Alert.alert("Lỗi", "Vui lòng đăng nhập để bình luận.");
+  //       return;
+  //     }
+  //     const response = await postComment(productId, newComment, token);
+  //     // console.log("Response:", response);
+  //     loadComments();
+  //     setNewComment("");
+  //   } catch (error) {
+  //     console.error("Error posting comment:", error);
+  //     Alert.alert("Lỗi", "Không thể đăng bình luận");
+  //   }
+  // };
 
-  const handleEditComment = async (commentId, newContent) => {
-    try {
-      await editComment(commentId, newContent);
-      loadComments();
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể sửa bình luận");
-    }
-  };
+  // const handleEditComment = async (commentId, newContent) => {
+  //   try {
+  //     await editComment(commentId, newContent);
+  //     loadComments();
+  //   } catch (error) {
+  //     Alert.alert("Lỗi", "Không thể sửa bình luận");
+  //   }
+  // };
 
-  const handleDeleteComment = async (commentId) => {
-    try {
-      await deleteComment(commentId);
-      loadComments();
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể xóa bình luận");
-    }
-  };
+  // const handleDeleteComment = async (commentId) => {
+  //   try {
+  //     await deleteComment(commentId);
+  //     loadComments();
+  //   } catch (error) {
+  //     Alert.alert("Lỗi", "Không thể xóa bình luận");
+  //   }
+  // };
 
-  const handleReplyComment = async (commentId) => {
-    Alert.alert(
-      "Thông báo",
-      "Chức năng trả lời bình luận chưa được triển khai"
-    );
-  };
+  // const handleReplyComment = async (commentId) => {
+  //   Alert.alert(
+  //     "Thông báo",
+  //     "Chức năng trả lời bình luận chưa được triển khai"
+  //   );
+  // };
 
   const handleAddToCart = (type) => {
     Alert.alert("Thông báo", `Sản phẩm đã được thêm vào giỏ hàng! (${type})`);
@@ -436,13 +469,38 @@ export default function ProductDetail() {
   const renderItem = ({ item }) => (
     <View style={styles.section}>
       {item.type === "image" && (
-        <Image
-          source={{
-            uri: product.imgAvatarPath || "https://via.placeholder.com/300",
-          }}
-          style={styles.productImage}
-        />
+        <>
+          <Image
+            source={{
+              uri:
+                selectedImage ||
+                product.imgAvatarPath ||
+                "https://via.placeholder.com/300",
+            }}
+            style={styles.productImage}
+          />
+
+          <FlatList
+            data={Object.values(imagesByColor)}
+            horizontal
+            keyExtractor={(image, index) => `${image}-${index}`}
+            style={styles.thumbnailList}
+            renderItem={({ item: image }) => (
+              <TouchableOpacity
+                onPress={() => setSelectedImage(image)}
+                style={[
+                  styles.thumbnailContainer,
+                  selectedImage === image && styles.selectedThumbnail,
+                ]}
+              >
+                <Image source={{ uri: image }} style={styles.thumbnailImage} />
+              </TouchableOpacity>
+            )}
+            showsHorizontalScrollIndicator={false}
+          />
+        </>
       )}
+
       {item.type === "info" && (
         <View style={styles.productInfo}>
           <Text style={styles.productName}>
@@ -487,17 +545,24 @@ export default function ProductDetail() {
               <TouchableOpacity
                 onPress={() => handleColorSelect(color)}
                 style={[
-                  styles.colorButton,
-                  selectedColor === color && styles.activeColorButton,
+                  styles.colorOptionContainer,
+                  selectedColor === color && styles.activeColorOptionContainer,
                 ]}
               >
+                <Image
+                  source={{
+                    uri:
+                      imagesByColor[color] || "https://via.placeholder.com/60",
+                  }}
+                  style={styles.colorOptionImage}
+                />
                 <Text
                   style={[
-                    styles.colorButtonText,
-                    selectedColor === color && styles.activeColorButtonText,
+                    styles.colorOptionText,
+                    selectedColor === color && styles.activeColorOptionText,
                   ]}
                 >
-                  {color}
+                  {`Q. ${color}`}
                 </Text>
               </TouchableOpacity>
             )}
@@ -584,14 +649,24 @@ export default function ProductDetail() {
             </TouchableOpacity>
           </View>
           <Text style={styles.totalPriceText}>
-            Tổng giá: {formatCurrency(totalPrice)} ₫
+            Tổng giá:{" "}
+            {typeof totalPrice === "string"
+              ? totalPrice
+              : `${formatCurrency(totalPrice)} ₫`}
           </Text>
+
           <View style={styles.addToCartContainer}>
-            <AddToCartButton
-              product={product}
-              quantity={quantity}
-              onAddToCart={() => handleAddToCart("add")}
-            />
+            {typeof totalPrice === "string" ? (
+              <Text style={{ color: "red", fontSize: 16, fontWeight: "bold" }}>
+                {totalPrice}
+              </Text>
+            ) : (
+              <AddToCartButton
+                product={product}
+                quantity={quantity}
+                onAddToCart={() => handleAddToCart("add")}
+              />
+            )}
           </View>
         </View>
       )}
@@ -671,13 +746,9 @@ export default function ProductDetail() {
       )}
       {item.type === "comments" && (
         <Comment
-          comments={comments}
+          productId={productId}
           isLoggedIn={isLoggedIn}
-          onPostComment={handlePostComment}
-          onEditComment={handleEditComment}
-          onDeleteComment={handleDeleteComment}
-          onReplyComment={handleReplyComment}
-          loadMoreComments={loadMoreComments}
+          currentUserId={currentUserId}
         />
       )}
     </View>
@@ -800,6 +871,32 @@ export default function ProductDetail() {
               <Text style={styles.cancelButtonText}>Hủy</Text>
             </TouchableOpacity>
           </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={isImageModalVisible}
+        transparent={true}
+        onRequestClose={() => setIsImageModalVisible(false)}
+      >
+        <View style={styles.imageModalContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setIsImageModalVisible(false)}
+          >
+            <AntDesign name="close" size={30} color="white" />
+          </TouchableOpacity>
+          <FlatList
+            data={fullscreenImages}
+            horizontal
+            pagingEnabled
+            renderItem={({ item }) => (
+              <Image source={{ uri: item }} style={styles.fullscreenImage} />
+            )}
+            keyExtractor={(image) => image}
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={fullscreenImages.indexOf(selectedImage)}
+          />
         </View>
       </Modal>
     </SafeAreaView>

@@ -1,6 +1,6 @@
 // src/styles/ProductDetailStyles.js
-import { StyleSheet } from "react-native";
-
+import { StyleSheet,Dimensions } from "react-native";
+const { width, height } = Dimensions.get("window");
 const COLORS = {
   primary: "#0035FF",
   secondary: "#FA7D0B",
@@ -417,6 +417,83 @@ conditionSelector: {
     color: '#0035FF',
     marginTop: 8,
   },
+
+  thumbnailList: {
+    marginTop: 10,
+  },
+  thumbnailContainer: {
+    marginRight: 10,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedThumbnail: {
+    borderColor: COLORS.primary,
+  },
+  thumbnailImage: {
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
+  },
+  imageModalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullscreenImage: {
+    width: width,
+    height: height * 0.8,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 1,
+  },
+  productImage: {
+    width: "100%",
+    height: Dimensions.get("window").width,
+    resizeMode: "contain",
+  },
+  fullscreenImage: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height * 0.8,
+  },
+
+  colorOptionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E4E6EB",
+    marginRight: 8,
+    backgroundColor: "#FFFFFF",
+  },
+  
+  activeColorOptionContainer: {
+    borderColor: "#FF5722", // Customize the color as per your design
+  },
+  
+  colorOptionImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  
+  colorOptionText: {
+    fontSize: 14,
+    color: "#050505",
+  },
+  
+  activeColorOptionText: {
+    color: "#FF5722", // Customize the color for active text
+  },
+  
 });
 
 export default styles;

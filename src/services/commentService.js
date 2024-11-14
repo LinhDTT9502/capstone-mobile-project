@@ -24,12 +24,20 @@ const getToken = async () => {
 
 export const fetchComments = async (productId) => {
   try {
-    const token = await getToken();
-    const response = await fetchCommentsAPI(productId, token);
-    // console.log("Fetched comments:", response.data);
+    if (!productId) {
+      throw new Error("Product ID is missing");
+    }
+
+    // const token = await getToken();
+    // if (!token) {
+    //   throw new Error("User token is missing. Please log in.");
+    // }
+
+    const response = await fetchCommentsAPI(productId);
+    console.log("Fetched comments:", response.data); // Debugging output
     return response.data;
   } catch (error) {
-    console.error("Error fetching comments:", error);
+    console.error("Error fetching comments:", error.response || error.message);
     throw error;
   }
 };
