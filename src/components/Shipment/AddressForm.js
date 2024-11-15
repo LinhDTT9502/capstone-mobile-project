@@ -10,8 +10,12 @@ import {
   ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { fetchDistrict, fetchProvince, fetchWard } from "../../services/GHN/GHNService";
-import { Ionicons } from '@expo/vector-icons';
+import {
+  fetchDistrict,
+  fetchProvince,
+  fetchWard,
+} from "../../services/GHN/GHNService";
+import { Ionicons } from "@expo/vector-icons";
 
 const AddressForm = ({ onAddressChange }) => {
   const [formData, setFormData] = useState({
@@ -36,6 +40,17 @@ const AddressForm = ({ onAddressChange }) => {
       fetchWards(value);
     }
   };
+
+  useEffect(() => {
+    if (formData.province && formData.district && formData.ward) {
+      const selectedWard = wards.find((w) => w.WardCode === formData.ward);
+      if (selectedWard) {
+        onAddressChange(selectedWard.WardCode);
+      } else {
+        console.error("Invalid ward selection:", formData.ward);
+      }
+    }
+  }, [formData]);
 
   useEffect(() => {
     const fetchProvinces = async () => {
@@ -77,9 +92,13 @@ const AddressForm = ({ onAddressChange }) => {
   };
 
   const getAddressString = () => {
-    const selectedWard = wards.find(w => w.WardCode === formData.ward);
-    const selectedDistrict = districts.find(d => d.DistrictID === Number(formData.district));
-    const selectedProvince = provinces.find(p => p.ProvinceID === Number(formData.province));
+    const selectedWard = wards.find((w) => w.WardCode === formData.ward);
+    const selectedDistrict = districts.find(
+      (d) => d.DistrictID === Number(formData.district)
+    );
+    const selectedProvince = provinces.find(
+      (p) => p.ProvinceID === Number(formData.province)
+    );
 
     const wardName = selectedWard ? selectedWard.WardName : "";
     const districtName = selectedDistrict ? selectedDistrict.DistrictName : "";
@@ -88,14 +107,14 @@ const AddressForm = ({ onAddressChange }) => {
     return `${formData.street}, ${wardName}, ${districtName}, ${provinceName}`.trim();
   };
 
-  useEffect(() => {
-    if (formData.province && formData.district && formData.ward) {
-      const addressString = getAddressString();
-      onAddressChange(addressString);
-    }
-  }, [formData]);
 
-  const renderPicker = (value, onValueChange, items, placeholder, enabled = true) => (
+  const renderPicker = (
+    value,
+    onValueChange,
+    items,
+    placeholder,
+    enabled = true
+  ) => (
     <View style={styles.pickerContainer}>
       <Picker
         selectedValue={value}
@@ -105,14 +124,15 @@ const AddressForm = ({ onAddressChange }) => {
       >
         <Picker.Item label={placeholder} value="" />
         {items.map((item) => (
-          <Picker.Item
-            key={item.id}
-            label={item.name}
-            value={item.id}
-          />
+          <Picker.Item key={item.id} label={item.name} value={item.id} />
         ))}
       </Picker>
-      <Ionicons name="chevron-down" size={24} color="#999" style={styles.pickerIcon} />
+      <Ionicons
+        name="chevron-down"
+        size={24}
+        color="#999"
+        style={styles.pickerIcon}
+      />
     </View>
   );
 
@@ -134,7 +154,7 @@ const AddressForm = ({ onAddressChange }) => {
           {renderPicker(
             formData.province,
             (value) => handleInputChange("province", value),
-            provinces.map(p => ({ id: p.ProvinceID, name: p.ProvinceName })),
+            provinces.map((p) => ({ id: p.ProvinceID, name: p.ProvinceName })),
             "Chọn tỉnh thành"
           )}
 
@@ -142,7 +162,7 @@ const AddressForm = ({ onAddressChange }) => {
           {renderPicker(
             formData.district,
             (value) => handleInputChange("district", value),
-            districts.map(d => ({ id: d.DistrictID, name: d.DistrictName })),
+            districts.map((d) => ({ id: d.DistrictID, name: d.DistrictName })),
             "Chọn quận/huyện",
             !!formData.province
           )}
@@ -151,7 +171,7 @@ const AddressForm = ({ onAddressChange }) => {
           {renderPicker(
             formData.ward,
             (value) => handleInputChange("ward", value),
-            wards.map(w => ({ id: w.WardCode, name: w.WardName })),
+            wards.map((w) => ({ id: w.WardCode, name: w.WardName })),
             "Chọn phường/xã",
             !!formData.district
           )}
@@ -164,12 +184,12 @@ const AddressForm = ({ onAddressChange }) => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 8,
   },
   input: {
@@ -187,14 +207,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#F8F8F8",
     marginBottom: 20,
-    position: 'relative',
+    position: "relative",
   },
   picker: {
     height: 50,
-    width: '100%',
+    width: "100%",
   },
   pickerIcon: {
-    position: 'absolute',
+    position: "absolute",
     right: 12,
     top: 12,
   },

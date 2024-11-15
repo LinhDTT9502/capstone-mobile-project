@@ -111,17 +111,17 @@ export default function Cart() {
 
   const handleIncreaseQuantity = (item) => {
     if (token) {
-      dispatch(addCusCart({ ...item, quantity: 1 })); 
+      dispatch(addCusCart({ ...item, quantity: 1 }));
     } else {
-      dispatch(addCart({ ...item, quantity: 1 })); 
+      dispatch(addCart({ ...item, quantity: 1 }));
     }
   };
 
   const handleDecreaseQuantity = (item) => {
     if (token) {
-      dispatch(decreaseCusQuantity(item.id)); 
+      dispatch(decreaseCusQuantity(item.id));
     } else {
-      dispatch(decreaseQuantity(item.id)); 
+      dispatch(decreaseQuantity(item.id));
     }
   };
 
@@ -150,7 +150,11 @@ export default function Cart() {
       Alert.alert("Lỗi", "Vui lòng chọn sản phẩm để mua.");
       return;
     }
-    navigation.navigate("Checkout", { selectedItems });
+
+    const selectedCartItems = cartItems.filter((item) =>
+      selectedItems.includes(item.id)
+    );
+    navigation.navigate("Checkout", { selectedCartItems });
   };
 
   const handleRent = () => {
@@ -244,7 +248,7 @@ export default function Cart() {
                   {formatCurrency(parseFloat(item.price))}
                 </Text>
                 <Text style={styles.itemSize}>Size: {item.size}</Text>
-                
+
                 <View style={styles.itemFooter}>
                   <View style={styles.quantityContainer}>
                     <TouchableOpacity
@@ -280,7 +284,9 @@ export default function Cart() {
               style={styles.selectAllContainer}
               onPress={handleSelectAll}
             >
-              <View style={[styles.checkbox, selectAll && styles.checkboxSelected]}>
+              <View
+                style={[styles.checkbox, selectAll && styles.checkboxSelected]}
+              >
                 {selectAll && (
                   <Ionicons name="checkmark" size={16} color={COLORS.white} />
                 )}
@@ -433,7 +439,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 4, 
+    borderRadius: 4,
     borderWidth: 2,
     borderColor: COLORS.primary,
     alignItems: "center",
