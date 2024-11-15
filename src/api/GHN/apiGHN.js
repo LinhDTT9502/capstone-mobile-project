@@ -7,7 +7,7 @@ const API_BASE_URL = 'https://online-gateway.ghn.vn/shiip/public-api/master-data
 const apiToken = GHN_TOKEN;
 const shopId = SHOP_ID;
 const apiKey = API_KEY;
-console.log(GHN_TOKEN, SHOP_ID, API_KEY);
+// console.log(GHN_TOKEN, SHOP_ID, API_KEY);
 
 export const getProvince = () => {
   const url = `${API_BASE_URL}/province`;

@@ -46,6 +46,7 @@ const COLORS = {
 export default function Cart() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+
   useEffect(() => {
     dispatch(loadCartState());
     dispatch(loadCustomerCartState());
@@ -73,7 +74,7 @@ export default function Cart() {
         const storedToken = await AsyncStorage.getItem("token");
         setToken(storedToken);
       } catch (error) {
-        // console.log("Error retrieving token:", error);
+        console.error("Error retrieving token:", error);
       }
     };
     fetchToken();
@@ -225,7 +226,7 @@ export default function Cart() {
               <View style={styles.itemDetails}>
                 <View style={styles.itemHeader}>
                   <Text style={styles.itemName} numberOfLines={2}>
-                    {item.productName}
+                    {item.productName} - {item.color} - {item.condition}
                   </Text>
                   <TouchableOpacity
                     style={styles.deleteButton}
@@ -242,7 +243,8 @@ export default function Cart() {
                 <Text style={styles.itemPrice}>
                   {formatCurrency(parseFloat(item.price))}
                 </Text>
-
+                <Text style={styles.itemSize}>Size: {item.size}</Text>
+                
                 <View style={styles.itemFooter}>
                   <View style={styles.quantityContainer}>
                     <TouchableOpacity
@@ -629,5 +631,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.secondary,
+  },
+  itemSize: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.gray,
+    marginBottom: 4,
   },
 });

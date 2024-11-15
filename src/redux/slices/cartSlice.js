@@ -32,12 +32,20 @@ const cartSlice = createSlice({
   },
   reducers: {
     addCart: (state, action) => {
-      const product = state.items.find(item => item.id === action.payload.id);
-      const quantityToAdd = action.payload.quantity || 1; // Use specified quantity or default to 1
+      const product = state.items.find(item => 
+        item.id === action.payload.id &&
+        item.size === action.payload.size &&
+        item.color === action.payload.color &&
+        item.condition === action.payload.condition
+      );
+      const quantityToAdd = action.payload.quantity || 1;
       if (product) {
         product.quantity += quantityToAdd;
       } else {
-        state.items.push({ ...action.payload, quantity: quantityToAdd });
+        state.items.push({ 
+          ...action.payload, 
+          quantity: quantityToAdd 
+        });
       }
       saveState(state.items);
     },
@@ -70,3 +78,4 @@ export const { addCart, removeFromCart, decreaseQuantity, clearCart } = cartSlic
 export const selectCartItems = state => state.cart.items;
 
 export default cartSlice.reducer;
+

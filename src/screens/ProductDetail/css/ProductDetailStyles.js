@@ -442,10 +442,7 @@ conditionSelector: {
     justifyContent: "center",
     alignItems: "center",
   },
-  fullscreenImage: {
-    width: width,
-    height: height * 0.8,
-  },
+
   closeButton: {
     position: "absolute",
     top: 40,

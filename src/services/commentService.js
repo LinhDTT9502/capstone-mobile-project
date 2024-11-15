@@ -34,7 +34,7 @@ export const fetchComments = async (productId) => {
     // }
 
     const response = await fetchCommentsAPI(productId);
-    console.log("Fetched comments:", response.data); // Debugging output
+    // console.log("Fetched comments:", response.data); // Debugging output
     return response.data;
   } catch (error) {
     console.error("Error fetching comments:", error.response || error.message);

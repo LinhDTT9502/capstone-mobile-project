@@ -32,9 +32,9 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log("Product ID in Comment component:", productId);
-    console.log("Is Logged In:", isLoggedIn);
-    console.log("Current User ID:", currentUserId);
+    // console.log("Product ID in Comment component:", productId);
+    // console.log("Is Logged In:", isLoggedIn);
+    // console.log("Current User ID:", currentUserId);
 
     if (productId) {
       loadComments();
@@ -53,7 +53,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
       // Check if response has the expected structure
       if (response && response.data && response.data.$values) {
         const commentsArray = response.data.$values;
-        console.log("Loaded comments:", commentsArray); // Log to debug
+        // console.log("Loaded comments:", commentsArray); // Log to debug
         setComments(commentsArray);
         setDisplayedComments(commentsArray.slice(0, INITIAL_COMMENT_COUNT));
       } else {

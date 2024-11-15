@@ -6,28 +6,40 @@ import { addCusCart } from '../redux/slices/customerCartSlice';
 import { addCart } from '../redux/slices/cartSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AddToCartButton = ({ product, quantity }) => {
+const AddToCartButton = ({ product, quantity, color, size, condition }) => {
   const dispatch = useDispatch();
 
   const handleAddToCart = async () => {
-    if (!product) {
-      console.error('Product is undefined');
-      Alert.alert('Lỗi', 'Không thể thêm vào giỏ hàng vì thông tin sản phẩm bị thiếu.');
+    if (!product || !color || !size || !condition) {
+      Alert.alert(
+        "Lỗi",
+        "Vui lòng chọn đầy đủ thông tin màu sắc, kích thước và tình trạng trước khi thêm vào giỏ hàng."
+      );
       return;
     }
 
     try {
-      const token = await AsyncStorage.getItem('token');
-      const payload = { ...product, quantity };
+      const token = await AsyncStorage.getItem("token");
+      const payload = {
+        ...product,
+        quantity,
+        color: color, // Use the color prop
+        size: size,    // Use the size prop
+        condition: condition, // Use the condition prop
+      };
+
+      const message = `${product.productName} - ${color} - Size: ${size} - Tình trạng: ${condition} với số lượng ${quantity} đã được thêm vào giỏ hàng!`;
+
       if (!token) {
-        dispatch(addCart(payload));        Alert.alert('Thông báo', `Sản phẩm "${product.productName}" với số lượng ${quantity} đã được thêm vào giỏ hàng!`);
+        dispatch(addCart(payload));
+        Alert.alert("Thông báo", message);
       } else {
         dispatch(addCusCart(payload));
-        Alert.alert('Thông báo', `"${product.productName}" với số lượng ${quantity} đã được thêm vào giỏ hàng!`);
+        Alert.alert("Thông báo", message);
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      Alert.alert('Lỗi', 'Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
+      console.error("Error adding to cart:", error);
+      Alert.alert("Lỗi", "Không thể thêm vào giỏ hàng. Vui lòng thử lại.");
     }
   };
 

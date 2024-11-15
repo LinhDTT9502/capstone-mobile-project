@@ -295,19 +295,39 @@ export default function ProductDetail() {
       Alert.alert("Lỗi", "Không thể thực hiện hành động like.");
     }
   };
-
   const loadProductDetails = async () => {
     try {
       const productData = await fetchProductById(productId);
-      // console.log("Fetched Product Data:", productData);
-      const productInfo = productData.$values[0];
-      // console.log("First Product in $values:", productInfo);
-      setProduct(productData.$values[0]);
-      setLikes(productData.$values[0]?.likes || 0);
-      setBasePrice(productInfo.price || 0);
-      setTotalPrice((productInfo.price || 0) * quantity);
+      // console.log("Fetched Product Data by ID:", productData);
+
+      // Trực tiếp sử dụng productData mà không cần $values
+      const productCode = productData.productCode;
+
+      if (!productCode) {
+        Alert.alert("Lỗi", "Mã sản phẩm không hợp lệ.");
+        return;
+      }
+
+      // Gọi API để lấy danh sách sản phẩm dựa trên productCode
+      const productListResponse = await getProductByProductCode(productCode);
+      // console.log("Product List by Product Code:", productListResponse);
+
+      if (
+        productListResponse &&
+        productListResponse.$values &&
+        productListResponse.$values.length > 0
+      ) {
+        const firstProduct = productListResponse.$values[0];
+        setProduct(firstProduct);
+        setLikes(firstProduct.likes || 0);
+        setBasePrice(firstProduct.price || 0);
+        setTotalPrice((firstProduct.price || 0) * quantity);
+      } else {
+        Alert.alert("Lỗi", "Không tìm thấy sản phẩm cho mã sản phẩm này.");
+      }
     } catch (error) {
       Alert.alert("Lỗi", "Không thể tải thông tin sản phẩm.");
+      console.error("Error loading product details:", error);
     }
   };
 
@@ -316,79 +336,6 @@ export default function ProductDetail() {
     setQuantity(newQuantity);
     setTotalPrice(basePrice * newQuantity);
   };
-
-  // const loadComments = async (newPage = 1) => {
-  //   try {
-  //     const response = await fetchComments(
-  //       productId,
-  //       newPage,
-  //       COMMENTS_PER_PAGE
-  //     );
-  //     const newComments = response.data?.$values || [];
-
-  //     if (newPage === 1) {
-  //       setComments(newComments);
-  //     } else {
-  //       setComments((prevComments) => [...prevComments, ...newComments]);
-  //     }
-
-  //     setHasMoreComments(newComments.length === COMMENTS_PER_PAGE);
-  //   } catch (error) {
-  //     console.error("Error loading comments:", error);
-  //     Alert.alert("Lỗi", "Không thể tải bình luận");
-  //   }
-  // };
-
-  // const loadMoreComments = async () => {
-  //   if (hasMoreComments) {
-  //     const nextPage = page + 1;
-  //     await loadComments(nextPage);
-  //     setPage(nextPage);
-  //   }
-  // };
-
-  // const handlePostComment = async (newComment) => {
-  //   try {
-  //     const token = await AsyncStorage.getItem("token");
-  //     // console.log("Token:", token);
-  //     if (!token) {
-  //       Alert.alert("Lỗi", "Vui lòng đăng nhập để bình luận.");
-  //       return;
-  //     }
-  //     const response = await postComment(productId, newComment, token);
-  //     // console.log("Response:", response);
-  //     loadComments();
-  //     setNewComment("");
-  //   } catch (error) {
-  //     console.error("Error posting comment:", error);
-  //     Alert.alert("Lỗi", "Không thể đăng bình luận");
-  //   }
-  // };
-
-  // const handleEditComment = async (commentId, newContent) => {
-  //   try {
-  //     await editComment(commentId, newContent);
-  //     loadComments();
-  //   } catch (error) {
-  //     Alert.alert("Lỗi", "Không thể sửa bình luận");
-  //   }
-  // };
-
-  // const handleDeleteComment = async (commentId) => {
-  //   try {
-  //     await deleteComment(commentId);
-  //     loadComments();
-  //   } catch (error) {
-  //     Alert.alert("Lỗi", "Không thể xóa bình luận");
-  //   }
-  // };
-
-  // const handleReplyComment = async (commentId) => {
-  //   Alert.alert(
-  //     "Thông báo",
-  //     "Chức năng trả lời bình luận chưa được triển khai"
-  //   );
-  // };
 
   const handleAddToCart = (type) => {
     Alert.alert("Thông báo", `Sản phẩm đã được thêm vào giỏ hàng! (${type})`);
@@ -562,7 +509,7 @@ export default function ProductDetail() {
                     selectedColor === color && styles.activeColorOptionText,
                   ]}
                 >
-                  {`Q. ${color}`}
+                  {color}
                 </Text>
               </TouchableOpacity>
             )}
@@ -664,6 +611,9 @@ export default function ProductDetail() {
               <AddToCartButton
                 product={product}
                 quantity={quantity}
+                color={selectedColor}
+                size={selectedSize}
+                condition={selectedCondition}
                 onAddToCart={() => handleAddToCart("add")}
               />
             )}
