@@ -178,6 +178,27 @@ export default function Checkout() {
           )}
         </View>
 
+
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tóm tắt đơn hàng</Text>
+          {selectedCartItems.map((item) => (
+            <View key={item.id} style={styles.orderItem}>
+              <Image source={{ uri: item.imgAvatarPath }} style={styles.productImage} />
+              <View style={styles.orderItemDetails}>
+                <Text style={styles.productName}>{item.productName} - {item.size}</Text>
+                <Text style={styles.quantityText}>Số lượng: {item.quantity}</Text>
+                <Text style={styles.priceText}>Giá: {formatCurrency(item.price)}</Text>
+                <Text style={styles.totalText}>Tổng cộng: {formatCurrency(item.price * item.quantity)}</Text>
+              </View>
+            </View>
+          ))}
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalLabel}>Tổng cộng:</Text>
+            <Text style={styles.totalAmount}>{formatCurrency(calculateTotal())}</Text>
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mã giảm giá</Text>
           <TextInput
@@ -200,25 +221,6 @@ export default function Checkout() {
             numberOfLines={3}
             placeholderTextColor={COLORS.gray}
           />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tóm tắt đơn hàng</Text>
-          {selectedCartItems.map((item) => (
-            <View key={item.id} style={styles.orderItem}>
-              <Image source={{ uri: item.imgAvatarPath }} style={styles.productImage} />
-              <View style={styles.orderItemDetails}>
-                <Text style={styles.productName}>{item.productName} - {item.size}</Text>
-                <Text style={styles.quantityText}>Số lượng: {item.quantity}</Text>
-                <Text style={styles.priceText}>Giá: {formatCurrency(item.price)}</Text>
-                <Text style={styles.totalText}>Tổng cộng: {formatCurrency(item.price * item.quantity)}</Text>
-              </View>
-            </View>
-          ))}
-          <View style={styles.totalContainer}>
-            <Text style={styles.totalLabel}>Tổng cộng:</Text>
-            <Text style={styles.totalAmount}>{formatCurrency(calculateTotal())}</Text>
-          </View>
         </View>
 
         <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
