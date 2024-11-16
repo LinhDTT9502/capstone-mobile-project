@@ -19,7 +19,10 @@ export const authenticateUser = async (username, password) => {
     const decoded = jwtDecode(response.data.data.token);
     await AsyncStorage.setItem("token", response.data.data.token);
     await AsyncStorage.setItem("refreshToken", response.data.data.refreshToken);
+    await AsyncStorage.setItem("currentUserId", response.data.data.userId.toString());
     return decoded;
+
+    
   } catch (error) {
     console.error("Login failed", error);
     throw error;

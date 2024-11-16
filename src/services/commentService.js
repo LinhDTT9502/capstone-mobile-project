@@ -45,9 +45,6 @@ export const fetchComments = async (productId) => {
 export const postComment = async (productId, content) => {
   try {
     const token = await getToken();
-    if (!token) {
-      throw new Error("User not logged in");
-    }
     const response = await postCommentAPI(productId, content, token);
     return response.data;
   } catch (error) {
@@ -56,13 +53,13 @@ export const postComment = async (productId, content) => {
   }
 };
 
-export const editComment = async (commentId, content) => {
+export const editComment = async (id, content) => {
   try {
     const token = await getToken();
     if (!token) {
       throw new Error("User not logged in");
     }
-    const response = await editCommentAPI(commentId, content, token);
+    const response = await editCommentAPI(id, content, token);
     return response.data;
   } catch (error) {
     console.error("Error editing comment:", error);
@@ -70,16 +67,17 @@ export const editComment = async (commentId, content) => {
   }
 };
 
-export const deleteComment = async (commentId) => {
+export const deleteComment = async (id) => {
   try {
     const token = await getToken();
     if (!token) {
-      throw new Error("User not logged in");
+      throw new Error("Người dùng chưa đăng nhập.");
     }
-    const response = await deleteCommentAPI(commentId, token);
+
+    const response = await deleteCommentAPI(id, token);
     return response.data;
   } catch (error) {
-    console.error("Error deleting comment:", error);
+    console.error("Lỗi API khi xoá bình luận:", error);
     throw error;
   }
 };

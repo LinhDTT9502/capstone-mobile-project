@@ -23,13 +23,6 @@ import Comment from "../../components/ProductDetail/Comment";
 import LikeButton from "../../components/ProductDetail/LikeButton";
 
 import {
-  fetchComments,
-  postComment,
-  editComment,
-  deleteComment,
-  replyComment,
-} from "../../services/commentService";
-import {
   fetchProductById,
   getProductByProductCode,
   listColorsOfProduct,
@@ -48,8 +41,6 @@ const COLORS = {
   white: "#FFFFFF",
   black: "#000000",
 };
-
-const COMMENTS_PER_PAGE = 5;
 
 export default function ProductDetail() {
   const navigation = useNavigation();
@@ -74,14 +65,7 @@ export default function ProductDetail() {
 
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
-
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState("");
-  const [editingCommentId, setEditingCommentId] = useState(null);
-  const [editingText, setEditingText] = useState("");
-  const [page, setPage] = useState(1);
-  const [hasMoreComments, setHasMoreComments] = useState(true);
 
   // select
   const [colors, setColors] = useState([]);
@@ -104,7 +88,8 @@ export default function ProductDetail() {
     const fetchCurrentUserId = async () => {
       try {
         const userId = await AsyncStorage.getItem("currentUserId");
-        setCurrentUserId(userId ? parseInt(userId, 10) : null); // Ensuring it's a number
+        // console.log("Fetched User ID:", userId); // Debug
+        setCurrentUserId(userId ? parseInt(userId, 10) : null);
       } catch (error) {
         console.error("Error fetching current user ID:", error);
       }
@@ -112,6 +97,10 @@ export default function ProductDetail() {
 
     fetchCurrentUserId();
   }, []);
+
+  useEffect(() => {
+    // console.log("currentUserId in ProductDetail:", currentUserId);
+  }, [currentUserId]);
 
   const fetchProductColors = async (productCode) => {
     try {

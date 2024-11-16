@@ -17,6 +17,7 @@ import {
   deleteComment,
   replyComment,
 } from "../../services/commentService";
+import { ToastAndroid } from "react-native";
 
 const MAX_COMMENT_LENGTH = 100;
 const INITIAL_COMMENT_COUNT = 5;
@@ -32,10 +33,9 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // console.log("Product ID in Comment component:", productId);
     // console.log("Is Logged In:", isLoggedIn);
     // console.log("Current User ID:", currentUserId);
-
+    // console.log("Product ID:", productId);
     if (productId) {
       loadComments();
     } else {
@@ -73,46 +73,112 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
 
   const handlePostComment = async () => {
     if (newComment.trim().length === 0) {
-      Alert.alert("Error", "Please enter a comment.");
+      Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận.");
       return;
     }
     if (newComment.length > MAX_COMMENT_LENGTH) {
       Alert.alert(
-        "Error",
-        `Comment cannot exceed ${MAX_COMMENT_LENGTH} characters.`
+        "Lỗi",
+        `Bình luận không được vượt quá ${MAX_COMMENT_LENGTH} ký tự.`
       );
       return;
     }
+
     try {
-      await postComment(productId, newComment);
-      setNewComment("");
-      loadComments(); // Reload comments after posting
+      const newCommentResponse = await postComment(productId, newComment);
+
+      // Cập nhật bình luận mới vào danh sách
+      setComments((prevComments) => [newCommentResponse.data, ...prevComments]);
+      setDisplayedComments((prevDisplayed) => [
+        newCommentResponse.data,
+        ...prevDisplayed,
+      ]);
+
+      setNewComment(""); // Xóa nội dung trong ô nhập
+      ToastAndroid.show("Thêm bình luận thành công!", ToastAndroid.SHORT);
     } catch (error) {
-      Alert.alert("Error", "Unable to post comment.");
+      Alert.alert("Lỗi", "Không thể thêm bình luận. Vui lòng thử lại.");
     }
   };
 
-  const handleEditComment = async (commentId) => {
-    if (editingText.trim().length === 0) {
-      Alert.alert("Error", "Vui lòng nhập comment");
+  const handleEditComment = async (id) => {
+    if (!id) {
+      console.error("id is undefined or null");
+      Alert.alert("Lỗi", "Không tìm thấy ID bình luận để chỉnh sửa.");
       return;
     }
+
+    if (editingText.trim().length === 0) {
+      Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận.");
+      return;
+    }
+
     try {
-      await editComment(commentId, editingText);
+      await editComment(id, editingText);
+
+      // Cập nhật bình luận trực tiếp trong danh sách
+      setComments((prevComments) =>
+        prevComments.map((comment) =>
+          comment.id === id ? { ...comment, content: editingText } : comment
+        )
+      );
+
+      setDisplayedComments((prevDisplayed) =>
+        prevDisplayed.map((comment) =>
+          comment.id === id ? { ...comment, content: editingText } : comment
+        )
+      );
+
       setEditingCommentId(null);
       setEditingText("");
-      loadComments(); // Reload comments after editing
+
+      ToastAndroid.show("Chỉnh sửa bình luận thành công!", ToastAndroid.SHORT);
     } catch (error) {
-      Alert.alert("Error", "Unable to edit comment.");
+      Alert.alert("Lỗi", "Không thể chỉnh sửa bình luận. Vui lòng thử lại.");
     }
   };
 
-  const handleDeleteComment = async (commentId) => {
+  const confirmDeleteComment = (id) => {
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa bình luận này không?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel",
+        },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: () => handleDeleteComment(id),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleDeleteComment = async (id) => {
+    if (!id) {
+      Alert.alert("Lỗi", "Không tìm thấy ID bình luận để xóa.");
+      return;
+    }
+
     try {
-      await deleteComment(commentId);
-      loadComments(); // Reload comments after deleting
+      await deleteComment(id);
+
+      // Loại bỏ bình luận đã xoá khỏi danh sách hiện tại
+      setComments((prevComments) =>
+        prevComments.filter((comment) => comment.id !== id)
+      );
+      setDisplayedComments((prevDisplayed) =>
+        prevDisplayed.filter((comment) => comment.id !== id)
+      );
+
+      // Hiển thị thông báo thành công
+      ToastAndroid.show("Xóa bình luận thành công!", ToastAndroid.SHORT);
     } catch (error) {
-      Alert.alert("Error", "Unable to delete comment.");
+      console.error("Lỗi xoá bình luận:", error);
+      Alert.alert("Lỗi", "Không thể xóa bình luận. Vui lòng thử lại.");
     }
   };
 
@@ -130,7 +196,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
 
   const renderCommentItem = ({ item }) => {
     const isOwner = item.userId === currentUserId;
-    const isEditing = editingCommentId === item.commentId;
+    const isEditing = editingCommentId === item.id;
 
     return (
       <View style={styles.commentItem}>
@@ -161,53 +227,42 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
               <>
                 <TouchableOpacity
                   onPress={() => {
-                    setEditingCommentId(item.commentId); // Set specific comment ID for editing
+                    setEditingCommentId(item.id);
                     setEditingText(item.content);
                   }}
                   style={styles.actionButton}
                 >
                   <Ionicons name="pencil-outline" size={16} color="#007AFF" />
-                  <Text style={styles.actionText}>Edit</Text>
+                  <Text style={styles.actionText}>Sửa</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => handleDeleteComment(item.commentId)}
+                  onPress={() => confirmDeleteComment(item.id)}
                   style={styles.actionButton}
                 >
                   <Ionicons name="trash-outline" size={16} color="#007AFF" />
-                  <Text style={styles.actionText}>Delete</Text>
+                  <Text style={styles.actionText}>Xóa</Text>
                 </TouchableOpacity>
               </>
             )}
             {isEditing && (
               <>
                 <TouchableOpacity
-                  onPress={() => handleEditComment(item.commentId)}
+                  onPress={() => handleEditComment(item.id)}
                   style={styles.actionButton}
                 >
-                  <Text style={styles.actionText}>Save</Text>
+                  <Text style={styles.actionText}>Lưu</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
-                    setEditingCommentId(null); // Clear editing state
+                    setEditingCommentId(null);
                     setEditingText("");
                   }}
                   style={styles.actionButton}
                 >
-                  <Text style={styles.actionText}>Cancel</Text>
+                  <Text style={styles.actionText}>Hủy</Text>
                 </TouchableOpacity>
               </>
             )}
-            <TouchableOpacity
-              onPress={() => handleReplyComment(item.commentId)}
-              style={styles.actionButton}
-            >
-              <Ionicons
-                name="return-up-back-outline"
-                size={16}
-                color="#007AFF"
-              />
-              <Text style={styles.actionText}>Reply</Text>
-            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -224,13 +279,13 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
       ) : displayedComments.length === 0 ? (
         <Text style={styles.noComments}>Không có bình luận nào</Text>
       ) : (
-<FlatList
-  data={displayedComments}
-  renderItem={renderCommentItem}
-  keyExtractor={(item) => `${item.productId}-${item.commentId}-${item.$id}`}
-/>
-
-
+        <FlatList
+          data={displayedComments.filter((item) => item && item.productId)}
+          renderItem={renderCommentItem}
+          keyExtractor={(item) =>
+            item.productId ? `${item.productId}-${item.id}` : `${item.id}`
+          }
+        />
       )}
       {displayedComments.length < comments.length && (
         <TouchableOpacity

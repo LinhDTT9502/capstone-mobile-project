@@ -44,12 +44,15 @@ const LoginScreen = () => {
     try {
       if (username && password) {
         const decoded = await authenticateUser(username, password);
+        // console.log("Decoded user data:", decoded);
         dispatch(login(decoded));
+        
         navigation.navigate('HomeController');
       } else {
         Alert.alert('Đăng nhập thất bại', 'Vui lòng nhập tên đăng nhập và mật khẩu.');
       }
     } catch (error) {
+      console.error("Login error:", error);
       Alert.alert('Lỗi', 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');
     } finally {
       setLoading(false);

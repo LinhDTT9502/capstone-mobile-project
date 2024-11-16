@@ -21,21 +21,21 @@ export const fetchCommentsAPI = (productId) => {
   };
   
 
-export const editCommentAPI = (commentId, content, token) => {
-  return axiosInstance.put(
-    `${API_BASE_URL}/comment/${commentId}`,
-    { content },
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-};
+  export const editCommentAPI = (id, content, token) => {
+    return axiosInstance.put(
+      `${API_BASE_URL}/update-comment/${id}`,
+      { content },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  };
 
-export const deleteCommentAPI = (commentId, token) => {
-  return axiosInstance.delete(`${API_BASE_URL}/comment/${commentId}`, {
+export const deleteCommentAPI = (id, token) => {
+  return axiosInstance.delete(`${API_BASE_URL}/remove-comment/${id}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
