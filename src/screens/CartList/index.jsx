@@ -145,11 +145,17 @@ export default function Cart() {
     }).format(amount);
   };
 
+  useEffect(() => {
+    console.log("Cart Items:", cartItems);
+  }, [cartItems]);
+
   const handleBuyNow = () => {
     if (selectedItems.length === 0) {
       Alert.alert("Lỗi", "Vui lòng chọn sản phẩm để mua.");
       return;
     }
+
+    
 
     const selectedCartItems = cartItems.filter((item) =>
       selectedItems.includes(item.id)

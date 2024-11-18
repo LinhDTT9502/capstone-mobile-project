@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import { addCusCart } from '../redux/slices/customerCartSlice';
 import { addCart } from '../redux/slices/cartSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { addToCart } from '../services/cartService'; // Import the addToCart function from the service
 
 const AddToCartButton = ({ product, quantity, color, size, condition }) => {
   const dispatch = useDispatch();
@@ -23,19 +24,30 @@ const AddToCartButton = ({ product, quantity, color, size, condition }) => {
       const payload = {
         ...product,
         quantity,
-        color: color, // Use the color prop
-        size: size,    // Use the size prop
-        condition: condition, // Use the condition prop
+        color: color,
+        size: size,  
+        condition: condition,
       };
 
       const message = `${product.productName} - ${color} - Size: ${size} - Tình trạng: ${condition} với số lượng ${quantity} đã được thêm vào giỏ hàng!`;
 
       if (!token) {
+        // Guest user
         dispatch(addCart(payload));
         Alert.alert("Thông báo", message);
       } else {
-        dispatch(addCusCart(payload));
-        Alert.alert("Thông báo", message);
+        // Customer user
+        try {
+          await addToCart(product.id, quantity, token);
+          dispatch(addCusCart(payload));
+          Alert.alert("Thông báo", message);
+        } catch (error) {
+          if (error.message === "Chỉ còn 1 sản phẩm!") {
+            Alert.alert("Thông báo", error.message);
+          } else {
+            throw error;
+          }
+        }
       }
     } catch (error) {
       console.error("Error adding to cart:", error);

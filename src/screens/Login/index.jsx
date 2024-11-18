@@ -45,6 +45,8 @@ const LoginScreen = () => {
       if (username && password) {
         const decoded = await authenticateUser(username, password);
         // console.log("Decoded user data:", decoded);
+        console.log("UserId data:", decoded.UserId);
+        console.log("UserId data 2:", decoded.emailConfirmed);
         dispatch(login(decoded));
         
         navigation.navigate('HomeController');

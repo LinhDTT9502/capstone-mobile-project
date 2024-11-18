@@ -25,6 +25,10 @@ export const getUserProfile = (userId) => {
   return axiosInstance.get(`${API_BASE_URL}/get-profile?userId=${userId}`);
 };
 
+export const getUserDetail = (userId) => {
+  return axiosInstance.get(`${API_BASE_URL}/get-users-detail?userId=${userId}`);
+};
+
 
 // PUT update user profile
 export const updateProfileApi = (userId, profileData) => {
