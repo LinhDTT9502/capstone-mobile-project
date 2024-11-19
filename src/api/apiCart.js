@@ -34,29 +34,30 @@ export const addToCartAPI = (productId, quantity, token) => {
 //   });
 // };
 
-export const getCartAPI = (sortBy = '') => {
+export const getCartAPI = (token, sortBy = '') => {
   const url = `${API_BASE_URL}/get-cart`;
-  return axios.get(url, {
+  return axiosInstance.get(url, {
     params: {
       perPage: 2,
       currentPage: 0,
       sortBy: sortBy,
-      isAscending: true
+      isAscending: true,
     },
     headers: {
-      'Accept': '*/*',
-      'Content-Type': 'application/json'
-    }
+      Accept: '*/*',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
   });
 };
 
 export const getCartItems = (cartItemId, token) => {
   const url = `${API_BASE_URL}/get-cart-item/${cartItemId}`;
-  return axios.get(url, {
+  return axiosInstance.get(url, {
     headers: {
-      'accept': '*/*',
-      'Authorization': `Bearer ${token}`
-    }
+      Accept: '*/*',
+      Authorization: `Bearer ${token}`,
+    },
   });
 };
 

@@ -16,13 +16,23 @@ export const addToCart = async (productId, quantityToAdd, token) => {
   }
 };
 
-export const getUserCart = async (sortBy = "") => {
+// export const getUserCart = async (sortBy = "") => {
+//   try {
+//     const response = await getCartAPI(sortBy);
+//     return response.data.data.$values;
+//   } catch (error) {
+//     console.error("Error fetching cart:", error);
+//     throw error;
+//   }
+// };
+
+export const getUserCart = async (token) => {
   try {
-    const response = await getCartAPI(sortBy);
+    const response = await getCartAPI(token);
     return response.data.data.$values;
   } catch (error) {
-    console.error("Error fetching cart:", error);
-    throw error;
+    console.error("Error fetching cart:", error.response?.data || error);
+    throw new Error("Failed to fetch user cart");
   }
 };
 

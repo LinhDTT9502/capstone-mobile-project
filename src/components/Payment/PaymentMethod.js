@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const COLORS = {
+const COLORS = {    
   primary: "#3366FF",
   secondary: "#FF8800",
   white: "#FFFFFF",

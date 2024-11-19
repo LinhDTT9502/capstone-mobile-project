@@ -146,7 +146,7 @@ export default function Cart() {
   };
 
   useEffect(() => {
-    console.log("Cart Items:", cartItems);
+    // console.log("Cart Items:", cartItems);
   }, [cartItems]);
 
   const handleBuyNow = () => {

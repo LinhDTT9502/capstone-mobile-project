@@ -135,14 +135,14 @@ export const checkAndRefreshToken = async () => {
         await AsyncStorage.setItem("refreshToken", newRefreshToken);
         token = newToken;
       } catch (error) {
-        console.error("Token refresh failed", error);
+        // console.error("Token refresh failed", error);
         throw error;
       }
     }
 
     return token;
   } catch (error) {
-    console.error("Error checking or refreshing token:", error);
+    // console.error("Error checking or refreshing token:", error);
     throw error;
   }
 };
