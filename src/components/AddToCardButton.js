@@ -1,11 +1,11 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { useDispatch } from 'react-redux';
-import { addCusCart } from '../redux/slices/customerCartSlice';
-import { addCart } from '../redux/slices/cartSlice';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { addToCart } from '../services/cartService'; // Import the addToCart function from the service
+import React from "react";
+import { TouchableOpacity, Text, StyleSheet, Alert } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
+import { addCusCart } from "../redux/slices/customerCartSlice";
+import { addCart } from "../redux/slices/cartSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { addToCart } from "../services/cartService";
 
 const AddToCartButton = ({ product, quantity, color, size, condition }) => {
   const dispatch = useDispatch();
@@ -25,7 +25,7 @@ const AddToCartButton = ({ product, quantity, color, size, condition }) => {
         ...product,
         quantity,
         color: color,
-        size: size,  
+        size: size,
         condition: condition,
       };
 
@@ -39,10 +39,16 @@ const AddToCartButton = ({ product, quantity, color, size, condition }) => {
         // Customer user
         try {
           await addToCart(product.id, quantity, token);
-          dispatch(addCusCart(payload));
           Alert.alert("Thông báo", message);
         } catch (error) {
-          if (error.message === "Chỉ còn 1 sản phẩm!") {
+          if (error.response) {
+            // API trả về lỗi
+            Alert.alert(
+              "Thông báo",
+              error.response.data.message || "Lỗi không xác định từ API"
+            );
+          }
+          if (error.message) {
             Alert.alert("Thông báo", error.message);
           } else {
             throw error;
@@ -65,19 +71,19 @@ const AddToCartButton = ({ product, quantity, color, size, condition }) => {
 
 const styles = StyleSheet.create({
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FA7D0B',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FA7D0B",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     elevation: 2,
   },
   text: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 8,
   },
 });

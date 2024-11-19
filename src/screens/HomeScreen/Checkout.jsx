@@ -63,7 +63,7 @@ export default function Checkout({ route }) {
 
 
   useEffect(() => {
-    console.log("Received selectedCartItems:", selectedCartItems);
+    // console.log("Received selectedCartItems:", selectedCartItems);
     if (!selectedCartItems || selectedCartItems.length === 0) {
       Alert.alert("Lỗi", "Không có sản phẩm nào được chọn để thanh toán.");
       navigation.goBack();
