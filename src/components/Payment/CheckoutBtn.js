@@ -13,15 +13,12 @@ const CheckoutBtn = ({
   selectedOption,
   shipment,
   selectedBranchId,
-  discountCode,
-  note,
   selectedCartItems,
-  user,
+  userData,
 }) => {
   const navigation = useNavigation();
 
   const handleCheckout = async () => {
-    // Validate shipment or branch based on selected option
     if (selectedOption === "HOME_DELIVERY" && !shipment) {
       Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng.");
       return;
@@ -32,50 +29,21 @@ const CheckoutBtn = ({
       return;
     }
 
-    // Validate cart items
-    if (!selectedCartItems || selectedCartItems.length === 0) {
-      Alert.alert("Lỗi", "Giỏ hàng trống. Vui lòng thêm sản phẩm để tiếp tục.");
-      return;
-    }
+    const orderData = {
+      ...userData,
+      deliveryMethod: selectedOption,
+      saleOrderDetailCMs: selectedCartItems.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        unitPrice: item.price,
+      })),
+    };
 
     try {
-      const deliveryDetails = {
-        userId: user?.UserId,
-        shipmentId: selectedOption === "HOME_DELIVERY" ? shipment?.id : null,
-        deliveryMethod: selectedOption,
-        branchId: selectedOption === "STORE_PICKUP" ? selectedBranchId : null,
-        discountCode: discountCode || null,
-        note: note || null,
-      };
-
-      // Gọi API đặt hàng
-      const response = await placedOrder(
-        selectedCartItems,
-        user,
-        deliveryDetails
-      );
-
-      if (response?.paymentLink) {
-        // Điều hướng tới trang thanh toán qua VNPay
-        navigation.navigate("PaymentWebView", {
-          url: response.paymentLink,
-        });
-      } else {
-        Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
-        navigation.navigate("OrderConfirmation", {
-          orderDetails: {
-            items: selectedCartItems,
-            delivery: deliveryDetails,
-            user,
-          },
-        });
-      }
+      const response = await placedOrder(orderData);
+      Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
     } catch (error) {
-      console.error("Lỗi khi thanh toán:", error);
-      Alert.alert(
-        "Lỗi",
-        "Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại sau."
-      );
+      Alert.alert("Lỗi", error.message || "Không thể hoàn tất đơn hàng.");
     }
   };
 

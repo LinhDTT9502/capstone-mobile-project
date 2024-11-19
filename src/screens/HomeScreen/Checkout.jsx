@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSelector, useDispatch } from "react-redux";
@@ -48,6 +49,9 @@ export default function Checkout({ route }) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [discountCode, setDiscountCode] = useState("");
   const [note, setNote] = useState("");
+  const [gender, setGender] = useState("");
+  const [isAddressModalVisible, setIsAddressModalVisible] = useState(false);
+  const [isGenderModalVisible, setIsGenderModalVisible] = useState(false);
 
   const totalPrice = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -61,15 +65,12 @@ export default function Checkout({ route }) {
     loadCart();
   }, [dispatch]);
 
-
   useEffect(() => {
-    // console.log("Received selectedCartItems:", selectedCartItems);
     if (!selectedCartItems || selectedCartItems.length === 0) {
       Alert.alert("Lỗi", "Không có sản phẩm nào được chọn để thanh toán.");
       navigation.goBack();
     }
   }, [selectedCartItems]);
-  
 
   useEffect(() => {
     const fetchBranchesAndShipments = async () => {
@@ -79,7 +80,7 @@ export default function Checkout({ route }) {
         const token = await AsyncStorage.getItem("token");
         const shipmentData = await getUserShipmentDetails(token);
         setShipments(shipmentData);
-        dispatch(setShipment(shipmentData[0])); // Chọn mặc định địa chỉ đầu tiên.
+        dispatch(setShipment(shipmentData[0]));
       } catch (error) {
         console.error("Error fetching branches or shipments:", error);
         Alert.alert("Error", "Unable to fetch delivery data.");
@@ -121,99 +122,181 @@ export default function Checkout({ route }) {
       <View style={styles.totalContainer}>
         <Text style={styles.totalText}>Tổng cộng:</Text>
         <Text style={styles.totalAmount}>
-        {formatCurrency(
-          selectedCartItems.reduce(
-            (acc, item) => acc + item.price * item.quantity,
-            0
-          )
-        )}
-      </Text>
+          {formatCurrency(
+            selectedCartItems.reduce(
+              (acc, item) => acc + item.price * item.quantity,
+              0
+            )
+          )}
+        </Text>
       </View>
     </View>
   );
 
-  const renderDeliveryOptions = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Phương thức giao hàng</Text>
-      <TouchableOpacity
-        style={[
-          styles.radioOption,
-          selectedOption === "HOME_DELIVERY" && styles.selectedOption,
-        ]}
-        onPress={() => handleOptionChange("HOME_DELIVERY")}
-      >
-        <Ionicons
-          name={
-            selectedOption === "HOME_DELIVERY"
-              ? "checkmark-circle"
-              : "ellipse-outline"
-          }
-          size={24}
-          color={COLORS.primary}
-        />
-        <Text style={styles.optionText}>Giao tận nhà</Text>
-      </TouchableOpacity>
-      {selectedOption === "HOME_DELIVERY" && (
-        <View style={styles.deliveryDetails}>
-          {shipments.length > 0 ? (
-            shipments.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={[
-                  styles.radioOption,
-                  shipment?.id === item.id && styles.selectedOption,
-                ]}
-                onPress={() => dispatch(setShipment(item))}
-              >
-                <Text style={styles.addressText}>{item.fullName}</Text>
-                <Text style={styles.addressText}>{item.address}</Text>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <Text>Không có địa chỉ giao hàng.</Text>
-          )}
-          <AddShipment />
-        </View>
-      )}
-      <TouchableOpacity
-        style={[
-          styles.radioOption,
-          selectedOption === "STORE_PICKUP" && styles.selectedOption,
-        ]}
-        onPress={() => handleOptionChange("STORE_PICKUP")}
-      >
-        <Ionicons
-          name={
-            selectedOption === "STORE_PICKUP"
-              ? "checkmark-circle"
-              : "ellipse-outline"
-          }
-          size={24}
-          color={COLORS.primary}
-        />
-        <Text style={styles.optionText}>Nhận tại cửa hàng</Text>
-      </TouchableOpacity>
-      {selectedOption === "STORE_PICKUP" && (
-        <View>
-          {branches.map((branch) => (
+const renderDeliveryOptions = () => (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>Phương thức giao hàng</Text>
+    <TouchableOpacity
+      style={[
+        styles.radioOption,
+        selectedOption === "HOME_DELIVERY" && styles.selectedOption,
+      ]}
+      onPress={() => handleOptionChange("HOME_DELIVERY")}
+    >
+      <Ionicons
+        name={
+          selectedOption === "HOME_DELIVERY"
+            ? "checkmark-circle"
+            : "ellipse-outline"
+        }
+        size={24}
+        color={COLORS.primary}
+      />
+      <Text style={styles.optionText}>Giao tận nhà</Text>
+    </TouchableOpacity>
+    {selectedOption === "HOME_DELIVERY" && (
+      <View style={styles.deliveryDetails}>
+        {/* Nút mở modal chọn địa chỉ */}
+        <TouchableOpacity
+          style={styles.selectButton}
+          onPress={() => setIsAddressModalVisible(true)}
+        >
+          <Text style={styles.selectButtonText}>
+            {shipment
+              ? `Địa chỉ đã chọn: ${shipment.address}`
+              : "Chọn địa chỉ của bạn"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Nút thêm địa chỉ mới */}
+        <AddShipment />
+      </View>
+    )}
+    <TouchableOpacity
+      style={[
+        styles.radioOption,
+        selectedOption === "STORE_PICKUP" && styles.selectedOption,
+      ]}
+      onPress={() => handleOptionChange("STORE_PICKUP")}
+    >
+      <Ionicons
+        name={
+          selectedOption === "STORE_PICKUP"
+            ? "checkmark-circle"
+            : "ellipse-outline"
+        }
+        size={24}
+        color={COLORS.primary}
+      />
+      <Text style={styles.optionText}>Nhận tại cửa hàng</Text>
+    </TouchableOpacity>
+    {selectedOption === "STORE_PICKUP" && (
+      <View>
+        {branches.map((branch) => (
+          <TouchableOpacity
+            key={branch.id}
+            style={[
+              styles.radioOption,
+              selectedBranchId === branch.id && styles.selectedOption,
+            ]}
+            onPress={() => setSelectedBranchId(branch.id)}
+          >
+            <Text>{branch.branchName}</Text>
+            <Text>{branch.location}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    )}
+  </View>
+);
+
+
+const renderAddressModal = () => (
+  <Modal
+    visible={isAddressModalVisible}
+    animationType="slide"
+    transparent={true}
+    onRequestClose={() => setIsAddressModalVisible(false)}
+  >
+    <View style={styles.modalContainer}>
+      <View style={styles.modalContent}>
+        <Text style={styles.modalTitle}>Chọn địa chỉ</Text>
+        <ScrollView>
+          {shipments.map((item) => (
             <TouchableOpacity
-              key={branch.id}
+              key={item.id}
               style={[
-                styles.radioOption,
-                selectedBranchId === branch.id && styles.selectedOption,
+                styles.addressOption,
+                shipment?.id === item.id && styles.selectedAddressOption,
               ]}
-              onPress={() => setSelectedBranchId(branch.id)}
+              onPress={() => {
+                console.log("Selected Address:", item); // Log để kiểm tra
+                dispatch(setShipment(item)); // Cập nhật Redux State
+                setIsAddressModalVisible(false); // Đóng modal
+              }}
             >
-              <Text>{branch.branchName}</Text>
-              <Text>{branch.location}</Text>
+              <Text style={styles.addressText}>{item.fullName}</Text>
+              <Text style={styles.addressText}>{item.address}</Text>
             </TouchableOpacity>
           ))}
-        </View>
-      )}
+        </ScrollView>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => setIsAddressModalVisible(false)}
+        >
+          <Text style={styles.closeButtonText}>Đóng</Text>
+        </TouchableOpacity>
+      </View>
     </View>
-  );
+  </Modal>
+);
 
   
+
+  const renderGenderModal = () => (
+    <Modal
+      visible={isGenderModalVisible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setIsGenderModalVisible(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Chọn giới tính</Text>
+          <TouchableOpacity
+            style={[
+              styles.genderOption,
+              gender === "Anh" && styles.selectedGenderOption,
+            ]}
+            onPress={() => {
+              setGender("Anh");
+              setIsGenderModalVisible(false);
+            }}
+          >
+            <Text style={styles.genderText}>Anh</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.genderOption,
+              gender === "Chị" && styles.selectedGenderOption,
+            ]}
+            onPress={() => {
+              setGender("Chị");
+              setIsGenderModalVisible(false);
+            }}
+          >
+            <Text style={styles.genderText}>Chị</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setIsGenderModalVisible(false)}
+          >
+            <Text style={styles.closeButtonText}>Đóng</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -262,6 +345,8 @@ export default function Checkout({ route }) {
           selectedCartItems={cartItems}
         />
       </ScrollView>
+      {renderAddressModal()}
+      {renderGenderModal()}
     </SafeAreaView>
   );
 }
@@ -318,6 +403,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.lightGray,
     borderColor: COLORS.primary,
   },
+  optionText: {
+    fontSize: 16,
+    marginLeft: 8,
+  },
   addressText: {
     fontSize: 16,
     color: COLORS.dark,
@@ -371,5 +460,90 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.secondary,
+  },
+
+  selectButtonGender: {
+    border: "1px solid COLORS.primary",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
+  selectButtonText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  selectButton: {
+    backgroundColor: COLORS.primary,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  selectButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  selectedAddress: {
+    backgroundColor: COLORS.lightGray,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    padding: 20,
+    borderRadius: 8,
+    width: "80%",
+    maxHeight: "80%",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  addressOption: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  selectedAddressOption: {
+    backgroundColor: COLORS.lightGray,
+  },
+  genderOption: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  selectedGenderOption: {
+    backgroundColor: COLORS.lightGray,
+  },
+  genderText: {
+    fontSize: 16,
+    color: COLORS.dark,
+  },
+  closeButton: {
+    backgroundColor: COLORS.primary,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  closeButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  deliveryDetails: {
+    marginTop: 8,
   },
 });
