@@ -10,7 +10,7 @@ import {
   mobileSignUp,
   forgotPasswordRequestMobile,
   verifyAccountMobileAPI,
-  resetPasswordMobile,
+  resetPasswordMobile,sendOtpRequestMobile
 } from "../api/apiAuth";
 
 export const authenticateUser = async (username, password) => {
@@ -66,15 +66,17 @@ export const verifyAccountMobile = async ({ username, email, OtpCode }) => {
   }
 };
 
-export const resendOtpRequest = async (data) => {
+export const resendOtpRequest = async ({ userName, email }) => {
   try {
-    const response = await sendOtpRequestMobile(data);
+    const response = await sendOtpRequestMobile({ userName, email });
     return response.data;
   } catch (error) {
-    console.error("Error resending OTP:", error);
-    throw error.response ? error.response.data : error;
+    console.error("Error in resendOtpRequest:", error.response?.data || error.message);
+    throw error.response?.data || error;
   }
 };
+
+
 
 export const performPasswordReset = async ({ otpCode, email, newPassword }) => {
   try {

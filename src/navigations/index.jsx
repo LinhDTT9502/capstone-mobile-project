@@ -14,7 +14,7 @@ import Checkout from "../screens/HomeScreen/Checkout";
 import EditProfile from "../screens/EditProfile/index";
 import ResetPasswordScreen from "../screens/Auth/ResetPassword";
 import MyOrderScreen from "../screens/MyOrder";
-import AccountResetPassword from "../screens/Auth/AccountResetPassword";
+import AccountResetPassword from "../screens/Auth/ResetPasswordProfile";
 import MyOrder from "../screens/MyOrder/index";
 import Policy from "../screens/Policy/index";
 import UserShipment from "../screens/UserShipment/index";
@@ -22,7 +22,7 @@ import CategoryProduct from "../screens/CategoryProduct/index";
 import VerifyOtpScreen from "../screens/VerifyOtpScreen/index";
 import BrandProduct from "../screens/BrandProduct/index";
 import BlogDetail from "../screens/Blog/BlogDetail/index";
-import ResetPasswordProfile from "../screens/Auth/AccountResetPassword";
+import ResetPasswordProfile from "../screens/Auth/ResetPasswordProfile";
 
 const Stack = createStackNavigator();
 

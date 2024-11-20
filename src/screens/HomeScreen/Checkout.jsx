@@ -230,9 +230,9 @@ const renderAddressModal = () => (
                 shipment?.id === item.id && styles.selectedAddressOption,
               ]}
               onPress={() => {
-                console.log("Selected Address:", item); // Log để kiểm tra
-                dispatch(setShipment(item)); // Cập nhật Redux State
-                setIsAddressModalVisible(false); // Đóng modal
+                console.log("Selected Address:", item);
+                dispatch(setShipment(item));
+                setIsAddressModalVisible(false);
               }}
             >
               <Text style={styles.addressText}>{item.fullName}</Text>

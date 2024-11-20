@@ -69,13 +69,13 @@ export default function Cart() {
         try {
           const storedToken = await AsyncStorage.getItem("token");
           setToken(storedToken);
-
+  
           if (storedToken) {
-            // Lấy giỏ hàng từ API nếu có token
+            // Lấy giỏ hàng từ API
             const customerCart = await getUserCart(storedToken);
             setCartItems(customerCart);
           } else {
-            // Redux để hiển thị giỏ hàng cho khách
+            // Lấy giỏ hàng từ Redux cho khách vãng lai
             setCartItems(guestCartItems);
           }
         } catch (error) {
@@ -83,10 +83,11 @@ export default function Cart() {
           Alert.alert("Lỗi", "Không thể tải giỏ hàng. Vui lòng thử lại.");
         }
       };
-
+  
       fetchCart();
     }, [guestCartItems])
   );
+  
 
   // useEffect(() => {
   //   if (token && customerCartItems) {
@@ -222,8 +223,10 @@ export default function Cart() {
     const selectedCartItems = cartItems.filter((item) =>
       selectedItems.includes(item.id)
     );
+
     navigation.navigate("Checkout", { selectedCartItems });
   };
+
   const handleRent = () => {
     if (selectedItems.length === 0) {
       Alert.alert("Lỗi", "Vui lòng chọn sản phẩm để thuê.");

@@ -19,16 +19,18 @@ const CheckoutBtn = ({
   const navigation = useNavigation();
 
   const handleCheckout = async () => {
+    console.log("Selected shipment:", shipment);
+  
     if (selectedOption === "HOME_DELIVERY" && !shipment) {
       Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng.");
       return;
     }
-
+  
     if (selectedOption === "STORE_PICKUP" && !selectedBranchId) {
       Alert.alert("Lỗi", "Vui lòng chọn chi nhánh nhận hàng.");
       return;
     }
-
+  
     const orderData = {
       ...userData,
       deliveryMethod: selectedOption,
@@ -38,7 +40,7 @@ const CheckoutBtn = ({
         unitPrice: item.price,
       })),
     };
-
+  
     try {
       const response = await placedOrder(orderData);
       Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
@@ -46,6 +48,7 @@ const CheckoutBtn = ({
       Alert.alert("Lỗi", error.message || "Không thể hoàn tất đơn hàng.");
     }
   };
+  
 
   return (
     <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>

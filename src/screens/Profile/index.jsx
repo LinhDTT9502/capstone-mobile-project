@@ -53,7 +53,11 @@ export default function Account() {
   // };
 
   const handleChangePassword = () => {
-    navigation.navigate("AccountResetPassword", { otpCode, email });
+    if (user?.Email) {
+      navigation.navigate("AccountResetPassword", { email: user.Email });
+    } else {
+      Alert.alert("Lỗi", "Không tìm thấy email của bạn.");
+    }
   };
 
   // useEffect(() => {
@@ -283,5 +287,3 @@ export default function Account() {
     </SafeAreaView>
   );
 }
-
-

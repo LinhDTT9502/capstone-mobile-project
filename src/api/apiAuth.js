@@ -115,10 +115,11 @@ export const resetPasswordMobile = ({ otpCode, email, newPassword }) => {
     },
   });
 };
-export const sendOtpRequestMobile = (data) => {
-  return axios.post(`${API_BASE_URL}/send-otp-request-mobile`, data, {
+export const sendOtpRequestMobile = ({ userName, email }) => {
+  return axios.post(`${API_BASE_URL}/send-otp-request-mobile`, null, {
+    params: { userName, email },
     headers: {
-      'Content-Type': 'application/json'
-    }
+      "Content-Type": "application/json",
+    },
   });
 };
