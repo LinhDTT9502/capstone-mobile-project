@@ -102,6 +102,15 @@ export default function Account() {
     navigation.navigate("LandingPage");
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("Ảnh mới đã được đồng bộ:", user.ImgAvatarPath);
+    }, [user.ImgAvatarPath])
+  );
+  useEffect(() => {
+    console.log("Dữ liệu ảnh mới nhất từ Redux:", user.ImgAvatarPath);
+  }, [user.ImgAvatarPath]);
+  
   if (!user) {
     return (
       <View style={styles.container}>
@@ -148,7 +157,7 @@ export default function Account() {
         <View style={styles.profileSection}>
           <Image
             source={{
-              uri: user.profileImage || "https://via.placeholder.com/100",
+              uri: user?.ImgAvatarPath || "https://via.placeholder.com/100",
             }}
             style={styles.profileImage}
           />

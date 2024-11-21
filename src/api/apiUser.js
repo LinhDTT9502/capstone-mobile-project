@@ -63,3 +63,23 @@ export const verifyEmail = (token) => {
     params: { token },
   });
 };
+
+// POST upload avatar
+export const uploadAvatarApi = (userId, avatarFile) => {
+  const formData = new FormData();
+  formData.append("userId", userId);
+  formData.append("Avatar", {
+    uri: avatarFile.uri,
+    name: avatarFile.name || "avatar.jpg",
+    type: avatarFile.type || "image/jpeg",
+  });
+
+  console.log("Uploading FormData:", formData);
+
+  return axiosInstance.post(`${API_BASE_URL}/upload-avatar`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+

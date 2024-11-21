@@ -21,6 +21,7 @@ const authSlice = createSlice({
     },
     updateUser: (state, action) => {
       if (state.user) {
+        console.log("Updating user with payload:", action.payload);
         state.user = { ...state.user, ...action.payload };
       }
     },

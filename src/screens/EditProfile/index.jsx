@@ -18,6 +18,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { selectUser, updateUser } from "../../redux/slices/authSlice";
 import { fetchUserProfile, saveUserProfile } from "../../services/userService";
 import { Picker } from "@react-native-picker/picker";
+import * as ImagePicker from "expo-image-picker";
+import { uploadAvatar } from "../../services/userService";
 
 export default function EditProfile() {
   const navigation = useNavigation();
@@ -31,6 +33,85 @@ export default function EditProfile() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
+
+  const handleAvatarChange = async (file) => {
+    if (!file) {
+      Alert.alert("Thông báo", "Vui lòng chọn ảnh trước khi tải lên.");
+      return;
+    }
+  
+    try {
+      const response = await uploadAvatar(user.UserId, file);
+      
+      // console.log("Response upload avatar:", response);
+  
+      if (response) {
+        Alert.alert("Thành công", "Ảnh đại diện đã được cập nhật.");
+
+        const updatedProfile = await fetchUserProfile(user.UserId);
+        dispatch(updateUser({ ...user, ImgAvatarPath: response.imgAvatarPath }));
+
+        setFormData((prev) => ({
+          ...prev,
+          ImgAvatarPath: response.imgAvatarPath,
+        }));
+      }
+    } catch (error) {
+      console.error("Error in handleAvatarChange:", error?.response || error?.message);
+      const errorMessage =
+        error?.response?.data?.message || "Không thể tải lên ảnh đại diện.";
+      Alert.alert("Lỗi", errorMessage);
+    }
+  };
+  
+
+  const requestMediaLibraryPermission = async () => {
+    try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Cấp quyền bị từ chối",
+          "Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh. Vui lòng cấp quyền trong cài đặt thiết bị."
+        );
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error requesting media library permissions:", error);
+      return false;
+    }
+  };
+
+  const pickImage = async () => {
+    // lấy quyền
+    const hasPermission = await requestMediaLibraryPermission();
+    if (!hasPermission) return null;
+  
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1], // Chọn ảnh vuông
+        quality: 0.5, // Nén chất lượng ảnh
+      });
+  
+      if (!result.canceled) {
+        const file = {
+          uri: result.assets[0].uri,
+          name: result.assets[0].uri.split("/").pop(),
+          type: "image/jpeg",
+        };
+        return file;
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Lỗi", "Không thể chọn ảnh.");
+    }
+    return null;
+  };
+  
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -39,6 +120,7 @@ export default function EditProfile() {
         if (profileData) {
           const newData = {
             UserName: profileData.userName || "",
+            ImgAvatarPath: profileData.imgAvatarPath || "", // Gán đúng key
             FullName: profileData.fullName || "",
             Gender: profileData.gender || "",
             BirthDate: profileData.dob || "",
@@ -48,12 +130,13 @@ export default function EditProfile() {
             IsEmailVerified: profileData.emailConfirmed || false,
             IsPhoneVerified: profileData.phoneConfirmed || false,
           };
-          setFormData(newData);
+          setFormData(newData); // Cập nhật formData
           setInitialData(newData);
         } else {
           Alert.alert("Thông báo", "Không có dữ liệu người dùng.");
         }
       } catch (error) {
+        console.error("Error fetching user profile:", error);
         Alert.alert("Lỗi", "Không thể tải thông tin người dùng.");
       }
     };
@@ -248,10 +331,21 @@ export default function EditProfile() {
       <ScrollView style={styles.content}>
         <View style={styles.profileImageContainer}>
           <Image
-            source={{ uri: "https://via.placeholder.com/150" }}
+            source={{
+              uri: `${formData.ImgAvatarPath}?t=${new Date().getTime()}`,
+            }}
             style={styles.profileImage}
           />
-          <TouchableOpacity style={styles.changePhotoButton}>
+          <TouchableOpacity
+            style={styles.changePhotoButton}
+            onPress={async () => {
+              const selectedFile = await pickImage();
+              if (selectedFile) {
+                setAvatarFile(selectedFile);
+                await handleAvatarChange(selectedFile);
+              }
+            }}
+          >
             <FontAwesome name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>

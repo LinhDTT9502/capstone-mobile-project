@@ -2,6 +2,7 @@
 import {
   getUserProfile as getUserProfile,
   updateProfileApi,
+  uploadAvatarApi,
 } from "../api/apiUser";
 
 export const fetchUserProfile = async (userId) => {
@@ -41,5 +42,16 @@ export const sendVerificationEmail = async (userId) => {
     return response.data;
   } catch (error) {
     throw new Error("Lỗi gửi lại email xác minh");
+  }
+};
+
+export const uploadAvatar = async (userId, avatarFile) => {
+  try {
+    const response = await uploadAvatarApi(userId, avatarFile);
+    // console.log("Upload Avatar Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading avatar:", error?.response || error?.message);
+    throw error;
   }
 };
