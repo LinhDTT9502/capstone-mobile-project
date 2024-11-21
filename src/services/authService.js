@@ -10,7 +10,8 @@ import {
   mobileSignUp,
   forgotPasswordRequestMobile,
   verifyAccountMobileAPI,
-  resetPasswordMobile,sendOtpRequestMobile
+  resetPasswordMobile,sendOtpRequestMobile,
+  updatePasswordAPI
 } from "../api/apiAuth";
 
 export const authenticateUser = async (username, password) => {
@@ -156,5 +157,15 @@ export const changeUserPassword = async (data) => {
   } catch (error) {
     console.error("Error changing password:", error);
     throw error.response ? error.response.data : error;
+  }
+};
+
+export const updatePassword = async (id, newPassword) => {
+  try {
+    const response = await updatePasswordAPI(id, newPassword);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating password:", error.response?.data || error.message);
+    throw error;
   }
 };

@@ -123,3 +123,16 @@ export const sendOtpRequestMobile = ({ userName, email }) => {
     },
   });
 };
+
+export const updatePasswordAPI = (id, newPassword) => {
+  return axios.put(
+    `https://twosportapi-295683427295.asia-southeast2.run.app/api/User/update-password`,
+    { newPassword },
+    {
+      params: { id },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};
