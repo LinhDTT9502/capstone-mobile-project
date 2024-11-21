@@ -39,73 +39,107 @@ const LoginScreen = () => {
     checkLoggedIn();
   }, [navigation]);
 
+  // const handleLogin = async () => {
+  //   setLoading(true);
+  //   try {
+  //     if (username && password) {
+  //       // Gọi API authenticateUser
+  //       const decoded = await authenticateUser(username, password);
+
+  //       // console.log("Decoded user data:", decoded);
+
+  //       // Kiểm tra nếu email chưa được xác minh
+  //       if (decoded.EmailConfirmed === "False" || decoded.EmailConfirmed === false) {
+  //         if (!decoded.UserName || !decoded.Email) {
+  //           throw new Error("UserName hoặc Email bị thiếu trong phản hồi.");
+  //         }
+
+  //         // Gửi OTP nếu email chưa được xác minh
+  //         await resendOtpRequest({
+  //           userName: decoded.UserName,
+  //           email: decoded.Email,
+  //         });
+
+  //         Alert.prompt(
+  //           "Xác minh tài khoản",
+  //           "Nhập mã OTP đã được gửi đến email của bạn:",
+  //           [
+  //             {
+  //               text: "Hủy",
+  //               onPress: () => console.log("Hủy xác minh OTP"),
+  //               style: "cancel",
+  //             },
+  //             {
+  //               text: "Xác nhận",
+  //               onPress: async (otpCode) => {
+  //                 try {
+  //                   // Gọi API để xác minh OTP
+  //                   await verifyAccountMobile({
+  //                     username: decoded.UserName,
+  //                     email: decoded.Email,
+  //                     OtpCode: otpCode,
+  //                   });
+  //                   Alert.alert("Thành công", "Tài khoản đã được xác minh!");
+  //                   navigation.navigate("HomeController");
+  //                 } catch (error) {
+  //                   console.error("OTP Verification Error:", error);
+  //                   Alert.alert("Lỗi", "Mã OTP không hợp lệ. Vui lòng thử lại.");
+  //                 }
+  //               },
+  //             },
+  //           ],
+  //           "plain-text"
+  //         );
+  //       } else {
+  //         // Email đã được xác minh, tiếp tục đăng nhập
+  //         dispatch(login(decoded));
+  //         navigation.navigate("HomeController");
+  //       }
+  //     } else {
+  //       Alert.alert("Đăng nhập thất bại", "Vui lòng nhập tên đăng nhập và mật khẩu.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Login error:", error.message || error.response?.data || error);
+  //     Alert.alert("Lỗi", error.message || "Thông tin đăng nhập không hợp lệ.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleLogin = async () => {
-    setLoading(true);
     try {
-      if (username && password) {
-        // Gọi API authenticateUser
-        const decoded = await authenticateUser(username, password);
-  
-        // console.log("Decoded user data:", decoded);
-  
-        // Kiểm tra nếu email chưa được xác minh
-        if (decoded.EmailConfirmed === "False" || decoded.EmailConfirmed === false) {
-          if (!decoded.UserName || !decoded.Email) {
-            throw new Error("UserName hoặc Email bị thiếu trong phản hồi.");
-          }
-  
-          // Gửi OTP nếu email chưa được xác minh
-          await resendOtpRequest({
-            userName: decoded.UserName,
-            email: decoded.Email,
-          });
-  
-          Alert.prompt(
-            "Xác minh tài khoản",
-            "Nhập mã OTP đã được gửi đến email của bạn:",
-            [
-              {
-                text: "Hủy",
-                onPress: () => console.log("Hủy xác minh OTP"),
-                style: "cancel",
+      const response = await authenticateUser(username, password);
+
+      if (response.isUnconfirmed) {
+        Alert.alert(
+          "Tài khoản chưa xác thực",
+          "Bạn có muốn xác thực ngay bây giờ không?",
+          [
+            { text: "Hủy", style: "cancel" },
+            {
+              text: "Xác thực",
+              onPress: () => {
+                navigation.navigate("VerifyAccount", { userName: username });
               },
-              {
-                text: "Xác nhận",
-                onPress: async (otpCode) => {
-                  try {
-                    // Gọi API để xác minh OTP
-                    await verifyAccountMobile({
-                      username: decoded.UserName,
-                      email: decoded.Email,
-                      OtpCode: otpCode,
-                    });
-                    Alert.alert("Thành công", "Tài khoản đã được xác minh!");
-                    navigation.navigate("HomeController");
-                  } catch (error) {
-                    console.error("OTP Verification Error:", error);
-                    Alert.alert("Lỗi", "Mã OTP không hợp lệ. Vui lòng thử lại.");
-                  }
-                },
-              },
-            ],
-            "plain-text"
-          );
-        } else {
-          // Email đã được xác minh, tiếp tục đăng nhập
-          dispatch(login(decoded));
-          navigation.navigate("HomeController");
-        }
-      } else {
-        Alert.alert("Đăng nhập thất bại", "Vui lòng nhập tên đăng nhập và mật khẩu.");
+            },
+          ]
+        );
+        return; // Thoát xử lý đăng nhập
       }
+  
+
+      // Đăng nhập thành công
+      const decoded = await authenticateUser(username, password);
+      dispatch(login(decoded));
+      navigation.navigate("HomeController");
     } catch (error) {
-      console.error("Login error:", error.message || error.response?.data || error);
-      Alert.alert("Lỗi", error.message || "Thông tin đăng nhập không hợp lệ.");
-    } finally {
-      setLoading(false);
+      console.error("Login error:", error);
+      Alert.alert(
+        "Lỗi",
+        error.response?.data?.message || "Đăng nhập thất bại."
+      );
     }
   };
-  
 
   const togglePasswordVisibility = () => {
     setSecureTextEntry(!secureTextEntry);

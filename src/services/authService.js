@@ -17,6 +17,16 @@ import {
 export const authenticateUser = async (username, password) => {
   try {
     const response = await signIn(username, password);
+
+    if (!response.data || response.data.data === null) {
+      const message = response.data?.message || "Đăng nhập thất bại.";
+      if (message === "Your account is not confirmed.") {
+        // Trả về thông tin đặc biệt để xử lý trong màn hình Login
+        return { isUnconfirmed: true, email: response.data?.email };
+      }
+      throw new Error(message); // Nếu lỗi khác
+    }
+
     const decoded = jwtDecode(response.data.data.token);
     await AsyncStorage.setItem("token", response.data.data.token);
     await AsyncStorage.setItem("refreshToken", response.data.data.refreshToken);
@@ -51,12 +61,14 @@ export const requestPasswordReset = async (email) => {
 };
 
 export const verifyAccountMobile = async ({ username, email, OtpCode }) => {
+  console.log("Payload sent to API:", { username, email, otpCode: OtpCode });
   try {
     const response = await verifyAccountMobileAPI({
       username,
       email,
       otpCode: OtpCode,
     });
+    console.log("API Response in verifyAccountMobile:", response.data);
     return response.data;
   } catch (error) {
     console.error(
@@ -67,9 +79,10 @@ export const verifyAccountMobile = async ({ username, email, OtpCode }) => {
   }
 };
 
-export const resendOtpRequest = async ({ userName, email }) => {
+export const sendOtpRequest = async ({ userName, email }) => {
   try {
     const response = await sendOtpRequestMobile({ userName, email });
+    console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error in resendOtpRequest:", error.response?.data || error.message);

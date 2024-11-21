@@ -23,6 +23,7 @@ import VerifyOtpScreen from "../screens/VerifyOtpScreen/index";
 import BrandProduct from "../screens/BrandProduct/index";
 import BlogDetail from "../screens/Blog/BlogDetail/index";
 import ResetPasswordProfile from "../screens/Auth/ResetPasswordProfile";
+import VerifyAccountScreen from "../screens/Login/VerifyAccount/index";
 
 const Stack = createStackNavigator();
 
@@ -46,6 +47,11 @@ export default function MainContainer() {
         name="AccountResetPassword"
         component={AccountResetPassword}
       />
+      <Stack.Screen
+        name="VerifyAccount"
+        component={VerifyAccountScreen}
+      />
+      
       <Stack.Screen name="MyOrder" component={MyOrder} />
       <Stack.Screen name="Policy" component={Policy} />
       <Stack.Screen name="UserShipment" component={UserShipment} />
