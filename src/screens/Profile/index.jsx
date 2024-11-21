@@ -104,16 +104,16 @@ export default function Account() {
 
   useFocusEffect(
     React.useCallback(() => {
-      console.log("Ảnh mới đã được đồng bộ:", user.ImgAvatarPath);
+      // console.log("Ảnh mới đã được đồng bộ:", user.ImgAvatarPath);
     }, [user.ImgAvatarPath])
   );
   useEffect(() => {
-    console.log("Dữ liệu ảnh mới nhất từ Redux:", user.ImgAvatarPath);
+    // console.log("Dữ liệu ảnh mới nhất từ Redux:", user.ImgAvatarPath);
   }, [user.ImgAvatarPath]);
   
-  if (!user) {
+  if (!user || noTokenModalVisible) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, styles.modalOverlay]}>
         <Modal
           visible={noTokenModalVisible}
           transparent={true}

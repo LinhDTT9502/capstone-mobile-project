@@ -24,6 +24,9 @@ import BrandProduct from "../screens/BrandProduct/index";
 import BlogDetail from "../screens/Blog/BlogDetail/index";
 import ResetPasswordProfile from "../screens/Auth/ResetPasswordProfile";
 import VerifyAccountScreen from "../screens/Login/VerifyAccount/index";
+import PolicySection from "../screens/Policy/PolicySection/index";
+import PolicyDetail from "../screens/Policy/PolicyDetail/index";
+import BranchList from "../screens/BranchList/index";
 
 const Stack = createStackNavigator();
 
@@ -43,6 +46,9 @@ export default function MainContainer() {
       <Stack.Screen name="ProductDetail" component={ProductDetail} />
       <Stack.Screen name="Checkout" component={Checkout} />
       <Stack.Screen name="EditProfile" component={EditProfile} />
+      <Stack.Screen name="PolicyDetail" component={PolicyDetail} />
+      <Stack.Screen name="PolicySection" component={PolicySection} />
+      <Stack.Screen name="BranchList" component={BranchList} />
       <Stack.Screen
         name="AccountResetPassword"
         component={AccountResetPassword}

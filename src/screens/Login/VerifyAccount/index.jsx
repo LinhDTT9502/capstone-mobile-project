@@ -41,7 +41,7 @@ const VerifyAccountScreen = ({ navigation }) => {
     try {
       setLoading(true);
       const response = await sendOtpRequest({ userName, email });
-      console.log("API Response in handleSendOtp:", response);
+      // console.log("API Response in handleSendOtp:", response);
 
       if (response.message === "Reset password OTP email sent successfully.") {
         setLoading(false);
@@ -78,7 +78,7 @@ const VerifyAccountScreen = ({ navigation }) => {
         OtpCode: otpString,
       });
   
-      console.log("OTP Verification Response:", response);
+      // console.log("OTP Verification Response:", response);
   
       // Check the success condition based on the message from the API
       if (response.message === "Verify successfully") {

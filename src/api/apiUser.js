@@ -74,7 +74,7 @@ export const uploadAvatarApi = (userId, avatarFile) => {
     type: avatarFile.type || "image/jpeg",
   });
 
-  console.log("Uploading FormData:", formData);
+  // console.log("Uploading FormData:", formData);
 
   return axiosInstance.post(`${API_BASE_URL}/upload-avatar`, formData, {
     headers: {

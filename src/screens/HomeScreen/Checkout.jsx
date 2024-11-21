@@ -230,7 +230,7 @@ const renderAddressModal = () => (
                 shipment?.id === item.id && styles.selectedAddressOption,
               ]}
               onPress={() => {
-                console.log("Selected Address:", item);
+                // console.log("Selected Address:", item);
                 dispatch(setShipment(item));
                 setIsAddressModalVisible(false);
               }}

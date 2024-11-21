@@ -61,14 +61,14 @@ export const requestPasswordReset = async (email) => {
 };
 
 export const verifyAccountMobile = async ({ username, email, OtpCode }) => {
-  console.log("Payload sent to API:", { username, email, otpCode: OtpCode });
+  // console.log("Payload sent to API:", { username, email, otpCode: OtpCode });
   try {
     const response = await verifyAccountMobileAPI({
       username,
       email,
       otpCode: OtpCode,
     });
-    console.log("API Response in verifyAccountMobile:", response.data);
+    // console.log("API Response in verifyAccountMobile:", response.data);
     return response.data;
   } catch (error) {
     console.error(
@@ -82,7 +82,7 @@ export const verifyAccountMobile = async ({ username, email, OtpCode }) => {
 export const sendOtpRequest = async ({ userName, email }) => {
   try {
     const response = await sendOtpRequestMobile({ userName, email });
-    console.log("API Response:", response.data);
+    // console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error in resendOtpRequest:", error.response?.data || error.message);

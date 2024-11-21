@@ -124,7 +124,7 @@ const LoginScreen = () => {
             },
           ]
         );
-        return; // Thoát xử lý đăng nhập
+        return;
       }
   
 
