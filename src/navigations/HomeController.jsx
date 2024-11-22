@@ -8,6 +8,7 @@ import ProductList from '../screens/ProductList/index';
 import Cart from '../screens/CartList/index';
 import Account from '../screens/Profile/index';
 import Blog from '../screens/Blog/index';
+import Bookmark from '../screens/Bookmark/index';
 
 const Tab = createBottomTabNavigator();
 
@@ -45,6 +46,8 @@ export default function HomeController() {
             iconName = focused ? 'newspaper' : 'newspaper-outline';
           } else if (route.name === 'Account') {
             iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Bookmark') {
+            iconName = focused ? 'bookmark' : 'bookmark-outline';
           }
 
           return (
@@ -61,7 +64,8 @@ export default function HomeController() {
             {route.name === 'LandingPage' ? 'Trang chủ' : 
              route.name === 'ProductList' ? 'Sản phẩm' : 
              route.name === 'Blog' ? 'Blog' : 
-             route.name === 'Cart' ? 'Giỏ hàng' : 'Tài khoản'}
+             route.name === 'Cart' ? 'Giỏ hàng' :
+              route.name === 'Bookmark' ? 'Đánh dấu' : 'Tài khoản'}
           </Text>
         ),
         tabBarActiveTintColor: '#4A90E2',
@@ -74,6 +78,7 @@ export default function HomeController() {
       <Tab.Screen name="ProductList" component={ProductList} />
       <Tab.Screen name="Cart" component={Cart} />
       <Tab.Screen name="Blog" component={Blog} />
+      <Tab.Screen name="Bookmark" component={Bookmark} />
       <Tab.Screen name="Account" component={Account} />
     </Tab.Navigator>
   );

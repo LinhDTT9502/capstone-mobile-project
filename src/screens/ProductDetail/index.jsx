@@ -21,6 +21,7 @@ import RentButton from "../../components/RentButton";
 import BuyNowButton from "../../components/BuyNowButton";
 import Comment from "../../components/ProductDetail/Comment";
 import LikeButton from "../../components/ProductDetail/LikeButton";
+import BookmarkComponent from "../../components/BookmarkComponent";
 
 import {
   fetchProductById,
@@ -46,7 +47,7 @@ export default function ProductDetail() {
   const navigation = useNavigation();
   const route = useRoute();
   const { productId } = route.params;
-
+  const [token, setToken] = useState(null);
   const [product, setProduct] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [startDate, setStartDate] = useState(
@@ -239,6 +240,19 @@ export default function ProductDetail() {
   };
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem("token");
+        setToken(storedToken); // Lưu token vào state
+      } catch (error) {
+        console.error("Error fetching token:", error);
+        setToken(null);
+      }
+    };
+
+    fetchToken();
+  }, []);
 
   useEffect(() => {
     loadProductDetails();
@@ -439,9 +453,23 @@ export default function ProductDetail() {
 
       {item.type === "info" && (
         <View style={styles.productInfo}>
-          <Text style={styles.productName}>
-            {product.productName || "Tên sản phẩm không có"}
-          </Text>
+          <View style={styles.rowContainer}>
+            <Text style={styles.productName}>
+              {product.productName || "Tên sản phẩm không có"}
+            </Text>
+            <BookmarkComponent
+  item={{
+    id: product.id,
+    title: product.title,
+    price: product.price,
+    imageUrl: product.imgAvatarPath,
+  }}
+  token={token} // Token của người dùng
+  style={{ marginLeft: 16 }}
+  iconSize={24}
+  color="#FF9900"
+/>
+          </View>
           <Text style={styles.productTag}>For exchange</Text>
           <View style={styles.priceContainer}>
             <View>

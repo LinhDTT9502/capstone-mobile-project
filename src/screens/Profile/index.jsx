@@ -102,14 +102,14 @@ export default function Account() {
     navigation.navigate("LandingPage");
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      // console.log("Ảnh mới đã được đồng bộ:", user.ImgAvatarPath);
-    }, [user.ImgAvatarPath])
-  );
-  useEffect(() => {
-    // console.log("Dữ liệu ảnh mới nhất từ Redux:", user.ImgAvatarPath);
-  }, [user.ImgAvatarPath]);
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     // console.log("Ảnh mới đã được đồng bộ:", user.ImgAvatarPath);
+  //   }, [user.ImgAvatarPath])
+  // );
+  // useEffect(() => {
+  //   // console.log("Dữ liệu ảnh mới nhất từ Redux:", user.ImgAvatarPath);
+  // }, [user.ImgAvatarPath]);
   
   if (!user || noTokenModalVisible) {
     return (
@@ -155,12 +155,12 @@ export default function Account() {
         </View>
 
         <View style={styles.profileSection}>
-          <Image
+          {/* <Image
             source={{
               uri: user?.ImgAvatarPath || "https://via.placeholder.com/100",
             }}
             style={styles.profileImage}
-          />
+          /> */}
           <Text style={styles.profileName}>{user.FullName}</Text>
           <Text style={styles.profileId}>Mã tài khoản: {user.UserId}</Text>
         </View>

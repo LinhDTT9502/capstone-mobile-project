@@ -11,6 +11,13 @@ const COLORS = {
 };
 
 const styles = StyleSheet.create({
+  rowContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  
   container: {
     flex: 1,
     paddingTop: 30,
