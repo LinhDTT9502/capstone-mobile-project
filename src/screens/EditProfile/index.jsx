@@ -40,17 +40,19 @@ export default function EditProfile() {
       Alert.alert("Thông báo", "Vui lòng chọn ảnh trước khi tải lên.");
       return;
     }
-  
+
     try {
       const response = await uploadAvatar(user.UserId, file);
-      
+
       // console.log("Response upload avatar:", response);
-  
+
       if (response) {
         Alert.alert("Thành công", "Ảnh đại diện đã được cập nhật.");
 
         const updatedProfile = await fetchUserProfile(user.UserId);
-        dispatch(updateUser({ ...user, ImgAvatarPath: response.imgAvatarPath }));
+        dispatch(
+          updateUser({ ...user, ImgAvatarPath: response.imgAvatarPath })
+        );
 
         setFormData((prev) => ({
           ...prev,
@@ -58,13 +60,15 @@ export default function EditProfile() {
         }));
       }
     } catch (error) {
-      console.error("Error in handleAvatarChange:", error?.response || error?.message);
+      console.error(
+        "Error in handleAvatarChange:",
+        error?.response || error?.message
+      );
       const errorMessage =
         error?.response?.data?.message || "Không thể tải lên ảnh đại diện.";
       Alert.alert("Lỗi", errorMessage);
     }
   };
-  
 
   const requestMediaLibraryPermission = async () => {
     try {
@@ -88,7 +92,7 @@ export default function EditProfile() {
     // lấy quyền
     const hasPermission = await requestMediaLibraryPermission();
     if (!hasPermission) return null;
-  
+
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -96,7 +100,7 @@ export default function EditProfile() {
         aspect: [1, 1], // Chọn ảnh vuông
         quality: 0.5, // Nén chất lượng ảnh
       });
-  
+
       if (!result.canceled) {
         const file = {
           uri: result.assets[0].uri,
@@ -111,7 +115,6 @@ export default function EditProfile() {
     }
     return null;
   };
-  
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -120,7 +123,7 @@ export default function EditProfile() {
         if (profileData) {
           const newData = {
             UserName: profileData.userName || "",
-            ImgAvatarPath: profileData.imgAvatarPath || "", // Gán đúng key
+            ImgAvatarPath: profileData.imgAvatarPath || "",
             FullName: profileData.fullName || "",
             Gender: profileData.gender || "",
             BirthDate: profileData.dob || "",
@@ -130,7 +133,7 @@ export default function EditProfile() {
             IsEmailVerified: profileData.emailConfirmed || false,
             IsPhoneVerified: profileData.phoneConfirmed || false,
           };
-          setFormData(newData); // Cập nhật formData
+          setFormData(newData); 
           setInitialData(newData);
         } else {
           Alert.alert("Thông báo", "Không có dữ liệu người dùng.");
@@ -221,10 +224,31 @@ export default function EditProfile() {
     setShowEmailModal(false);
   };
 
-  const handlePhoneSave = () => {
-    handleChange("Phone", newPhone);
-    setShowPhoneModal(false);
+  const handlePhoneSave = async () => {
+    if (!newPhone || newPhone.trim() === "") {
+      Alert.alert("Cảnh báo", "Vui lòng nhập số điện thoại hợp lệ.");
+      return;
+    }
+  
+    try {
+      const updatedData = { ...formData, Phone: newPhone };
+      await saveUserProfile(user.UserId, updatedData);
+  
+      dispatch(updateUser({ ...user, Phone: newPhone }));
+  
+      setFormData((prev) => ({ ...prev, Phone: newPhone }));
+  
+      Alert.alert("Thành công", "Số điện thoại đã được cập nhật.");
+      setShowPhoneModal(false);
+    } catch (error) {
+      console.error("Error updating phone number:", error?.response || error?.message);
+      Alert.alert(
+        "Lỗi",
+        error?.response?.data?.message || "Không thể cập nhật số điện thoại."
+      );
+    }
   };
+  
 
   const renderInput = (
     label,
@@ -244,70 +268,45 @@ export default function EditProfile() {
         <Text style={styles.label}>{label}</Text>
       </View>
       <View style={styles.inputWrapper}>
-        {name === "BirthDate" && isEditing ? (
-          <TouchableOpacity
-            onPress={() => isEditing && setShowDatePicker(true)}
-            style={[
-              styles.input,
-              !isEditing && styles.disabledInput,
-              isEditing && styles.editableInput,
-            ]}
-          >
-            <Text style={styles.dateButtonText}>
-              {formatDateForDisplay(formData.BirthDate) || "Chọn ngày"}
-            </Text>
-          </TouchableOpacity>
-        ) : name === "Gender" ? (
-          <Picker
-            selectedValue={formData.Gender}
-            onValueChange={(itemValue) => handleChange("Gender", itemValue)}
-            enabled={isEditing}
-            style={[
-              styles.input,
-              !isEditing && styles.disabledInput,
-              isEditing && styles.editableInput,
-            ]}
-          >
-            <Picker.Item label="Chọn giới tính" value="" />
-            <Picker.Item label="Nam" value="male" />
-            <Picker.Item label="Nữ" value="female" />
-            <Picker.Item label="Khác" value="other" />
-          </Picker>
-        ) : (
+        {name === "Phone" ? (
           <View style={styles.inputWithButton}>
             <TextInput
-              style={[
-                styles.input,
-                !editable && styles.disabledInput,
-                editable && styles.editableInput,
-                (name === "Email" || name === "Phone") &&
-                  styles.nonEditableInput,
-              ]}
-              value={formData[name]}
-              onChangeText={(value) => handleChange(name, value)}
-              editable={editable && name !== "Email" && name !== "Phone"}
-              placeholder={`Nhập ${label.toLowerCase()}`}
+              style={[styles.input, styles.nonEditableInput]}
+              value={formData.Phone || "Chưa có số điện thoại"}
+              editable={false}
+              placeholder="Nhập số điện thoại"
               placeholderTextColor="#A0AEC0"
             />
-            {(name === "Email" || name === "Phone") && (
-              <TouchableOpacity
-                style={styles.changeButtonInline}
-                onPress={
-                  name === "Email" ? handleEmailChange : handlePhoneChange
-                }
-              >
-                <Text style={styles.changeButtonTextInline}>Thay đổi</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              style={styles.changeButtonInline}
+              onPress={() =>
+                formData.Phone ? handlePhoneChange() : setShowPhoneModal(true)
+              }
+            >
+              <Text style={styles.changeButtonTextInline}>
+                {formData.Phone ? "Thay đổi" : "Thêm số điện thoại"}
+              </Text>
+            </TouchableOpacity>
           </View>
+        ) : (
+          <TextInput
+            style={[
+              styles.input,
+              !editable && styles.disabledInput,
+              editable && styles.editableInput,
+            ]}
+            value={formData[name]}
+            onChangeText={(value) => handleChange(name, value)}
+            editable={editable}
+            placeholder={`Nhập ${label.toLowerCase()}`}
+            placeholderTextColor="#A0AEC0"
+          />
         )}
-        {verifiable && (
+        {verifiable && name === "Phone" && (
           <FontAwesome
-            name={
-              formData[`Is${name}Verified`] ? "check-circle" : "times-circle"
-            }
+            name={formData.IsPhoneVerified ? "check-circle" : "times-circle"}
             size={24}
-            color={formData[`Is${name}Verified`] ? "#4CAF50" : "#FF3B30"}
+            color={formData.IsPhoneVerified ? "#4CAF50" : "#FF3B30"}
             style={styles.verifiedIcon}
           />
         )}
@@ -445,12 +444,14 @@ export default function EditProfile() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Thay đổi Số điện thoại</Text>
+            <Text style={styles.modalTitle}>
+              {formData.Phone ? "Thay đổi số điện thoại" : "Thêm số điện thoại"}
+            </Text>
             <TextInput
               style={styles.modalInput}
               value={newPhone}
               onChangeText={setNewPhone}
-              placeholder="Nhập số điện thoại mới"
+              placeholder="Nhập số điện thoại"
               keyboardType="phone-pad"
             />
             <View style={styles.navButtonContainer}>
@@ -464,7 +465,9 @@ export default function EditProfile() {
                 style={styles.modalButton}
                 onPress={handlePhoneSave}
               >
-                <Text style={styles.modalButtonText}>Lưu</Text>
+                <Text style={styles.modalButtonText}>
+                  {formData.Phone ? "Lưu thay đổi" : "Thêm"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

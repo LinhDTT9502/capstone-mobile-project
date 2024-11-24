@@ -182,3 +182,30 @@ export const updatePassword = async (id, newPassword) => {
     throw error;
   }
 };
+
+// POST send OTP to phone number
+export const sendSmsOtp = (phoneNumber) => {
+  return axios.put(
+    `${API_BASE_URL}/send-sms-otp/${phoneNumber}`,
+    null,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};
+
+// POST verify phone number with OTP
+export const verifyPhoneNumber = (otp) => {
+  return axios.post(
+    `${API_BASE_URL}/verify-phone-number/${otp}`,
+    null,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};
+

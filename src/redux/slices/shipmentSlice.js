@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from "redux-persist/lib/storage";
 
 const shipmentPersistConfig = {
     key: "shipment",
-    storage: AsyncStorage,
+    storage,
 };
 
 const initialState = {
@@ -20,10 +20,8 @@ const shipmentSlice = createSlice({
     reducers: {
         setShipment: (state, action) => {
             state.shipment = action.payload;
-
-            // Safely handle wardCode and districtId
-            state.wardCode = action.payload?.wardCode || null;
-            state.districtId = action.payload?.districtId || null;
+            state.wardCode = action.payload.wardCode;
+            state.districtId = action.payload.districtId;
         },
         selectShipments: (state, action) => {
             state.selectedShipments = action.payload;
@@ -37,23 +35,17 @@ const shipmentSlice = createSlice({
         addShipment: (state, action) => {
             state.shipment.push(action.payload);
         },
+
         deleteShipment: (state, action) => {
             state.shipment = state.shipment.filter(shipment => shipment.id !== action.payload);
         },
     },
 });
 
+export const { setShipment, selectShipments, updateShipment, addShipment, deleteShipment } = shipmentSlice.actions;
 
-export const {
-    setShipment,
-    selectShipments,
-    updateShipment,
-    addShipment,
-    deleteShipment,
-  } = shipmentSlice.actions;
-  
-  export const selectShipment = (state) => state.shipment?.shipment || [];
-  export const selectedShipment = (state) => state.shipment?.selectedShipments || null;
-  
-  // Export reducer với persist
-  export default persistReducer(shipmentPersistConfig, shipmentSlice.reducer);
+export const selectShipment = (state) => state.shipment?.shipment || [];
+export const selectedShipment = (state) => state.shipment.selectedShipments;
+
+// export default persistReducer(shipmentPersistConfig, shipmentSlice.reducer);
+export default shipmentSlice.reducer;

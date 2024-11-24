@@ -2,82 +2,78 @@ import React, { useState, useEffect } from "react";
 import { TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import { fetchProductById } from "../services/productService";
 
 const BookmarkComponent = ({
-  item, // Thông tin của mục cần Bookmark
-  token, // Token để xác thực người dùng
-  style, // CSS tùy chỉnh cho nút Bookmark
-  iconSize = 24, // Kích thước icon Bookmark
-  color = "#3366FF", // Màu sắc của icon Bookmark
+  item,
+  token,
+  style,
+  iconSize = 24,
+  color = "#3366FF",
 }) => {
-  const [bookmarks, setBookmarks] = useState([]); // Danh sách Bookmark hiện tại
-  const [isBookmarked, setIsBookmarked] = useState(false); // Trạng thái đã Bookmark
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
-  // Load danh sách Bookmark từ AsyncStorage khi component được render
   useEffect(() => {
-    const loadBookmarks = async () => {
+    const checkBookmarkStatus = async () => {
       try {
         const storedBookmarks = await AsyncStorage.getItem("bookmarks");
         if (storedBookmarks) {
-          const parsedBookmarks = JSON.parse(storedBookmarks);
-          setBookmarks(parsedBookmarks);
-          setIsBookmarked(parsedBookmarks.some((bookmark) => bookmark.id === item.id));
+          const bookmarks = JSON.parse(storedBookmarks);
+          setIsBookmarked(bookmarks.some((bookmark) => bookmark.id === item.id));
         }
       } catch (error) {
-        console.error("Error loading bookmarks:", error);
+        console.error("Error checking bookmark status:", error);
       }
     };
-    loadBookmarks();
+
+    checkBookmarkStatus();
   }, [item.id]);
 
-  // Hàm lưu Bookmark vào AsyncStorage
   const saveBookmarks = async (updatedBookmarks) => {
     try {
       await AsyncStorage.setItem("bookmarks", JSON.stringify(updatedBookmarks));
-      setBookmarks(updatedBookmarks); // Cập nhật danh sách Bookmark trong state
     } catch (error) {
       console.error("Error saving bookmarks:", error);
     }
   };
 
-  // Hàm xử lý khi nhấn nút Bookmark
   const handleBookmarkToggle = async () => {
     if (!token) {
       Alert.alert("Thông báo", "Bạn cần đăng nhập để sử dụng tính năng Bookmark.");
       return;
     }
-
-    let updatedBookmarks = [];
-    if (isBookmarked) {
-      // Xóa mục khỏi danh sách Bookmark
-      updatedBookmarks = bookmarks.filter((bookmark) => bookmark.id !== item.id);
-      setIsBookmarked(false);
-      Alert.alert("Thành công", "Đã xóa sản phẩm khỏi Bookmark.");
-    } else {
-      // Thêm mục vào danh sách Bookmark
-      const newItem = {
-        id: item.id,
-        title: item.title,
-        price: item.price,
-        imageUrl: item.imageUrl, // Đảm bảo có đủ thông tin
-      };
-      updatedBookmarks = [...bookmarks, newItem];
-      setIsBookmarked(true);
-      Alert.alert("Thành công", "Đã thêm sản phẩm vào Bookmark.");
+  
+    try {
+      const storedBookmarks = await AsyncStorage.getItem("bookmarks");
+      const parsedBookmarks = storedBookmarks ? JSON.parse(storedBookmarks) : [];
+      let updatedBookmarks;
+  
+      if (isBookmarked) {
+        updatedBookmarks = parsedBookmarks.filter((bookmark) => bookmark.id !== item.id);
+        setIsBookmarked(false);
+        Alert.alert("Thành công", "Đã xóa sản phẩm khỏi Bookmark.");
+      } else {
+        
+        const productDetails = await fetchProductById(item.id);
+  
+        updatedBookmarks = [...parsedBookmarks, productDetails];
+        setIsBookmarked(true);
+        Alert.alert("Thành công", "Đã thêm sản phẩm vào Bookmark.");
+      }
+  
+      await saveBookmarks(updatedBookmarks);
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
     }
-
-    saveBookmarks(updatedBookmarks); // Lưu danh sách cập nhật vào AsyncStorage
   };
+  
 
   return (
-    <TouchableOpacity
-      style={style} // Áp dụng style truyền vào từ props
-      onPress={handleBookmarkToggle} // Xử lý toggle Bookmark
-    >
+    <TouchableOpacity style={style} onPress={handleBookmarkToggle}>
       <Ionicons
-        name={isBookmarked ? "bookmark" : "bookmark-outline"} // Thay đổi icon dựa trên trạng thái
-        size={iconSize} // Kích thước icon
-        color={color} // Màu sắc icon
+        name={isBookmarked ? "bookmark" : "bookmark-outline"}
+        size={iconSize}
+        color={color}
       />
     </TouchableOpacity>
   );

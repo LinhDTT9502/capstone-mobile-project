@@ -55,3 +55,23 @@ export const uploadAvatar = async (userId, avatarFile) => {
     throw error;
   }
 };
+
+export const sendSmsOtpService = async (phoneNumber) => {
+  try {
+    const response = await sendSmsOtp(phoneNumber);
+    return response.data;
+  } catch (error) {
+    console.error("Error sending SMS OTP:", error);
+    throw new Error("Lỗi gửi OTP đến số điện thoại");
+  }
+};
+
+export const verifyPhoneNumberService = async (otp) => {
+  try {
+    const response = await verifyPhoneNumber(otp);
+    return response.data;
+  } catch (error) {
+    console.error("Error verifying phone number:", error);
+    throw new Error("Lỗi xác thực số điện thoại bằng OTP");
+  }
+};

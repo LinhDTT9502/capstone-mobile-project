@@ -11,27 +11,25 @@ import {
 } from "react-native";
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from "@react-navigation/native";
-import { fetchAllBlogs } from "../../services/blogService"; // Import the fetch function
+import { fetchAllBlogs } from "../../services/blogService"; 
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function Blog() {
   const navigation = useNavigation();
-  const [blogs, setBlogs] = useState([]); // Initialize blogs state only once
-
+  const [blogs, setBlogs] = useState([]); 
   useEffect(() => {
-    // Use a self-contained async function inside useEffect to fetch blogs
     const loadBlogs = async () => {
       try {
         const blogData = await fetchAllBlogs();
-        setBlogs(blogData); // Set the fetched blogs into state
+        setBlogs(blogData); 
       } catch (error) {
         console.error("Error fetching blogs:", error);
       }
     };
 
-    loadBlogs(); // Fetch blogs when component mounts
-  }, []); // Ensure useEffect only runs once on mount
+    loadBlogs(); 
+  }, []); 
 
   const renderBlogItem = ({ item }) => (
     <TouchableOpacity 

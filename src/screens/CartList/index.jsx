@@ -224,7 +224,7 @@ export default function Cart() {
       selectedItems.includes(item.id)
     );
 
-    navigation.navigate("Checkout", { selectedCartItems });
+    navigation.navigate("PlacedOrder", { selectedCartItems });
   };
 
   const handleRent = () => {

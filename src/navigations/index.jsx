@@ -27,6 +27,8 @@ import VerifyAccountScreen from "../screens/Login/VerifyAccount/index";
 import PolicySection from "../screens/Policy/PolicySection/index";
 import PolicyDetail from "../screens/Policy/PolicyDetail/index";
 import BranchList from "../screens/BranchList/index";
+import PlaceOrderScreen from "../screens/PlaceOrder/index";
+import OrderSuccessScreen from "../screens/PlaceOrder/OrderSuccess/index";
 
 const Stack = createStackNavigator();
 
@@ -39,7 +41,10 @@ export default function MainContainer() {
       <Stack.Screen name="SignUp" component={SignUpScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-      <Stack.Screen name="ResetPasswordProfile" component={ResetPasswordProfile} />
+      <Stack.Screen
+        name="ResetPasswordProfile"
+        component={ResetPasswordProfile}
+      />
       <Stack.Screen name="HomeController" component={HomeController} />
       <Stack.Screen name="Introduction" component={IntroductionScreen} />
       <Stack.Screen name="ContactUs" component={ContactUs} />
@@ -50,14 +55,17 @@ export default function MainContainer() {
       <Stack.Screen name="PolicySection" component={PolicySection} />
       <Stack.Screen name="BranchList" component={BranchList} />
       <Stack.Screen
+        name="OrderSuccess"
+        component={OrderSuccessScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
         name="AccountResetPassword"
         component={AccountResetPassword}
       />
-      <Stack.Screen
-        name="VerifyAccount"
-        component={VerifyAccountScreen}
-      />
-      
+      <Stack.Screen name="VerifyAccount" component={VerifyAccountScreen} />
+
       <Stack.Screen name="MyOrder" component={MyOrder} />
       <Stack.Screen name="Policy" component={Policy} />
       <Stack.Screen name="UserShipment" component={UserShipment} />
@@ -65,6 +73,9 @@ export default function MainContainer() {
       <Stack.Screen name="BrandProduct" component={BrandProduct} />
       <Stack.Screen name="BlogDetail" component={BlogDetail} />
       <Stack.Screen name="VerifyOtpScreen " component={VerifyOtpScreen} />
+
+      {/* testing */}
+      <Stack.Screen name="PlacedOrder" component={PlaceOrderScreen} />
     </Stack.Navigator>
   );
 }

@@ -12,7 +12,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute ,useFocusEffect} from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -84,6 +84,28 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState("");
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [fullscreenImages, setFullscreenImages] = useState([]);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadBookmarks = async () => {
+        try {
+          const storedBookmarks = await AsyncStorage.getItem("bookmarks");
+          if (storedBookmarks) {
+            const parsedBookmarks = JSON.parse(storedBookmarks);
+            setIsBookmarked(parsedBookmarks.some((b) => b.id === product.id));
+          }
+        } catch (error) {
+          console.error("Error loading bookmarks:", error);
+        }
+      };
+  
+      loadBookmarks();
+    }, [product.id])
+  );
+  
 
   useEffect(() => {
     const fetchCurrentUserId = async () => {
@@ -115,7 +137,7 @@ export default function ProductDetail() {
   const fetchProductSizes = async (productCode, color) => {
     try {
       const response = await listSizesOfProduct(productCode, color);
-      setSizes(response.data.$values.map((item) => item.size)); // Assuming 'size' key
+      setSizes(response.data.$values.map((item) => item.size));
     } catch (error) {
       console.error("Error fetching sizes:", error);
     }
@@ -124,7 +146,7 @@ export default function ProductDetail() {
   const fetchProductConditions = async (productCode, color, size) => {
     try {
       const response = await listConditionsOfProduct(productCode, color, size);
-      setConditions(response.data.$values.map((item) => item.condition)); // Assuming 'condition' key
+      setConditions(response.data.$values.map((item) => item.condition));
     } catch (error) {
       console.error("Error fetching conditions:", error);
     }
@@ -136,14 +158,13 @@ export default function ProductDetail() {
         const response = await getProductByProductCode(product.productCode);
         setProductList(response.$values || []);
 
-        // Fetch images for each color from the beginning
         const initialImages = {};
         response.$values.forEach((item) => {
           if (!initialImages[item.color]) {
-            initialImages[item.color] = item.imgAvatarPath; // Store first image per color
+            initialImages[item.color] = item.imgAvatarPath; 
           }
         });
-        setImagesByColor(initialImages); // Store in state for color-specific display
+        setImagesByColor(initialImages);
       } catch (error) {
         console.error("Lỗi khi tải danh sách sản phẩm:", error);
       }

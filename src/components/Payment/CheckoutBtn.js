@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { TouchableOpacity, Text, StyleSheet, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { placedOrder } from "../../services/Checkout/checkoutService";
@@ -15,44 +15,75 @@ const CheckoutBtn = ({
   selectedBranchId,
   selectedCartItems,
   userData,
+  discountCode,
+  note,
 }) => {
   const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleCheckout = async () => {
-    console.log("Selected shipment:", shipment);
-  
-    if (selectedOption === "HOME_DELIVERY" && !shipment) {
+    const actualShipment = shipment?.shipment; // Trích xuất đúng dữ liệu cần thiết
+
+    if (
+      selectedOption === "HOME_DELIVERY" &&
+      (!actualShipment || !actualShipment.id)
+    ) {
       Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng.");
       return;
     }
-  
-    if (selectedOption === "STORE_PICKUP" && !selectedBranchId) {
-      Alert.alert("Lỗi", "Vui lòng chọn chi nhánh nhận hàng.");
+
+    if (!userData?.shipmentDetailID && selectedOption === "HOME_DELIVERY") {
+      Alert.alert("Lỗi", "Dữ liệu địa chỉ giao hàng không đầy đủ.");
       return;
     }
-  
+
     const orderData = {
-      ...userData,
+      fullName: userData?.fullName || "",
+      email: userData?.email || "",
+      contactPhone: userData?.phoneNumber || "",
+      address: userData?.address || "",
+      userID: userData.userId || 0,
+      shipmentDetailID: actualShipment?.id || 0,
       deliveryMethod: selectedOption,
+      gender: userData?.gender || "Unknown",
+      branchId: selectedOption === "STORE_PICKUP" ? selectedBranchId : null,
+      dateOfReceipt: null,
+      discountCode: discountCode || null,
+      note: note || null,
       saleOrderDetailCMs: selectedCartItems.map((item) => ({
         productId: item.id,
+        productName: item.productName,
+        productCode: item.productCode,
         quantity: item.quantity,
         unitPrice: item.price,
       })),
     };
-  
+
     try {
+      // console.log("Placing order with data:", orderData);
       const response = await placedOrder(orderData);
       Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
+      navigation.navigate("OrderSuccess", {
+        orderID: response.data.saleOrderId,
+        orderCode: response.data.orderCode,
+      });
     } catch (error) {
+      console.error("Checkout error:", error);
       Alert.alert("Lỗi", error.message || "Không thể hoàn tất đơn hàng.");
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   return (
-    <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-      <Text style={styles.checkoutButtonText}>Hoàn tất đơn hàng</Text>
+    <TouchableOpacity
+      style={styles.checkoutButton}
+      onPress={handleCheckout}
+      disabled={isLoading}
+    >
+      <Text style={styles.checkoutButtonText}>
+        {isLoading ? "Đang xử lý..." : "Hoàn tất đơn hàng"}
+      </Text>
     </TouchableOpacity>
   );
 };

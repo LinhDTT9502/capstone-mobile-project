@@ -13,7 +13,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect  } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
 import {
@@ -22,6 +22,8 @@ import {
 } from "../../services/productService";
 import { getBrands } from "../../services/brandService";
 import { fetchCategories } from "../../services/categoryService";
+import BookmarkComponent from "@/src/components/BookmarkComponent";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const logoImage = require("../Logo/2sport_logo.png");
@@ -43,6 +45,71 @@ export default function ProductListing() {
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
   const [hasMore, setHasMore] = useState(true);
+  const [token, setToken] = useState(null);
+  const [bookmarks, setBookmarks] = useState([]);
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      const reloadData = async () => {
+        await loadInitialProducts(); // Gọi hàm tải lại sản phẩm
+        const storedBookmarks = await AsyncStorage.getItem("bookmarks");
+        if (storedBookmarks) {
+          setBookmarks(JSON.parse(storedBookmarks));
+        }
+      };
+  
+      reloadData();
+    }, [])
+  );
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadBookmarks = async () => {
+        try {
+          const storedBookmarks = await AsyncStorage.getItem("bookmarks");
+          if (storedBookmarks) {
+            const parsedBookmarks = JSON.parse(storedBookmarks);
+            setBookmarks(parsedBookmarks);
+          }
+        } catch (error) {
+          console.error("Error loading bookmarks:", error);
+        }
+      };
+  
+      const handleBookmarkUpdated = ({ itemId, isBookmarked }) => {
+        setBookmarks((prevBookmarks) => {
+          if (isBookmarked) {
+            return [...prevBookmarks, { id: itemId }];
+          } else {
+            return prevBookmarks.filter((bookmark) => bookmark.id !== itemId);
+          }
+        });
+      };
+  
+      navigation.addListener("bookmarkUpdated", handleBookmarkUpdated);
+      loadBookmarks();
+  
+      return () => {
+        navigation.removeListener("bookmarkUpdated", handleBookmarkUpdated);
+      };
+    }, [navigation])
+  );
+  
+  
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchToken = async () => {
+        try {
+          const storedToken = await AsyncStorage.getItem("token");
+          setToken(storedToken);
+        } catch (error) {
+          console.error("Error fetching token:", error);
+        }
+      };
+      fetchToken();
+    }, [])
+  );
 
   useEffect(() => {
     loadInitialProducts();
@@ -178,6 +245,21 @@ export default function ProductListing() {
         <Text style={styles.productPrice}>
           {item.price.toLocaleString()} ₫
         </Text>
+        {token && ( 
+        <BookmarkComponent
+          item={{
+            id: item.id,
+            title: item.productName,
+            price: item.price,
+            imageUrl: item.imgAvatarPath,
+          }}
+          token={token}
+          navigation={navigation}
+          style={styles.bookmarkButton}
+          iconSize={20}
+          color="#4A90E2"
+        />
+      )}
       </View>
     </TouchableOpacity>
   );
@@ -630,5 +712,11 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  bookmarkButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    zIndex: 10,
   },
 });
