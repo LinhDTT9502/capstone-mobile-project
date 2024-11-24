@@ -11,6 +11,7 @@ import {
   SectionList,
   Modal,
   FlatList,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSelector, useDispatch } from "react-redux";
@@ -90,20 +91,19 @@ export default function PlaceOrderScreen({ route }) {
       Alert.alert("Lỗi", "Không thể chọn địa chỉ giao hàng.");
       return;
     }
-
-    // console.log("Selected shipment item:", item);
+  
     dispatch(setShipment(item));
     setUserData((prev) => ({
       ...prev,
       shipmentDetailID: item.id,
-      fullName: item.fullName,
-      email: item.email,
-      phoneNumber: item.phoneNumber,
-      address: item.address,
+      fullName: item.fullName || prev.fullName,
+      email: item.email || prev.email,
+      phoneNumber: item.phoneNumber || prev.phoneNumber,
+      address: item.address || prev.address,
     }));
     setIsModalVisible(false);
   };
-
+  
   const handleGuestInput = (field, value) => {
     setUserData((prev) => ({
       ...prev,
@@ -144,8 +144,8 @@ export default function PlaceOrderScreen({ route }) {
         setShipments(shipmentData);
         dispatch(setShipment(shipmentData[0]));
       } catch (error) {
-        console.error("Error fetching branches or shipments:", error);
-        Alert.alert("Error", "Unable to fetch delivery data.");
+        // console.error("Error fetching branches or shipments:", error);
+        // Alert.alert("Error", "Unable to fetch delivery data.");
       }
     };
     fetchBranchesAndShipments();
@@ -158,10 +158,18 @@ export default function PlaceOrderScreen({ route }) {
     }).format(amount);
   };
 
+  const handleAddressChange = (address) => {
+    // console.log("Address received from AddressForm:", address);
+    setUserData((prev) => ({
+      ...prev,
+      address,
+    }));
+  };
+
   const renderCustomerInfo = () => {
     if (isGuest) {
       return (
-        <View>
+        <View style={styles.sectionContainer}>
           <TextInput
             style={styles.input}
             placeholder="Họ và tên"
@@ -177,25 +185,24 @@ export default function PlaceOrderScreen({ route }) {
           />
           <TextInput
             style={styles.input}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={userData.email}
+            onChangeText={(value) => handleGuestInput("email", value)}
+          />
+          <TextInput
+            style={[styles.input, { backgroundColor: COLORS.lightGray }]}
             placeholder="Địa chỉ"
+            editable={false}
             value={userData.address}
             onChangeText={(value) => handleGuestInput("address", value)}
-          />
-                    <TextInput
-            style={styles.input}
-            placeholder="Email"
-            keyboardType="phone-pad"
-            value={userData.email}
-            onChangeText={(value) => handleGuestInput("Email", value)}
           />
         </View>
       );
     } else {
       return (
-        <View>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Thông tin giao hàng</Text>
-          </View>
+        <View style={styles.sectionContainer}>
           {userData.shipmentDetailID ? (
             <View style={styles.selectedShipment}>
               <Text style={styles.selectedTitle}>Địa chỉ đã chọn:</Text>
@@ -224,37 +231,33 @@ export default function PlaceOrderScreen({ route }) {
 
   const sections = [
     {
+      title: "Tóm tắt đơn hàng",
       data: selectedCartItems,
       renderItem: ({ item }) => (
-        <View>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Tóm tắt đơn hàng</Text>
-          </View>
-          <View style={styles.productItem}>
-            <Image source={{ uri: item.imgAvatarPath }} style={styles.image} />
-            <View style={styles.productDetails}>
-              <Text style={styles.productName}>{item.productName}</Text>
-              <Text style={styles.productQuantity}>
-                Số lượng: {item.quantity}
-              </Text>
-              <Text style={styles.productPrice}>
-                {formatCurrency(item.price)}
-              </Text>
-              <Text style={styles.productTotal}>
-                Tổng: {formatCurrency(item.price * item.quantity)}
-              </Text>
-            </View>
+        <View style={styles.productItem}>
+          <Image source={{ uri: item.imgAvatarPath }} style={styles.image} />
+          <View style={styles.productDetails}>
+            <Text style={styles.productName}>{item.productName}</Text>
+            <Text style={styles.productQuantity}>
+              Số lượng: {item.quantity}
+            </Text>
+            <Text style={styles.productPrice}>
+              {formatCurrency(item.price)}
+            </Text>
+            <Text style={styles.productTotal}>
+              Tổng: {formatCurrency(item.price * item.quantity)}
+            </Text>
           </View>
         </View>
       ),
     },
     {
-      //   title: "Thông tin khách hàng",
+      title: "Thông tin giao hàng",
       data: [{ key: "customerInfo" }],
       renderItem: () => renderCustomerInfo(),
     },
     {
-      //   title: "Phương thức giao hàng",
+      title: "Phương thức giao hàng",
       data: [{ key: "orderMethod" }],
       renderItem: () => (
         <OrderMethod
@@ -264,12 +267,12 @@ export default function PlaceOrderScreen({ route }) {
           handleOptionChange={handleOptionChange}
           selectedBranchId={selectedBranchId}
           setSelectedBranchId={setSelectedBranchId}
+          onAddressChange={handleAddressChange}
         />
       ),
     },
-
     {
-      //   title: "Phương thức thanh toán",
+      title: "Phương thức thanh toán",
       data: [{ key: "paymentMethod" }],
       renderItem: () => (
         <PaymentMethod
@@ -279,63 +282,38 @@ export default function PlaceOrderScreen({ route }) {
       ),
     },
     {
-      title: "Mã giảm giá",
+      title: "Ưu đãi",
       data: [{ key: "discountCode" }],
       renderItem: () => (
-        <TextInput
-          style={styles.input}
-          placeholder="Nhập mã giảm giá"
-          value={discountCode}
-          onChangeText={setDiscountCode}
-          placeholderTextColor={COLORS.gray}
-        />
+        <View style={styles.sectionContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Nhập mã ưu đãi"
+            value={discountCode}
+            onChangeText={setDiscountCode}
+            placeholderTextColor={COLORS.gray}
+          />
+        </View>
       ),
     },
     {
       title: "Ghi chú",
       data: [{ key: "note" }],
       renderItem: () => (
-        <TextInput
-          style={[styles.input, styles.noteInput]}
-          placeholder="Thêm ghi chú"
-          value={note}
-          onChangeText={setNote}
-          multiline
-          numberOfLines={3}
-          placeholderTextColor={COLORS.gray}
-        />
+        <View style={styles.sectionContainer}>
+          <TextInput
+            style={[styles.input, styles.noteInput]}
+            placeholder="Thêm ghi chú"
+            value={note}
+            onChangeText={setNote}
+            multiline
+            numberOfLines={3}
+            placeholderTextColor={COLORS.gray}
+          />
+        </View>
       ),
     },
   ];
-
-  const DiscountInput = ({ discountCode, setDiscountCode }) => (
-    <div className="flex justify-between items-center pt-1 border rounded mt-4">
-      <label className="block text-lg font-semibold">Mã ưu đãi</label>
-      <input
-        type="text"
-        className="border rounded w-3/4 px-3 py-2 mt-2"
-        value={discountCode}
-        onChange={(e) => setDiscountCode(e.target.value)}
-        placeholder="nhập mã ưu đãi tại đây"
-      />
-    </div>
-  );
-
-  const OrderNote = ({ note, setNote }) => (
-    <div className="flex justify-between items-center pt-1 border rounded mt-4">
-      <label className="block text-lg font-semibold">Ghi chú</label>
-      <input
-        type="text"
-        className="border rounded w-3/4 px-3 py-2 mt-2"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder="ghi chú của bạn"
-      />
-    </div>
-  );
-
-//   console.log("userData:", userData);
-//   console.log("shipment:", shipment);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -351,9 +329,14 @@ export default function PlaceOrderScreen({ route }) {
         keyExtractor={(item, index) =>
           item.id?.toString() || item.key || index.toString()
         }
-        // renderSectionHeader={({ section: { title } }) => (
-        //   <Text style={styles.sectionTitle}>{title}</Text>
-        // )}
+        renderSectionHeader={({ section: { title } }) => (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{title}</Text>
+          </View>
+        )}
+        renderSectionFooter={({ section }) => (
+          <View style={styles.sectionSeparator} />
+        )}
         ListFooterComponent={() => (
           <>
             <View style={styles.totalContainer}>
@@ -402,14 +385,12 @@ export default function PlaceOrderScreen({ route }) {
                   <Text style={styles.addressText}>{item.address}</Text>
                   <Text style={styles.addressText}>{item.phoneNumber}</Text>
                   <Text style={styles.selectedText}>{item.email}</Text>
-
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
                 <Text style={styles.emptyText}>Chưa có địa chỉ nào</Text>
               }
             />
-
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setIsModalVisible(false)}
@@ -426,7 +407,7 @@ export default function PlaceOrderScreen({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 30,
+    paddingTop:30,
     backgroundColor: COLORS.lightGray,
   },
   header: {
@@ -443,34 +424,42 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     color: COLORS.dark,
   },
-  sectionListContent: {
+  sectionListContent:
+{
     paddingBottom: 24,
   },
-  sectionHeader: {
+  sectionContainer: {
     backgroundColor: COLORS.white,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
+    marginBottom: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+    padding: 16,
+  },
+  sectionHeader: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: COLORS.dark,
-    padding: 16,
+    color: COLORS.white,
+  },
+  sectionSeparator: {
+    height: 8,
   },
   productItem: {
     flexDirection: "row",
-    padding: 12,
-    backgroundColor: COLORS.white,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
   },
   image: {
     width: 80,
     height: 80,
     marginRight: 16,
-    borderRadius: 4,
+    borderRadius: 8,
   },
   productDetails: {
     flex: 1,
@@ -494,13 +483,12 @@ const styles = StyleSheet.create({
   },
   totalContainer: {
     marginTop: 16,
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.lightGray,
+    padding: 16,
+    backgroundColor: COLORS.white,
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: COLORS.white,
+    alignItems: "center",
+    borderRadius: 8,
   },
   totalText: {
     fontSize: 18,
@@ -508,7 +496,7 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
   },
   totalAmount: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     color: COLORS.secondary,
   },
@@ -536,25 +524,32 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     margin: 16,
+    maxHeight: '80%',
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 16,
+    color: COLORS.primary,
   },
   addressItem: {
-    padding: 12,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   selectedAddress: {
     backgroundColor: COLORS.lightGray,
   },
   addressName: {
     fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 4,
   },
   addressText: {
     color: COLORS.gray,
+    marginBottom: 2,
   },
   closeButton: {
     marginTop: 16,
@@ -566,11 +561,13 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: COLORS.white,
     fontWeight: "bold",
+    fontSize: 16,
   },
   emptyText: {
     textAlign: "center",
     color: COLORS.gray,
     marginTop: 16,
+    fontSize: 16,
   },
   selectedShipment: {
     backgroundColor: COLORS.white,
@@ -596,6 +593,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
+    marginTop: 8,
   },
   changeAddressText: {
     color: COLORS.white,

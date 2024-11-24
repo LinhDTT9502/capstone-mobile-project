@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { TouchableOpacity, Text, StyleSheet, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { placedOrder } from "../../services/Checkout/checkoutService";
+import { addGuestOrder } from "../../redux/slices/guestOrderSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const COLORS = {
   primary: "#3366FF",
@@ -22,7 +24,7 @@ const CheckoutBtn = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCheckout = async () => {
-    const actualShipment = shipment?.shipment; // Trích xuất đúng dữ liệu cần thiết
+    const actualShipment = shipment?.shipment;
 
     if (
       selectedOption === "HOME_DELIVERY" &&
@@ -37,12 +39,13 @@ const CheckoutBtn = ({
       return;
     }
 
+    const token = await AsyncStorage.getItem("token");
     const orderData = {
       fullName: userData?.fullName || "",
       email: userData?.email || "",
       contactPhone: userData?.phoneNumber || "",
       address: userData?.address || "",
-      userID: userData.userId || 0,
+      userID: token ? userData.userId || 0 : 0,
       shipmentDetailID: actualShipment?.id || 0,
       deliveryMethod: selectedOption,
       gender: userData?.gender || "Unknown",
@@ -60,13 +63,20 @@ const CheckoutBtn = ({
     };
 
     try {
-      // console.log("Placing order with data:", orderData);
       const response = await placedOrder(orderData);
-      Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
-      navigation.navigate("OrderSuccess", {
-        orderID: response.data.saleOrderId,
-        orderCode: response.data.orderCode,
-      });
+
+      if (response) {
+        if (!token) {
+          // If the user is a guest, save the order in Redux
+          dispatch(addGuestOrder(response.data));
+        }
+
+        Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
+        navigation.navigate("OrderSuccess", {
+          orderID: response.data.saleOrderId,
+          orderCode: response.data.orderCode,
+        });
+      }
     } catch (error) {
       console.error("Checkout error:", error);
       Alert.alert("Lỗi", error.message || "Không thể hoàn tất đơn hàng.");

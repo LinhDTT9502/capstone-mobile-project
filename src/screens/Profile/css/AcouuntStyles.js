@@ -33,14 +33,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginTop: 15,
   },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
-    borderWidth: 3,
-    borderColor: "#FF9900",
-  },
   profileName: {
     fontSize: 22,
     fontWeight: "bold",
@@ -51,17 +43,12 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 5,
   },
-  orderSection: {
+  settingsSection: {
     backgroundColor: "#FFF",
-    padding: 20,
-    marginBottom: 15,
-    borderRadius: 15,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    marginHorizontal: 15,
+    padding: 16,
+    borderRadius: 10,
+    elevation: 3,
+    marginHorizontal: 10,
   },
   sectionTitle: {
     fontSize: 22,
@@ -71,55 +58,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: "#FF9900",
     paddingBottom: 10,
-  },
-  statusMenu: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  statusButton: {
-    alignItems: "center",
-    backgroundColor: "#F5F7FA",
-    borderRadius: 12,
-    padding: 12,
-    width: 80,
-  },
-  iconContainer: {
-    backgroundColor: "#FF9900",
-    borderRadius: 30,
-    width: 60,
-    height: 60,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  statusText: {
-    fontSize: 12,
-    color: "#333",
-    textAlign: "center",
-    marginTop: 8,
-    fontWeight: "600",
-  },
-  viewAllOrders: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-    marginTop: 10,
-  },
-  viewAllOrdersText: {
-    fontSize: 16,
-    color: "#FF9900",
-    fontWeight: "bold",
-  },
-  settingsSection: {
-    backgroundColor: "#FFF",
-    padding: 16,
-    borderRadius: 10,
-    elevation: 3,
-    marginHorizontal: 10,
   },
   settingItem: {
     flexDirection: "row",
@@ -204,20 +142,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  cancelButtonText: {
-    color: "#666",
-    fontSize: 16,
-    // paddingHorizontal: 20,
-    // paddingVertical: 5,
-    fontWeight: "bold",
-  },
-  loginButtonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    // paddingHorizontal: 20,
-    // paddingVertical: 5,
-  },
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
@@ -227,3 +151,4 @@ const styles = StyleSheet.create({
 });
 
 export default styles;
+

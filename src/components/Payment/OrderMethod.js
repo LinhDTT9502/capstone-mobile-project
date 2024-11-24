@@ -12,6 +12,8 @@ import { fetchBranchs } from "../../services/branchService";
 import { fetchProductsbyBranch } from "../../services/warehouseService";
 import DeliveryAddress from "../Payment/DeliveryAddress";
 import AddressForm from "../Shipment/AddressForm";
+import { selectUser } from "@/src/redux/slices/authSlice";
+import { Ionicons } from "@expo/vector-icons";
 
 const OrderMethod = ({
   userData,
@@ -23,7 +25,7 @@ const OrderMethod = ({
 }) => {
   const [branches, setBranches] = useState([]);
   const [branchStatus, setBranchStatus] = useState({});
-  const user = useSelector((state) => state.auth.user);
+  const user = useSelector(selectUser);
 
   useEffect(() => {
     const loadBranchesWithStatus = async () => {
@@ -62,13 +64,17 @@ const OrderMethod = ({
     setSelectedBranchId(branchId);
   };
 
-  const handleAddressChange = (fullAddress) => {
-    setUserData((prevData) => ({ ...prevData, address: fullAddress }));
+  const handleAddressChange = (address) => {
+    // console.log("Address received from AddressForm:", address);
+    setUserData((prev) => ({
+      ...prev,
+      address: address,
+    }));
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Phương thức nhận hàng</Text>
+      {/* <Text style={styles.title}>Phương thức nhận hàng</Text> */}
       <View style={styles.radioGroup}>
         <TouchableOpacity
           style={styles.radioOption}
@@ -84,12 +90,22 @@ const OrderMethod = ({
         </TouchableOpacity>
 
         {selectedOption === "HOME_DELIVERY" && (
-          <View style={styles.deliveryAddressContainer}>
-            <Text style={styles.deliveryInfoText}>
-              Thông tin khách hàng sẽ được sử dụng.
-            </Text>
+          <View style={styles.deliveryContainer}>
+            {user ? (
+              // <AddressForm
+              //   address={userData.address}
+              //   province={userData.province}
+              //   district={userData.district}
+              //   ward={userData.ward}
+              //   onAddressChange={handleAddressChange}
+              // />
+              <></>
+            ) : (
+              <AddressForm onAddressChange={handleAddressChange} />
+            )}
           </View>
         )}
+
         <TouchableOpacity
           style={styles.radioOption}
           onPress={() => handleOptionChange("STORE_PICKUP")}
@@ -102,6 +118,7 @@ const OrderMethod = ({
           />
           <Text style={styles.radioLabel}>Nhận tại cửa hàng</Text>
         </TouchableOpacity>
+
         {selectedOption === "STORE_PICKUP" && (
           <FlatList
             data={branches}
@@ -120,18 +137,23 @@ const OrderMethod = ({
                 }
                 disabled={branchStatus[item.id] === "Hết hàng"}
               >
-                <Text style={styles.branchName}>{item.branchName}</Text>
-                <Text style={styles.branchLocation}>{item.location}</Text>
-                <Text
-                  style={[
-                    styles.branchStatus,
-                    branchStatus[item.id] === "Còn hàng"
-                      ? styles.available
-                      : styles.unavailable,
-                  ]}
-                >
-                  {branchStatus[item.id]}
-                </Text>
+                <View style={styles.branchInfo}>
+                  <Text style={styles.branchName}>{item.branchName}</Text>
+                  <Text style={styles.branchLocation}>{item.location}</Text>
+                  <Text
+                    style={[
+                      styles.branchStatus,
+                      branchStatus[item.id] === "Còn hàng"
+                        ? styles.available
+                        : styles.unavailable,
+                    ]}
+                  >
+                    {branchStatus[item.id]}
+                  </Text>
+                </View>
+                {selectedBranchId === item.id && (
+                  <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
+                )}
               </TouchableOpacity>
             )}
           />
@@ -155,12 +177,14 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     backgroundColor: COLORS.white,
-    flex: 1,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 16,
+    color: COLORS.primary,
   },
   radioGroup: {
     marginBottom: 16,
@@ -168,15 +192,17 @@ const styles = StyleSheet.create({
   radioOption: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   radioCircle: {
-    height: 20,
-    width: 20,
-    borderRadius: 10,
+    height: 24,
+    width: 24,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: COLORS.gray,
-    marginRight: 8,
+    borderColor: COLORS.primary,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   radioSelected: {
     backgroundColor: COLORS.primary,
@@ -185,19 +211,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
   },
-  deliveryAddressContainer: {
+  deliveryContainer: {
     marginTop: 16,
     backgroundColor: COLORS.lightGray,
-    padding: 12,
+    padding: 16,
     borderRadius: 8,
   },
   branchItem: {
     padding: 16,
-    marginBottom: 8,
+    marginBottom: 12,
     borderRadius: 8,
     backgroundColor: COLORS.lightGray,
-    borderWidth: 1,
-    borderColor: COLORS.gray,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   selectedBranchItem: {
     borderColor: COLORS.primary,
@@ -206,17 +233,22 @@ const styles = StyleSheet.create({
   disabledBranchItem: {
     opacity: 0.5,
   },
+  branchInfo: {
+    flex: 1,
+  },
   branchName: {
     fontSize: 16,
     fontWeight: "bold",
+    marginBottom: 4,
   },
   branchLocation: {
     fontSize: 14,
     color: COLORS.gray,
+    marginBottom: 4,
   },
   branchStatus: {
-    marginTop: 4,
     fontSize: 14,
+    fontWeight: '600',
   },
   available: {
     color: COLORS.success,
@@ -224,17 +256,7 @@ const styles = StyleSheet.create({
   unavailable: {
     color: COLORS.danger,
   },
-  deliveryAddressContainer: {
-    marginTop: 16,
-    backgroundColor: COLORS.lightGray,
-    padding: 12,
-    borderRadius: 8,
-  },
-  deliveryInfoText: {
-    fontSize: 14,
-    color: COLORS.gray,
-    textAlign: "center",
-  },
 });
 
 export default OrderMethod;
+

@@ -30,7 +30,11 @@ const AddressForm = ({ onAddressChange }) => {
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (name, value) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
     if (name === "province") {
       setDistricts([]);
       setWards([]);
@@ -43,12 +47,8 @@ const AddressForm = ({ onAddressChange }) => {
 
   useEffect(() => {
     if (formData.province && formData.district && formData.ward) {
-      const selectedWard = wards.find((w) => w.WardCode === formData.ward);
-      if (selectedWard) {
-        onAddressChange(selectedWard.WardCode);
-      } else {
-        console.error("Invalid ward selection:", formData.ward);
-      }
+      const addressString = getAddressString();
+      onAddressChange(addressString);
     }
   }, [formData]);
 
@@ -106,7 +106,6 @@ const AddressForm = ({ onAddressChange }) => {
 
     return `${formData.street}, ${wardName}, ${districtName}, ${provinceName}`.trim();
   };
-
 
   const renderPicker = (
     value,
