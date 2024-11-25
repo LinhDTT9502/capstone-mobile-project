@@ -72,9 +72,9 @@ const CheckoutBtn = ({
         }
 
         Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
-        navigation.navigate("OrderSuccess", {
-          orderID: response.data.saleOrderId,
-          orderCode: response.data.orderCode,
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "OrderSuccess", params: { orderID: response.data.saleOrderId, orderCode: response.data.orderCode } }],
         });
       }
     } catch (error) {

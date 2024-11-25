@@ -18,7 +18,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { selectUser, updateUser } from "../../redux/slices/authSlice";
 import { fetchUserProfile, saveUserProfile } from "../../services/userService";
 import { Picker } from "@react-native-picker/picker";
-import * as ImagePicker from "expo-image-picker";
 import { uploadAvatar } from "../../services/userService";
 
 export default function EditProfile() {
@@ -133,13 +132,12 @@ export default function EditProfile() {
             IsEmailVerified: profileData.emailConfirmed || false,
             IsPhoneVerified: profileData.phoneConfirmed || false,
           };
-          setFormData(newData); 
+          setFormData(newData);
           setInitialData(newData);
         } else {
           Alert.alert("Thông báo", "Không có dữ liệu người dùng.");
         }
       } catch (error) {
-        console.error("Error fetching user profile:", error);
         Alert.alert("Lỗi", "Không thể tải thông tin người dùng.");
       }
     };
@@ -224,31 +222,10 @@ export default function EditProfile() {
     setShowEmailModal(false);
   };
 
-  const handlePhoneSave = async () => {
-    if (!newPhone || newPhone.trim() === "") {
-      Alert.alert("Cảnh báo", "Vui lòng nhập số điện thoại hợp lệ.");
-      return;
-    }
-  
-    try {
-      const updatedData = { ...formData, Phone: newPhone };
-      await saveUserProfile(user.UserId, updatedData);
-  
-      dispatch(updateUser({ ...user, Phone: newPhone }));
-  
-      setFormData((prev) => ({ ...prev, Phone: newPhone }));
-  
-      Alert.alert("Thành công", "Số điện thoại đã được cập nhật.");
-      setShowPhoneModal(false);
-    } catch (error) {
-      console.error("Error updating phone number:", error?.response || error?.message);
-      Alert.alert(
-        "Lỗi",
-        error?.response?.data?.message || "Không thể cập nhật số điện thoại."
-      );
-    }
+  const handlePhoneSave = () => {
+    handleChange("Phone", newPhone);
+    setShowPhoneModal(false);
   };
-  
 
   const renderInput = (
     label,
@@ -268,45 +245,70 @@ export default function EditProfile() {
         <Text style={styles.label}>{label}</Text>
       </View>
       <View style={styles.inputWrapper}>
-        {name === "Phone" ? (
-          <View style={styles.inputWithButton}>
-            <TextInput
-              style={[styles.input, styles.nonEditableInput]}
-              value={formData.Phone || "Chưa có số điện thoại"}
-              editable={false}
-              placeholder="Nhập số điện thoại"
-              placeholderTextColor="#A0AEC0"
-            />
-            <TouchableOpacity
-              style={styles.changeButtonInline}
-              onPress={() =>
-                formData.Phone ? handlePhoneChange() : setShowPhoneModal(true)
-              }
-            >
-              <Text style={styles.changeButtonTextInline}>
-                {formData.Phone ? "Thay đổi" : "Thêm số điện thoại"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TextInput
+        {name === "BirthDate" && isEditing ? (
+          <TouchableOpacity
+            onPress={() => isEditing && setShowDatePicker(true)}
             style={[
               styles.input,
-              !editable && styles.disabledInput,
-              editable && styles.editableInput,
+              !isEditing && styles.disabledInput,
+              isEditing && styles.editableInput,
             ]}
-            value={formData[name]}
-            onChangeText={(value) => handleChange(name, value)}
-            editable={editable}
-            placeholder={`Nhập ${label.toLowerCase()}`}
-            placeholderTextColor="#A0AEC0"
-          />
+          >
+            <Text style={styles.dateButtonText}>
+              {formatDateForDisplay(formData.BirthDate) || "Chọn ngày"}
+            </Text>
+          </TouchableOpacity>
+        ) : name === "Gender" ? (
+          <Picker
+            selectedValue={formData.Gender}
+            onValueChange={(itemValue) => handleChange("Gender", itemValue)}
+            enabled={isEditing}
+            style={[
+              styles.input,
+              !isEditing && styles.disabledInput,
+              isEditing && styles.editableInput,
+            ]}
+          >
+            <Picker.Item label="Chọn giới tính" value="" />
+            <Picker.Item label="Nam" value="male" />
+            <Picker.Item label="Nữ" value="female" />
+            <Picker.Item label="Khác" value="other" />
+          </Picker>
+        ) : (
+          <View style={styles.inputWithButton}>
+            <TextInput
+              style={[
+                styles.input,
+                !editable && styles.disabledInput,
+                editable && styles.editableInput,
+                (name === "Email" || name === "Phone") &&
+                  styles.nonEditableInput,
+              ]}
+              value={formData[name]}
+              onChangeText={(value) => handleChange(name, value)}
+              editable={editable && name !== "Email" && name !== "Phone"}
+              placeholder={`Nhập ${label.toLowerCase()}`}
+              placeholderTextColor="#A0AEC0"
+            />
+            {(name === "Email" || name === "Phone") && (
+              <TouchableOpacity
+                style={styles.changeButtonInline}
+                onPress={
+                  name === "Email" ? handleEmailChange : handlePhoneChange
+                }
+              >
+                <Text style={styles.changeButtonTextInline}>Thay đổi</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         )}
-        {verifiable && name === "Phone" && (
+        {verifiable && (
           <FontAwesome
-            name={formData.IsPhoneVerified ? "check-circle" : "times-circle"}
+            name={
+              formData[`Is${name}Verified`] ? "check-circle" : "times-circle"
+            }
             size={24}
-            color={formData.IsPhoneVerified ? "#4CAF50" : "#FF3B30"}
+            color={formData[`Is${name}Verified`] ? "#4CAF50" : "#FF3B30"}
             style={styles.verifiedIcon}
           />
         )}
@@ -328,7 +330,7 @@ export default function EditProfile() {
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.profileImageContainer}>
+      <View style={styles.profileImageContainer}>
           <Image
             source={{
               uri: `${formData.ImgAvatarPath}?t=${new Date().getTime()}`,
@@ -348,6 +350,7 @@ export default function EditProfile() {
             <FontAwesome name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
+
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -444,14 +447,12 @@ export default function EditProfile() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {formData.Phone ? "Thay đổi số điện thoại" : "Thêm số điện thoại"}
-            </Text>
+            <Text style={styles.modalTitle}>Thay đổi Số điện thoại</Text>
             <TextInput
               style={styles.modalInput}
               value={newPhone}
               onChangeText={setNewPhone}
-              placeholder="Nhập số điện thoại"
+              placeholder="Nhập số điện thoại mới"
               keyboardType="phone-pad"
             />
             <View style={styles.navButtonContainer}>
@@ -465,9 +466,7 @@ export default function EditProfile() {
                 style={styles.modalButton}
                 onPress={handlePhoneSave}
               >
-                <Text style={styles.modalButtonText}>
-                  {formData.Phone ? "Lưu thay đổi" : "Thêm"}
-                </Text>
+                <Text style={styles.modalButtonText}>Lưu</Text>
               </TouchableOpacity>
             </View>
           </View>

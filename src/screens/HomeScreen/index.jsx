@@ -100,7 +100,7 @@ const HomePage = () => {
         const data = await fetchCategories();
         setCategories(data);
       } catch (error) {
-        console.error("Failed to load categories:", error);
+        // console.error("Failed to load categories:", error);
       }
     };
 
@@ -109,7 +109,7 @@ const HomePage = () => {
         const { products: initialProducts } = await fetchProducts(1);
         setProducts(initialProducts.slice(0, 4));
       } catch (error) {
-        console.error("Error loading products:", error);
+        // console.error("Error loading products:", error);
       }
     };
 

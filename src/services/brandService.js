@@ -11,7 +11,7 @@ import {
       const response = await fetchBrandsAPI();
       return response.data.data.$values.filter((brand) => brand.status);
     } catch (error) {
-      console.error('Error fetching brands:', error);
+      // console.error('Error fetching brands:', error);
       return [];
     }
   };
@@ -21,7 +21,7 @@ import {
       const response = await getBrandByIdAPI(brandId);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching brand with ID ${brandId}:`, error);
+      // console.error(`Error fetching brand with ID ${brandId}:`, error);
       return null;
     }
   };
@@ -31,7 +31,7 @@ import {
       const response = await addBrandAPI(brandData);
       return response.data;
     } catch (error) {
-      console.error('Error adding brand:', error);
+      // console.error('Error adding brand:', error);
       return null;
     }
   };
@@ -41,7 +41,7 @@ import {
       const response = await updateBrandAPI(brandId, brandData);
       return response.data;
     } catch (error) {
-      console.error(`Error updating brand with ID ${brandId}:`, error);
+      // console.error(`Error updating brand with ID ${brandId}:`, error);
       return null;
     }
   };
@@ -51,7 +51,7 @@ import {
       const response = await deleteBrandAPI(brandId);
       return response.data;
     } catch (error) {
-      console.error(`Error deleting brand with ID ${brandId}:`, error);
+      // console.error(`Error deleting brand with ID ${brandId}:`, error);
       return null;
     }
   };

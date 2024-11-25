@@ -27,6 +27,7 @@ import {
   setShipment,
 } from "../../redux/slices/shipmentSlice";
 import OrderMethod from "../../components/Payment/OrderMethod";
+import { useFocusEffect } from "expo-router";
 
 const COLORS = {
   primary: "#3366FF",
@@ -60,6 +61,15 @@ export default function PlaceOrderScreen({ route }) {
     address: "",
     shipmentDetailID: "",
   });
+
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     Alert.alert("Cảnh báo", "Bạn không thể quay lại để đặt hàng lại.", [
+  //       { text: "OK", onPress: () => navigation.navigate("LandingPage") },
+  //     ]);
+  //     return true;
+  //   }, [])
+  // );
 
   useEffect(() => {
     const checkLoginStatus = async () => {

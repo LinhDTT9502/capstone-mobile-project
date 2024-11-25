@@ -9,6 +9,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
+  Modal,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -20,16 +21,25 @@ const screenWidth = Dimensions.get("window").width;
 export default function BookmarkList() {
   const [bookmarks, setBookmarks] = useState([]);
   const navigation = useNavigation();
+  const [noTokenModalVisible, setNoTokenModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       const loadBookmarks = async () => {
         try {
-          // Lấy danh sách bookmark từ AsyncStorage
+          // Check if user is logged in by checking the token
+          const token = await AsyncStorage.getItem("token");
+          if (!token) {
+            setNoTokenModalVisible(true);
+            return;
+          }
+
+          // Load bookmarks if logged in
           const storedBookmarks = await AsyncStorage.getItem("bookmarks");
-          const parsedBookmarks = storedBookmarks ? JSON.parse(storedBookmarks) : [];
-  
-          // Gọi API để lấy thông tin chi tiết sản phẩm
+          const parsedBookmarks = storedBookmarks
+            ? JSON.parse(storedBookmarks)
+            : [];
+
           const bookmarkDetails = await Promise.all(
             parsedBookmarks.map(async (bookmark) => {
               try {
@@ -39,23 +49,24 @@ export default function BookmarkList() {
                   id: bookmark.id,
                 };
               } catch (error) {
-                console.error(`Error fetching product with id ${bookmark.id}:`, error);
+                console.error(
+                  `Error fetching product with id ${bookmark.id}:`,
+                  error
+                );
                 return null;
               }
             })
           );
-  
+
           setBookmarks(bookmarkDetails.filter((product) => product !== null));
         } catch (error) {
           console.error("Error loading bookmarks:", error);
         }
       };
-  
+
       loadBookmarks();
     }, [])
   );
-  
-
   const handleRemoveBookmark = async (item) => {
     Alert.alert(
       "Xóa Bookmark",
@@ -84,7 +95,15 @@ export default function BookmarkList() {
       ]
     );
   };
+  const handleLogin = () => {
+    setNoTokenModalVisible(false);
+    navigation.navigate("Login");
+  };
 
+  const handleCancel = () => {
+    setNoTokenModalVisible(false);
+    navigation.navigate("LandingPage");
+  };
   const renderBookmarkItem = ({ item }) => (
     <TouchableOpacity
       style={styles.bookmarkItem}
@@ -94,7 +113,9 @@ export default function BookmarkList() {
     >
       <Image
         style={styles.coverImage}
-        source={{ uri: item.imgAvatarPath || "https://via.placeholder.com/150" }}
+        source={{
+          uri: item.imgAvatarPath || "https://via.placeholder.com/150",
+        }}
       />
       <View style={styles.bookmarkContent}>
         <Text style={styles.bookmarkTitle} numberOfLines={2}>
@@ -112,7 +133,6 @@ export default function BookmarkList() {
       </View>
     </TouchableOpacity>
   );
-  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -123,7 +143,9 @@ export default function BookmarkList() {
       {bookmarks.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Feather name="bookmark" size={64} color="#ccc" />
-          <Text style={styles.emptyText}>Danh sách Bookmark của bạn trống!</Text>
+          <Text style={styles.emptyText}>
+            Danh sách Bookmark của bạn trống!
+          </Text>
         </View>
       ) : (
         <FlatList
@@ -135,6 +157,36 @@ export default function BookmarkList() {
           columnWrapperStyle={styles.columnWrapper}
         />
       )}
+
+      <Modal
+        visible={noTokenModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setNoTokenModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Bạn chưa có tài khoản</Text>
+            <Text style={styles.modalText}>
+              Vui lòng đăng nhập để tiếp tục.
+            </Text>
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={handleCancel}
+              >
+                <Text style={styles.cancelButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={handleLogin}
+              >
+                <Text style={styles.loginButtonText}>Đăng nhập</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -146,9 +198,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0F2F5",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
@@ -163,13 +215,13 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   columnWrapper: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   bookmarkItem: {
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     marginBottom: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 3,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
@@ -198,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   removeButton: {
-    position: 'absolute',
+    position: "absolute",
     right: 8,
     bottom: 8,
     padding: 4,
@@ -214,5 +266,61 @@ const styles = StyleSheet.create({
     color: "#888",
     textAlign: "center",
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#FFF",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#666",
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: 10,
+  },
+  cancelButton: {
+    padding: 12,
+    borderRadius: 8,
+    width: "45%",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  loginButton: {
+    padding: 12,
+    borderRadius: 8,
+    width: "45%",
+    alignItems: "center",
+    backgroundColor: "#FF9900",
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  loginButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
-

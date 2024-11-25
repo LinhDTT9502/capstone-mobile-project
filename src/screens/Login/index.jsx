@@ -32,7 +32,7 @@ const LoginScreen = () => {
           navigation.navigate("HomeController");
         }
       } catch (error) {
-        console.error("Error checking login status:", error);
+        // console.error("Error checking login status:", error);
       }
     };
 
@@ -133,7 +133,7 @@ const LoginScreen = () => {
       dispatch(login(decoded));
       navigation.navigate("HomeController");
     } catch (error) {
-      console.error("Login error:", error);
+      // console.error("Login error:", error);
       Alert.alert(
         "Lỗi",
         error.response?.data?.message || "Đăng nhập thất bại."

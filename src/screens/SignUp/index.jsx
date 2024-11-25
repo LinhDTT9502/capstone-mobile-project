@@ -86,7 +86,7 @@ export default function SignUpScreen() {
       navigation.navigate("Login");
     } catch (error) {
       Alert.alert("Lỗi", `Mã OTP không chính xác hoặc đã hết hạn.`);
-      console.error("Error in verifyAccountMobile:", error);
+      // console.error("Error in verifyAccountMobile:", error);
     } finally {
       setLoading(false);
     }
