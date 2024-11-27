@@ -1,7 +1,7 @@
 // apiComment.js
 import axios from 'axios';
 import axiosInstance from './axiosInstance';
-const API_BASE_URL = 'https://twosportapi-295683427295.asia-southeast2.run.app/api/Comment';
+const API_BASE_URL = 'https://capstone-project-703387227873.asia-southeast1.run.app/api/Comment';
 
 export const fetchCommentsAPI = (productId) => {
     return axios.get(`${API_BASE_URL}/get-all-comments/${productId}`);
@@ -42,15 +42,16 @@ export const deleteCommentAPI = (id, token) => {
   });
 };
 
-export const replyCommentAPI = (commentId, content, token) => {
+export const replyCommentAPI = (productId, parentCommentId, content, token) => {
   return axiosInstance.post(
-    `${API_BASE_URL}/comment/${commentId}/reply`,
+    `${API_BASE_URL}/reply-comment/${productId}?parentCommentId=${parentCommentId}`,
     { content },
     {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     }
   );
 };
+

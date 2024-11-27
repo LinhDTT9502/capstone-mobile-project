@@ -1,16 +1,15 @@
 import axios from "axios";
 
 const API_BASE_URL =
-  "https://twosportapi-295683427295.asia-southeast2.run.app/api/Product";
+  "https://capstone-project-703387227873.asia-southeast1.run.app/api/Product";
 const perPage = 15;
 
 export const getProductList = (currentPage) => {
   const url = `${API_BASE_URL}/list-products`;
   const params = {
-    perPage: perPage,
-    currentPage: currentPage,
+    perPage,
+    currentPage,
   };
-  // console.log(params);
   return axios.get(url, {
     params,
     headers: {
@@ -18,6 +17,7 @@ export const getProductList = (currentPage) => {
     },
   });
 };
+
 export const getProductById = (id) => {
   const url = `${API_BASE_URL}/get-product/${id}`;
   return axios.get(url, {

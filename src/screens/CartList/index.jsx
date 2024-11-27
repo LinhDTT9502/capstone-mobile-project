@@ -16,7 +16,6 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  loadCartState,
   selectCartItems,
   addCart,
   removeFromCart,
@@ -71,11 +70,9 @@ export default function Cart() {
           setToken(storedToken);
   
           if (storedToken) {
-            // Lấy giỏ hàng từ API
             const customerCart = await getUserCart(storedToken);
             setCartItems(customerCart);
           } else {
-            // Lấy giỏ hàng từ Redux cho khách vãng lai
             setCartItems(guestCartItems);
           }
         } catch (error) {
@@ -127,13 +124,11 @@ export default function Cart() {
   const handleIncreaseQuantity = async (item) => {
     try {
       if (token) {
-        // Gọi API để tăng số lượng
         const updatedItem = await updateCartItemQuantity(
-          item.id, // Đảm bảo item.id là cartItemId
-          item.quantity + 1, // Tăng số lượng thêm 1
+          item.id, 
+          item.quantity + 1, 
           token
         );
-        // Cập nhật lại trạng thái giỏ hàng
         setCartItems((prev) =>
           prev.map((i) =>
             i.id === item.id
@@ -142,7 +137,6 @@ export default function Cart() {
           )
         );
       } else {
-        // Redux logic cho khách vãng lai
         dispatch(addCart({ ...item, quantity: item.quantity + 1 }));
       }
     } catch (error) {
@@ -155,13 +149,11 @@ export default function Cart() {
     try {
       if (item.quantity > 1) {
         if (token) {
-          // Gọi API giảm số lượng
           const updatedItem = await updateCartItemQuantity(
-            item.id, // Đảm bảo truyền đúng item.id (cartItemId)
+            item.id, 
             item.quantity - 1,
             token
           );
-          // Cập nhật lại trạng thái giỏ hàng
           setCartItems((prev) =>
             prev.map((i) =>
               i.id === item.id
@@ -170,11 +162,9 @@ export default function Cart() {
             )
           );
         } else {
-          // Dùng Redux cho khách
           dispatch(decreaseQuantity(item.id));
         }
       } else {
-        // Nếu số lượng <= 1, xóa sản phẩm khỏi giỏ hàng
         await handleRemoveItem(item.id);
       }
     } catch (error) {

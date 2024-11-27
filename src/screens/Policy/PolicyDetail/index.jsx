@@ -20,7 +20,7 @@ const PolicyDetail = ({ route }) => {
         onPress={() => navigation.goBack()}
       >
         <Ionicons name="arrow-back" size={24} color="#4A90E2" />
-        <Text style={styles.backText}>Back</Text>
+        <Text style={styles.backText}>Quay lại</Text>
       </TouchableOpacity>
       <ScrollView style={styles.contentContainer}>
         <Text style={styles.title}>{title}</Text>

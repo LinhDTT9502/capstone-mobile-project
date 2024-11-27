@@ -23,49 +23,6 @@ const bannerImages = [
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZEJzEPbuVrCyMZzH3925ylhxW_t2DqErYOQ&s",
 ];
 
-const flashSaleProducts = [
-  {
-    id: 1,
-    name: "Giày chạy bộ Nike Air Zoom",
-    price: "2.000.000 ₫",
-    image:
-      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/skwgyqrbfvnt6ux4ssap/air-zoom-pegasus-37-running-shoe-mwrTCc.png",
-    discount: "20%",
-  },
-  {
-    id: 2,
-    name: "Áo thể thao Adidas Climacool",
-    price: "800.000 ₫",
-    image:
-      "https://assets.adidas.com/images/w_600,f_auto,q_auto/5ce17825f3bd4bbd90f9ab9600a3f64c_9366/Ao_Thun_3_Soc_DJen_GN3495_01_laydown.jpg",
-    discount: "15%",
-  },
-];
-
-const recentlyViewedProducts = [
-  {
-    id: 1,
-    name: "Bóng đá Nike Strike",
-    price: "750.000 ₫",
-    image:
-      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/17e7e6e4-5795-4c75-80a5-7d3c4ea4d6b3/strike-soccer-ball-GnljN8.png",
-  },
-  {
-    id: 2,
-    name: "Túi đựng vợt tennis Wilson",
-    price: "1.200.000 ₫",
-    image:
-      "https://www.wilson.com/en-us/media/catalog/product/W/R/WR8002001001_0_Tour_2_Comp_Large_RD_BL.jpg",
-  },
-  {
-    id: 3,
-    name: "Túi đựng vợt tennis Wilson",
-    price: "1.200.000 ₫",
-    image:
-      "https://www.wilson.com/en-us/media/catalog/product/W/R/WR8002001001_0_Tour_2_Comp_Large_RD_BL.jpg",
-  },
-];
-
 const promotionalContent = [
   {
     id: "1",
@@ -90,10 +47,22 @@ const HomePage = () => {
   const navigation = useNavigation();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [flashSaleProducts, setFlashSaleProducts] = useState([]);
+  const [recentlyViewedProducts, setRecentlyViewedProducts] = useState([]);
+  const handleProductClick = (product) => {
+    setRecentlyViewedProducts((prev) => {
+      const filtered = prev.filter((item) => item.id !== product.id);
+      return [product, ...filtered];
+    });
+
+    navigation.navigate("ProductDetail", { productId: product.id });
+  };
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
+
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -106,15 +75,34 @@ const HomePage = () => {
 
     const loadInitialProducts = async () => {
       try {
-        const { products: initialProducts } = await fetchProducts(1);
-        setProducts(initialProducts.slice(0, 4));
+        // const response = await fetchProducts(1);
+        // const products = response.data?.$values || [];
+        // const newProducts = products.filter((product) => product.isNew === true);
+        // setProducts(newProducts.slice(0, 4));
+
+        const { products } = await fetchProducts(1);
+        const lastFourProducts = products.slice(-4);
+        setProducts(lastFourProducts.reverse());
       } catch (error) {
-        // console.error("Error loading products:", error);
+        console.error("Error loading new products:", error);
+      }
+    };
+
+    const loadFlashSaleProducts = async () => {
+      try {
+        const { products: allProducts } = await fetchProducts(1);
+        const discountedProducts = allProducts.filter(
+          (product) => product.discount > 0
+        );
+        setFlashSaleProducts(discountedProducts);
+      } catch (error) {
+        // console.error("Error loading flash sale products:", error);
       }
     };
 
     loadCategories();
     loadInitialProducts();
+    loadFlashSaleProducts();
   }, []);
 
   const renderCategory = useCallback(
@@ -147,29 +135,26 @@ const HomePage = () => {
   const renderProductCard = (product, isFlashSale = false) => (
     <TouchableOpacity
       key={product.id}
-      style={styles.productCard}
-      onPress={() =>
-        navigation.navigate("ProductDetail", { productId: product.id })
-      }
+      style={[styles.productCard, isFlashSale && styles.flashSaleCard]}
+      onPress={() => handleProductClick(product)}
     >
       <Image
-        source={{ uri: product.image || product.imgAvatarPath }}
+        source={{ uri: product.imgAvatarPath || product.image }}
         style={styles.productImage}
       />
       {isFlashSale && (
         <View style={styles.discountTag}>
-          <Text style={styles.discountText}>{product.discount} OFF</Text>
+          <Text style={styles.discountText}>-{product.discount}%</Text>
         </View>
       )}
-      <Text style={styles.productName} numberOfLines={2}>
-        {product.name || product.productName}
-      </Text>
-      <Text style={styles.productPrice}>
-        {typeof product.price === "number"
-          ? product.price.toLocaleString()
-          : product.price}{" "}
-        ₫
-      </Text>
+      <View style={styles.productInfo}>
+        <Text style={styles.productName} numberOfLines={2}>
+          {product.productName || product.name}
+        </Text>
+        <Text style={styles.productPrice}>
+          {product.price?.toLocaleString() || "N/A"} ₫
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 
@@ -246,7 +231,11 @@ const HomePage = () => {
           </View>
 
           <View style={styles.featuredProductsContainer}>
-            {products.map((product) => renderProductCard(product))}
+            {products.length > 0 ? (
+              products.map((product) => renderProductCard(product))
+            ) : (
+              <Text>Không có sản phẩm để hiển thị</Text>
+            )}
           </View>
         </View>
 
@@ -264,20 +253,26 @@ const HomePage = () => {
 
         <View style={styles.flashSaleSection}>
           <Text style={styles.sectionTitle}>Flash Sale</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {flashSaleProducts.map((product) =>
-              renderProductCard(product, true)
-            )}
-          </ScrollView>
+          <FlatList
+            data={flashSaleProducts}
+            renderItem={({ item }) => renderProductCard(item, true)}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.flashSaleContainer}
+          />
         </View>
 
         <View style={styles.recentlyViewedSection}>
           <Text style={styles.sectionTitle}>Đã xem gần đây</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {recentlyViewedProducts.map((product) =>
-              renderProductCard(product)
-            )}
-          </ScrollView>
+          <FlatList
+            data={recentlyViewedProducts}
+            renderItem={({ item }) => renderProductCard(item)}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recentlyViewedContainer}
+          />
         </View>
 
         {/* <TouchableOpacity

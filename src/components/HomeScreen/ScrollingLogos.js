@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Image, Animated, Easing, StyleSheet, Dimensions, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { getBrands } from '../../services/brandService';
+import { getBrands } from "../../services/brandService";
 
 const { width } = Dimensions.get("window");
 
@@ -16,20 +16,27 @@ const ScrollingLogos = () => {
       setBrands(brandData);
     };
     fetchBrands();
+  }, []);
 
-    const totalWidth = brands.length * 100;
+  useEffect(() => {
+    if (brands.length > 0) {
+      const totalWidth = brands.length * 100;
+      const animatedWidth = totalWidth * 2;
 
-    const scrollAnimation = Animated.loop(
-      Animated.timing(scrollX, {
-        toValue: -totalWidth,
-        duration: 20000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    );
-    scrollAnimation.start();
+      const infiniteScroll = () => {
+        scrollX.setValue(0);
+        Animated.timing(scrollX, {
+          toValue: -totalWidth,
+          duration: 20000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }).start(() => {
+          infiniteScroll();
+        });
+      };
 
-    return () => scrollAnimation.stop();
+      infiniteScroll(); 
+    }
   }, [brands]);
 
   const handleBrandPress = (brandName) => {

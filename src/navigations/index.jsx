@@ -29,6 +29,7 @@ import PolicyDetail from "../screens/Policy/PolicyDetail/index";
 import BranchList from "../screens/BranchList/index";
 import PlaceOrderScreen from "../screens/PlaceOrder/index";
 import OrderSuccessScreen from "../screens/PlaceOrder/OrderSuccess/index";
+import Bookmark from "../screens/Bookmark/index";
 
 const Stack = createStackNavigator();
 
@@ -54,6 +55,7 @@ export default function MainContainer() {
       <Stack.Screen name="PolicyDetail" component={PolicyDetail} />
       <Stack.Screen name="PolicySection" component={PolicySection} />
       <Stack.Screen name="BranchList" component={BranchList} />
+      <Stack.Screen name="Bookmark" component={Bookmark} />
       <Stack.Screen
         name="OrderSuccess"
         component={OrderSuccessScreen}

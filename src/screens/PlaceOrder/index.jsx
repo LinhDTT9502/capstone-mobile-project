@@ -21,7 +21,7 @@ import PaymentMethod from "../../components/Payment/PaymentMethod";
 import CheckoutButton from "../../components/Payment/CheckoutBtn";
 import { fetchBranchs } from "../../services/branchService";
 import { getUserShipmentDetails } from "../../services/shipmentService";
-import { selectCartItems, loadCartState } from "../../redux/slices/cartSlice";
+import { selectCartItems} from "../../redux/slices/cartSlice";
 import {
   selectedShipment,
   setShipment,
@@ -132,7 +132,6 @@ export default function PlaceOrderScreen({ route }) {
 
   useEffect(() => {
     const loadCart = async () => {
-      await dispatch(loadCartState());
     };
     loadCart();
   }, [dispatch]);

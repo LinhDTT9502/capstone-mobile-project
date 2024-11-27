@@ -16,8 +16,6 @@ export const addToCart = async (productId, quantityToAdd, token) => {
     if (error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
-
-    throw new Error("Sản phẩm đã hết hàng");
   }
 };
 

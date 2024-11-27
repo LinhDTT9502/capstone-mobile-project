@@ -1,5 +1,5 @@
 // src/styles/ProductDetailStyles.js
-import { StyleSheet,Dimensions } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 const { width, height } = Dimensions.get("window");
 const COLORS = {
   primary: "#0035FF",
@@ -17,16 +17,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  
+  unavailableOption: {
+    opacity: 0.5,
+    backgroundColor: "#F5F5F5",
+  },
+
+  unavailableText: {
+    color: "#A0A0A0",
+  },
+
   container: {
     flex: 1,
     paddingTop: 30,
     backgroundColor: "#F0F2F5",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
@@ -169,8 +177,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
 
-
-conditionSelector: {
+  conditionSelector: {
     flexDirection: "row",
     flexWrap: "wrap",
     marginBottom: 16,
@@ -349,58 +356,58 @@ conditionSelector: {
   },
   optionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
-    color: '#000',
+    color: "#000",
   },
   optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   optionButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#0035FF',
+    backgroundColor: "#0035FF",
     borderRadius: 20,
   },
   activeOptionButton: {
-    backgroundColor: '#0035FF',
+    backgroundColor: "#0035FF",
   },
   optionButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   activeOptionButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   circleButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    borderColor: "#E5E5E5",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
   },
   activeCircleButton: {
-    borderColor: '#0035FF',
-    backgroundColor: '#FFFFFF',
+    borderColor: "#0035FF",
+    backgroundColor: "#FFFFFF",
   },
   circleButtonText: {
     fontSize: 14,
-    color: '#000000',
+    color: "#000000",
   },
   activeCircleButtonText: {
-    color: '#0035FF',
+    color: "#0035FF",
   },
   quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: "#E5E5E5",
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -411,17 +418,17 @@ conditionSelector: {
   },
   quantityText: {
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   addToCartContainer: {
     marginTop: 16,
   },
   totalPriceText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#0035FF',
+    fontWeight: "600",
+    color: "#0035FF",
     marginTop: 8,
   },
 
@@ -431,9 +438,9 @@ conditionSelector: {
   thumbnailContainer: {
     marginRight: 10,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   selectedThumbnail: {
     borderColor: COLORS.primary,
@@ -441,7 +448,7 @@ conditionSelector: {
   thumbnailImage: {
     width: 60,
     height: 60,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   imageModalContainer: {
     flex: 1,
@@ -477,27 +484,46 @@ conditionSelector: {
     marginRight: 8,
     backgroundColor: "#FFFFFF",
   },
-  
+
   activeColorOptionContainer: {
     borderColor: "#FF5722", // Customize the color as per your design
   },
-  
+
   colorOptionImage: {
     width: 40,
     height: 40,
     borderRadius: 4,
     marginRight: 8,
   },
-  
+
   colorOptionText: {
     fontSize: 14,
     color: "#050505",
   },
-  
+
   activeColorOptionText: {
     color: "#FF5722", // Customize the color for active text
   },
-  
+  cartIconContainer: {
+    position: "relative",
+    padding: 8,
+  },
+  cartBadge: {
+    position: "absolute",
+    top: -5,
+    right: -10,
+    backgroundColor: COLORS.secondary,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cartBadgeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "bold",
+  },
 });
 
 export default styles;

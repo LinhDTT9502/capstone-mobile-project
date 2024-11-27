@@ -50,7 +50,7 @@ const OrderSuccessScreen = ({ route }) => {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("LandingPage")}
+          onPress={() => navigation.navigate("HomeController")}
           activeOpacity={0.8}
         >
           <Text style={styles.buttonText}>Quay về trang chủ</Text>

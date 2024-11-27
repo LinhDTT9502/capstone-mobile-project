@@ -11,7 +11,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { fetchProductById } from "@/src/services/productService";
@@ -137,6 +137,12 @@ export default function BookmarkList() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Feather name="arrow-left" size={24} color="#050505" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Bookmarks</Text>
       </View>
 
@@ -198,9 +204,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0F2F5",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    // justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
@@ -322,5 +328,9 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
   },
 });

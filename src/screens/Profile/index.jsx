@@ -17,6 +17,8 @@ import { selectUser } from "../../redux/slices/authSlice";
 import LogoutButton from "../../components/Auth/LogoutButton";
 import styles from "./css/AcouuntStyles";
 import OrderStatus from "../../components/Profile/OrderStatus";
+import LoyaltyPoints from "../../components/Profile/LoyalPoint";
+
 export default function Account() {
   const navigation = useNavigation();
   const user = useSelector(selectUser);
@@ -107,11 +109,19 @@ export default function Account() {
           <Text style={styles.profileName}>{user.FullName}</Text>
           <Text style={styles.profileId}>Mã tài khoản: {user.UserId}</Text>
         </View>
-
+        {/* <LoyaltyPoints userId={user.UserId} /> */}
         <OrderStatus />
 
         <View style={styles.settingsSection}>
           <Text style={styles.sectionTitle}>Cài đặt tài khoản</Text>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => navigation.navigate("Bookmark")}
+          >
+            <Ionicons name="bookmark-outline" size={24} color="red" />
+            <Text style={styles.settingText}>Bookmark</Text>
+            <Ionicons name="chevron-forward" size={20} color="#888" />
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.settingItem}
             onPress={() => navigation.navigate("EditProfile")}

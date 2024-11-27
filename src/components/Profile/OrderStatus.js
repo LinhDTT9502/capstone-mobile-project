@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import styles from './OrderStatusStyle';
@@ -8,10 +8,10 @@ const OrderSection = () => {
   const navigation = useNavigation();
 
   const statuses = [
-    { label: "Chờ xác nhận", icon: "time-outline", value: "pending" },
-    { label: "Chờ lấy hàng", icon: "cube-outline", value: "pickup" },
-    { label: "Đang giao", icon: "bicycle-outline", value: "shipping" },
-    { label: "Đánh giá", icon: "star-outline", value: "review" },
+    { label: "Chờ xác nhận", icon: "time-outline", value: "pending", color: "#FF9900" },
+    { label: "Chờ lấy hàng", icon: "cube-outline", value: "pickup", color: "#4CAF50" },
+    { label: "Đang giao", icon: "bicycle-outline", value: "shipping", color: "#2196F3" },
+    { label: "Đánh giá", icon: "star-outline", value: "review", color: "#9C27B0" },
   ];
 
   const handleStatusClick = (status) => {
@@ -28,13 +28,15 @@ const OrderSection = () => {
             style={styles.statusButton}
             onPress={() => handleStatusClick(item.value)}
           >
-            <Ionicons
-              name={item.icon}
-              size={28}
-              color="#FF9900"
-              style={styles.statusIcon}
-            />
-            <Text style={styles.statusText}>{item.label}</Text>
+            <Animated.View style={[styles.iconContainer, { backgroundColor: item.color }]}>
+              <Ionicons
+                name={item.icon}
+                size={28}
+                color="#FFF"
+                style={styles.statusIcon}
+              />
+            </Animated.View>
+            <Text style={styles.statusText} numberOfLines={2} ellipsizeMode="tail">{item.label}</Text>
           </TouchableOpacity>
         ))}
       </View>

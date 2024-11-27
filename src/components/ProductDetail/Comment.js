@@ -31,11 +31,10 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingText, setEditingText] = useState("");
   const [error, setError] = useState(null);
+  const [replyingCommentId, setReplyingCommentId] = useState(null);
+  const [replyText, setReplyText] = useState("");
 
   useEffect(() => {
-    // console.log("Is Logged In:", isLoggedIn);
-    // console.log("Current User ID:", currentUserId);
-    // console.log("Product ID:", productId);
     if (productId) {
       loadComments();
     } else {
@@ -43,29 +42,29 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
     }
   }, [productId]);
 
+  const organizeComments = (commentsArray) => {
+    const mainComments = commentsArray.filter((c) => c.parentCommentId === 0);
+    mainComments.forEach((comment) => {
+      comment.replies = commentsArray.filter(
+        (r) => r.parentCommentId === comment.id
+      );
+    });
+    return mainComments;
+  };
+
   const loadComments = async () => {
     try {
       setLoading(true);
-      setError(null);
-
       const response = await fetchComments(productId);
-
-      // Check if response has the expected structure
-      if (response && response.data && response.data.$values) {
-        const commentsArray = response.data.$values;
-        // console.log("Loaded comments:", commentsArray); // Log to debug
-        setComments(commentsArray);
-        setDisplayedComments(commentsArray.slice(0, INITIAL_COMMENT_COUNT));
+      if (response?.data?.$values) {
+        const organizedComments = organizeComments(response.data.$values);
+        setComments(organizedComments);
+        setDisplayedComments(organizedComments.slice(0, INITIAL_COMMENT_COUNT));
       } else {
-        setError("Unexpected response format when loading comments");
-        console.error(
-          "Error: Expected an array in response.data.$values, got:",
-          response
-        );
+        setError("Unexpected response format.");
       }
     } catch (error) {
-      setError("Unable to load comments");
-      console.error("Error loading comments:", error);
+      setError("Unable to load comments.");
     } finally {
       setLoading(false);
     }
@@ -86,15 +85,12 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
 
     try {
       const newCommentResponse = await postComment(productId, newComment);
-
-      // Cập nhật bình luận mới vào danh sách
       setComments((prevComments) => [newCommentResponse.data, ...prevComments]);
       setDisplayedComments((prevDisplayed) => [
         newCommentResponse.data,
         ...prevDisplayed,
       ]);
-
-      setNewComment(""); // Xóa nội dung trong ô nhập
+      setNewComment("");
       ToastAndroid.show("Thêm bình luận thành công!", ToastAndroid.SHORT);
     } catch (error) {
       Alert.alert("Lỗi", "Không thể thêm bình luận. Vui lòng thử lại.");
@@ -103,7 +99,6 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
 
   const handleEditComment = async (id) => {
     if (!id) {
-      console.error("id is undefined or null");
       Alert.alert("Lỗi", "Không tìm thấy ID bình luận để chỉnh sửa.");
       return;
     }
@@ -115,23 +110,18 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
 
     try {
       await editComment(id, editingText);
-
-      // Cập nhật bình luận trực tiếp trong danh sách
       setComments((prevComments) =>
         prevComments.map((comment) =>
           comment.id === id ? { ...comment, content: editingText } : comment
         )
       );
-
       setDisplayedComments((prevDisplayed) =>
         prevDisplayed.map((comment) =>
           comment.id === id ? { ...comment, content: editingText } : comment
         )
       );
-
       setEditingCommentId(null);
       setEditingText("");
-
       ToastAndroid.show("Chỉnh sửa bình luận thành công!", ToastAndroid.SHORT);
     } catch (error) {
       Alert.alert("Lỗi", "Không thể chỉnh sửa bình luận. Vui lòng thử lại.");
@@ -143,10 +133,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
       "Xác nhận xóa",
       "Bạn có chắc chắn muốn xóa bình luận này không?",
       [
-        {
-          text: "Hủy",
-          style: "cancel",
-        },
+        { text: "Hủy", style: "cancel" },
         {
           text: "Xóa",
           style: "destructive",
@@ -165,16 +152,12 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
 
     try {
       await deleteComment(id);
-
-      // Loại bỏ bình luận đã xoá khỏi danh sách hiện tại
       setComments((prevComments) =>
         prevComments.filter((comment) => comment.id !== id)
       );
       setDisplayedComments((prevDisplayed) =>
         prevDisplayed.filter((comment) => comment.id !== id)
       );
-
-      // Hiển thị thông báo thành công
       ToastAndroid.show("Xóa bình luận thành công!", ToastAndroid.SHORT);
     } catch (error) {
       console.error("Lỗi xoá bình luận:", error);
@@ -182,17 +165,58 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
     }
   };
 
-  const handleReplyComment = async (commentId) => {
-    Alert.alert(
-      "Feature Not Implemented",
-      "Reply functionality is not available yet."
-    );
+  const handleReplyComment = async (parentCommentId) => {
+    if (replyText.trim().length === 0) {
+      Alert.alert("Lỗi", "Vui lòng nhập nội dung trả lời.");
+      return;
+    }
+  
+    if (!isLoggedIn) {
+      Alert.alert("Lỗi", "Vui lòng đăng nhập để trả lời bình luận.");
+      return;
+    }
+  
+    try {
+      const newReply = await replyComment(productId, parentCommentId, replyText);
+  
+      setComments((prevComments) =>
+        prevComments.map((comment) =>
+          comment.id === parentCommentId
+            ? { ...comment, replies: [...(comment.replies || []), newReply.data] }
+            : comment
+        )
+      );
+  
+      setReplyingCommentId(null);
+      setReplyText("");
+      ToastAndroid.show("Trả lời bình luận thành công!", ToastAndroid.SHORT);
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể trả lời bình luận. Vui lòng thử lại.");
+      console.error("Error posting reply:", error.response || error.message);
+    }
+  };
+
+  const startReplying = (commentId) => {
+    setReplyingCommentId(commentId);
+    setReplyText("");
   };
 
   const handleLoadMore = () => {
     const newCount = displayedComments.length + LOAD_MORE_COUNT;
     setDisplayedComments(comments.slice(0, newCount));
   };
+
+  const renderReplyItem = (reply) => (
+    <View key={reply.id} style={styles.replyItem}>
+      <View style={styles.replyHeader}>
+        <Text style={styles.replyAuthor}>{reply.username || "Unknown User"}</Text>
+        <Text style={styles.replyDate}>
+          {reply.createdAt ? new Date(reply.createdAt).toLocaleString() : "Unknown Date"}
+        </Text>
+      </View>
+      <Text style={styles.replyContent}>{reply.content}</Text>
+    </View>
+  );
 
   const renderCommentItem = ({ item }) => {
     const isOwner = item.userId === currentUserId;
@@ -215,6 +239,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
             style={styles.editInput}
             value={editingText}
             onChangeText={setEditingText}
+            multiline
           />
         ) : (
           <Text style={styles.commentContent}>
@@ -263,6 +288,35 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
                 </TouchableOpacity>
               </>
             )}
+            <TouchableOpacity
+              onPress={() => startReplying(item.id)}
+              style={styles.actionButton}
+            >
+              <Ionicons name="chatbox-outline" size={16} color="#007AFF" />
+              <Text style={styles.actionText}>Trả lời</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {item.replies && item.replies.length > 0 && (
+          <View style={styles.repliesContainer}>
+            {item.replies.map(renderReplyItem)}
+          </View>
+        )}
+        {replyingCommentId === item.id && (
+          <View style={styles.replyInputContainer}>
+            <TextInput
+              style={styles.replyInput}
+              placeholder="Nhập nội dung trả lời..."
+              value={replyText}
+              onChangeText={setReplyText}
+              multiline
+            />
+            <TouchableOpacity
+              onPress={() => handleReplyComment(item.id)}
+              style={styles.sendReplyButton}
+            >
+              <Ionicons name="send" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -275,7 +329,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
       {loading ? (
         <ActivityIndicator size="large" color="#007AFF" />
       ) : error ? (
-        <Text style={{ color: "red", textAlign: "center" }}>{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       ) : displayedComments.length === 0 ? (
         <Text style={styles.noComments}>Không có bình luận nào</Text>
       ) : (
@@ -285,6 +339,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
           keyExtractor={(item) =>
             item.productId ? `${item.productId}-${item.id}` : `${item.id}`
           }
+          contentContainerStyle={styles.commentList}
         />
       )}
       {displayedComments.length < comments.length && (
@@ -309,7 +364,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
             onPress={handlePostComment}
             style={styles.sendButton}
           >
-            <Ionicons name="send" size={24} color="#007AFF" />
+            <Ionicons name="send" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       ) : (
@@ -321,15 +376,15 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
+    flex: 1,
     backgroundColor: "#FFFFFF",
-    paddingBottom: 20,
+    padding: 16,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 12,
-    color: "#333",
+    marginBottom: 16,
+    color: "#333333",
   },
   noComments: {
     fontStyle: "italic",
@@ -338,28 +393,28 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   commentList: {
-    maxHeight: "100%",
+    flexGrow: 1,
   },
   commentItem: {
-    marginBottom: 12,
+    marginBottom: 16,
     padding: 16,
-    backgroundColor: "#F0F2F5",
-    borderRadius: 10,
+    backgroundColor: "#F8F9FA",
+    borderRadius: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   commentHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   commentAuthor: {
     fontWeight: "bold",
     color: "#007AFF",
-    fontSize: 14,
+    fontSize: 16,
   },
   commentDate: {
     fontSize: 12,
@@ -367,17 +422,19 @@ const styles = StyleSheet.create({
   },
   commentContent: {
     marginBottom: 12,
-    color: "#333",
-    fontSize: 15,
-    lineHeight: 20,
+    color: "#333333",
+    fontSize: 16,
+    lineHeight: 24,
   },
   editInput: {
     borderWidth: 1,
     borderColor: "#007AFF",
     borderRadius: 8,
-    padding: 8,
+    padding: 12,
     marginBottom: 8,
-    fontSize: 14,
+    fontSize: 16,
+    color: "#333333",
+    backgroundColor: "#FFFFFF",
   },
   commentActions: {
     flexDirection: "row",
@@ -386,12 +443,17 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 20,
+    marginRight: 16,
+    backgroundColor: "#E6F2FF",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
   },
   actionText: {
     color: "#007AFF",
     marginLeft: 4,
     fontSize: 14,
+    fontWeight: "500",
   },
   inputContainer: {
     flexDirection: "row",
@@ -405,34 +467,112 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: "#E4E6EB",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginRight: 8,
-    fontSize: 14,
-    color: "#333",
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginRight: 12,
+    fontSize: 16,
+    color: "#333333",
+    backgroundColor: "#F8F9FA",
   },
   loginPrompt: {
     fontStyle: "italic",
     color: "#8e8e93",
     marginTop: 16,
     textAlign: "center",
+    fontSize: 16,
   },
   loadMoreButton: {
     alignItems: "center",
-    marginTop: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    marginVertical: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
     borderColor: "#007AFF",
     borderWidth: 1,
-    backgroundColor: "#E6F0FF",
+    backgroundColor: "#E6F2FF",
   },
   loadMoreText: {
     color: "#007AFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  repliesContainer: {
+    marginTop: 12,
+    paddingLeft: 16,
+    borderLeftWidth: 2,
+    borderLeftColor: "#E4E6EB",
+  },
+  replyItem: {
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  replyHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  replyAuthor: {
+    fontWeight: "600",
+    color: "#007AFF",
     fontSize: 14,
-    fontWeight: "bold",
+  },
+  replyContent: {
+    color: "#333333",
+    marginVertical: 4,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  replyDate: {
+    fontSize: 10,
+    color: "#8e8e93",
+  },
+  replyInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  replyInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#E4E6EB",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    fontSize: 14,
+    color: "#333333",
+    backgroundColor: "#F8F9FA",
+  },
+  sendReplyButton: {
+    padding: 8,
+    backgroundColor: "#007AFF",
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sendButton: {
+    backgroundColor: "#007AFF",
+    borderRadius: 24,
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    fontSize: 16,
+    marginVertical: 16,
   },
 });
 
 export default Comment;
+

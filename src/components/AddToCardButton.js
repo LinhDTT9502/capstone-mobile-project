@@ -7,7 +7,7 @@ import { addCart } from "../redux/slices/cartSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { addToCart } from "../services/cartService";
 
-const AddToCartButton = ({ product, quantity, color, size, condition }) => {
+const AddToCartButton = ({ product, quantity, color, size, condition , onCartUpdated,}) => {
   const dispatch = useDispatch();
 
   const handleAddToCart = async () => {
@@ -34,15 +34,16 @@ const AddToCartButton = ({ product, quantity, color, size, condition }) => {
       if (!token) {
         // Guest user
         dispatch(addCart(payload));
+        onCartUpdated && onCartUpdated();
         Alert.alert("Thông báo", message);
       } else {
         // Customer user
         try {
           await addToCart(product.id, quantity, token);
+          onCartUpdated && onCartUpdated();
           Alert.alert("Thông báo", message);
         } catch (error) {
           if (error.response) {
-            // API trả về lỗi
             Alert.alert(
               "Thông báo",
               error.response.data.message || "Lỗi không xác định từ API"

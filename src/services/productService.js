@@ -7,11 +7,12 @@ import {
   getProductByProductCodeAPI,
   listColorsOfProductAPI,
   listSizesOfProductAPI,
-  listConditionsOfProductAPI} from "../api/apiProduct";
+  listConditionsOfProductAPI,
+} from "../api/apiProduct";
 
-export const fetchProducts = async (currentPage) => {
+export const fetchProducts = async () => {
   try {
-    const response = await getProductList(currentPage);
+    const response = await getProductList();
     const { total, data } = response.data;
     return { total, products: data.$values };
   } catch (error) {
@@ -27,7 +28,7 @@ export const fetchProductsFiltered = async (
   selectedCategories,
   minPrice,
   maxPrice,
-  size 
+  size
 ) => {
   try {
     const response = await getProductFilterBy(
@@ -37,7 +38,7 @@ export const fetchProductsFiltered = async (
       selectedCategories,
       minPrice,
       maxPrice,
-      size 
+      size
     );
     const { total, data } = response.data;
     return { total, products: data.$values };
@@ -98,10 +99,20 @@ export const fetchSizesOfProduct = async (productCode, color) => {
   }
 };
 
-export const getProductByProductCode = async (productCode, color = null, size = null, condition = null) => {
+export const getProductByProductCode = async (
+  productCode,
+  color = null,
+  size = null,
+  condition = null
+) => {
   try {
     // console.log("Calling getProductByProductCode API with productCode:", productCode);
-    const response = await getProductByProductCodeAPI(productCode, color, size, condition);
+    const response = await getProductByProductCodeAPI(
+      productCode,
+      color,
+      size,
+      condition
+    );
     // console.log("Response from getProductByProductCodeAPI:", response);
     return response.data;
   } catch (error) {
@@ -110,34 +121,32 @@ export const getProductByProductCode = async (productCode, color = null, size = 
   }
 };
 
-
-
 export const listColorsOfProduct = async (productCode) => {
   try {
-      const response = await listColorsOfProductAPI(productCode);
-      return response.data;
+    const response = await listColorsOfProductAPI(productCode);
+    return response.data;
   } catch (error) {
-      console.error("Error fetching colors of product:", error);
-      throw error;
+    console.error("Error fetching colors of product:", error);
+    throw error;
   }
 };
 
 export const listSizesOfProduct = async (productCode, color) => {
   try {
-      const response = await listSizesOfProductAPI(productCode, color);
-      return response.data;
+    const response = await listSizesOfProductAPI(productCode, color);
+    return response.data;
   } catch (error) {
-      console.error("Error fetching sizes of product:", error);
-      throw error;
+    console.error("Error fetching sizes of product:", error);
+    throw error;
   }
 };
 
 export const listConditionsOfProduct = async (productCode, color, size) => {
   try {
-      const response = await listConditionsOfProductAPI(productCode, color, size);
-      return response.data;
+    const response = await listConditionsOfProductAPI(productCode, color, size);
+    return response.data;
   } catch (error) {
-      console.error("Error fetching conditions of product:", error);
-      throw error;
+    console.error("Error fetching conditions of product:", error);
+    throw error;
   }
 };

@@ -5,6 +5,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 30,
+    paddingBottom: 50,
     backgroundColor: "#F5F7FA",
   },
   content: {
@@ -100,10 +101,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   productCard: {
-    width: (width - 48) / 2,
+    width: (width - 60) / 2,
     backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 12,
+    margin:5,
     marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -156,16 +158,28 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   flashSaleSection: {
-    marginVertical: 24,
+    marginVertical: 20,
     backgroundColor: "#FFF3E0",
     padding: 16,
     borderRadius: 16,
   },
   recentlyViewedSection: {
-    marginVertical: 24,
+    marginVertical: 20,
     backgroundColor: "#E3F2FD",
     padding: 16,
     borderRadius: 16,
+  },
+
+  flashSaleCard: {
+    width: width * 0.4,
+    marginHorizontal: 10,
+    marginVertical: 10,
+  },
+  recentlyViewedCard: {
+    width: width * 0.4,
+    marginRight:100,
+    marginHorizontal: 10,
+    marginVertical: 10,
   },
   viewAllButton: {
     backgroundColor: "#4A90E2",
@@ -271,6 +285,13 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "bold",
   },
+  flashSaleContainer:{
+    marginRight:30,
+  },
+  recentlyViewedContainer:{
+    marginRight:50,
+  },
+  
 });
 
 export default styles;

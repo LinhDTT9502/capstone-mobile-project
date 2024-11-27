@@ -13,10 +13,11 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation, useFocusEffect  } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
 import {
+  fetchProducts,
   fetchProductsFiltered,
   searchProducts,
 } from "../../services/productService";
@@ -47,21 +48,20 @@ export default function ProductListing() {
   const [hasMore, setHasMore] = useState(true);
   const [token, setToken] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
-  
+
   useFocusEffect(
     React.useCallback(() => {
       const reloadData = async () => {
-        await loadInitialProducts(); // Gọi hàm tải lại sản phẩm
+        await loadInitialProducts();
         const storedBookmarks = await AsyncStorage.getItem("bookmarks");
         if (storedBookmarks) {
           setBookmarks(JSON.parse(storedBookmarks));
         }
       };
-  
       reloadData();
     }, [])
   );
-  
+
   useFocusEffect(
     React.useCallback(() => {
       const loadBookmarks = async () => {
@@ -75,7 +75,7 @@ export default function ProductListing() {
           console.error("Error loading bookmarks:", error);
         }
       };
-  
+
       const handleBookmarkUpdated = ({ itemId, isBookmarked }) => {
         setBookmarks((prevBookmarks) => {
           if (isBookmarked) {
@@ -85,17 +85,15 @@ export default function ProductListing() {
           }
         });
       };
-  
+
       navigation.addListener("bookmarkUpdated", handleBookmarkUpdated);
       loadBookmarks();
-  
+
       return () => {
         navigation.removeListener("bookmarkUpdated", handleBookmarkUpdated);
       };
     }, [navigation])
   );
-  
-  
 
   useFocusEffect(
     React.useCallback(() => {
@@ -132,21 +130,38 @@ export default function ProductListing() {
   }, []);
 
   const loadInitialProducts = async () => {
-    setCurrentPage(1);
-    setProducts([]);
-    setHasMore(true);
-    await loadFilteredProducts(1);
+    setLoading(true);
+    try {
+      const { products } = await fetchProducts();
+      setProducts(products);
+    } catch (error) {
+      console.error("Error loading initial products:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const loadFilteredProducts = async (page = currentPage) => {
-    if (loading || !hasMore) return;
+  const applyFilters = async () => {
+    setFilterModalVisible(false);
 
-    // setLoading(true);
-    // const timeout = setTimeout(() => setLoading(false), 10000);
+    const noFiltersApplied =
+      sortOrder === "default" &&
+      selectedBrands.length === 0 &&
+      selectedCategories.length === 0 &&
+      !minPrice &&
+      !maxPrice &&
+      !sizeInput;
+
+    if (noFiltersApplied) {
+      await loadInitialProducts();
+      return;
+    }
+
+    setLoading(true);
     try {
       const sortBy = sortOrder === "default" ? "" : "price";
       const isAscending = sortOrder === "lowToHigh";
-      const { total, products: fetchedProducts } = await fetchProductsFiltered(
+      const { products: filteredProducts } = await fetchProductsFiltered(
         sortBy,
         isAscending,
         selectedBrands,
@@ -155,32 +170,57 @@ export default function ProductListing() {
         maxPrice ? parseInt(maxPrice) : 1000000000,
         sizeInput
       );
-
-      // Lọc trùng lặp theo `productCode`
-      const newProducts =
-        page === 1 ? fetchedProducts : [...products, ...fetchedProducts];
-      const uniqueProductsByCode = Array.from(
-        new Map(newProducts.map((item) => [item.productCode, item])).values()
-      );
-
-      setProducts(uniqueProductsByCode);
-      setTotalProducts(total);
-      setHasMore(fetchedProducts.length > 0);
+      setProducts(filteredProducts);
     } catch (error) {
-      console.error("Error loading products:", error);
+      console.error("Error applying filters:", error);
     } finally {
-      // clearTimeout(timeout)
-      // setLoading(false);
+      setLoading(false);
     }
   };
 
-  const loadMoreProducts = () => {
-    if (!loading && hasMore) {
-      const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
-      loadFilteredProducts(nextPage);
-    }
-  };
+  // const loadFilteredProducts = async (page = currentPage) => {
+  //   if (loading || !hasMore) return;
+
+  //   // setLoading(true);
+  //   // const timeout = setTimeout(() => setLoading(false), 10000);
+  //   try {
+  //     const sortBy = sortOrder === "default" ? "" : "price";
+  //     const isAscending = sortOrder === "lowToHigh";
+  //     const { total, products: fetchedProducts } = await fetchProductsFiltered(
+  //       sortBy,
+  //       isAscending,
+  //       selectedBrands,
+  //       selectedCategories,
+  //       minPrice ? parseInt(minPrice) : 0,
+  //       maxPrice ? parseInt(maxPrice) : 1000000000,
+  //       sizeInput
+  //     );
+
+  //     // Lọc trùng lặp theo `productCode`
+  //     const newProducts =
+  //       page === 1 ? fetchedProducts : [...products, ...fetchedProducts];
+  //     const uniqueProductsByCode = Array.from(
+  //       new Map(newProducts.map((item) => [item.productCode, item])).values()
+  //     );
+
+  //     setProducts(uniqueProductsByCode);
+  //     setTotalProducts(total);
+  //     setHasMore(fetchedProducts.length > 0);
+  //   } catch (error) {
+  //     console.error("Error loading products:", error);
+  //   } finally {
+  //     // clearTimeout(timeout)
+  //     // setLoading(false);
+  //   }
+  // };
+
+  // const loadMoreProducts = () => {
+  //   if (!loading && hasMore) {
+  //     const nextPage = currentPage + 1;
+  //     setCurrentPage(nextPage);
+  //     loadFilteredProducts(nextPage);
+  //   }
+  // };
 
   const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
 
@@ -190,11 +230,6 @@ export default function ProductListing() {
       if (prevOrder === "lowToHigh") return "highToLow";
       return "default";
     });
-  };
-
-  const applyFilters = () => {
-    toggleFilterModal();
-    loadInitialProducts();
   };
 
   const handleSearch = async () => {
@@ -222,47 +257,51 @@ export default function ProductListing() {
       brand: setSelectedBrands,
       category: setSelectedCategories,
     };
-    setterMap[type]((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    setterMap[type](() => [id]);
   };
 
-  const renderProduct = ({ item }) => (
-    <TouchableOpacity
-      style={styles.productCard}
-      onPress={() =>
-        navigation.navigate("ProductDetail", { productId: item.id })
-      }
-    >
-      <Image source={{ uri: item.imgAvatarPath }} style={styles.productImage} />
-      <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={2}>
-          {item.productName}
-        </Text>
-        <Text style={styles.productCategory} numberOfLines={1}>
-          {item.categoryName}
-        </Text>
-        <Text style={styles.productPrice}>
-          {item.price.toLocaleString()} ₫
-        </Text>
-        {token && ( 
-        <BookmarkComponent
-          item={{
-            id: item.id,
-            title: item.productName,
-            price: item.price,
-            imageUrl: item.imgAvatarPath,
-          }}
-          token={token}
-          navigation={navigation}
-          style={styles.bookmarkButton}
-          iconSize={20}
-          color="#4A90E2"
+  const renderProduct = ({ item }) => {
+    const price = item.price && !isNaN(item.price) ? item.price : "N.A";
+    return (
+      <TouchableOpacity
+        style={styles.productCard}
+        onPress={() =>
+          navigation.navigate("ProductDetail", { productId: item.id })
+        }
+      >
+        <Image
+          source={{ uri: item.imgAvatarPath }}
+          style={styles.productImage}
         />
-      )}
-      </View>
-    </TouchableOpacity>
-  );
+        <View style={styles.productInfo}>
+          <Text style={styles.productName} numberOfLines={2}>
+            {item.productName}
+          </Text>
+          <Text style={styles.productCategory} numberOfLines={1}>
+            {item.categoryName}
+          </Text>
+          <Text style={styles.productPrice}>
+            {price !== "N.A" ? `${parseInt(price).toLocaleString()} ₫` : "N.A"}
+          </Text>
+          {token && (
+            <BookmarkComponent
+              item={{
+                id: item.id,
+                title: item.productName,
+                price: price !== "N.A" ? price : null,
+                imageUrl: item.imgAvatarPath,
+              }}
+              token={token}
+              navigation={navigation}
+              style={styles.bookmarkButton}
+              iconSize={20}
+              color="#4A90E2"
+            />
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -331,7 +370,7 @@ export default function ProductListing() {
           styles.productList,
           products.length === 0 && styles.emptyList,
         ]}
-        onEndReached={loadMoreProducts}
+        // onEndReached={loadMoreProducts}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={!loading && renderEmptyState()}
         ListFooterComponent={renderFooter()}

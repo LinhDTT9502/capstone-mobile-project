@@ -71,7 +71,7 @@ const CheckoutBtn = ({
           dispatch(addGuestOrder(response.data));
         }
 
-        Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
+        // Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
         navigation.reset({
           index: 0,
           routes: [{ name: "OrderSuccess", params: { orderID: response.data.saleOrderId, orderCode: response.data.orderCode } }],

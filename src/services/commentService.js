@@ -82,16 +82,16 @@ export const deleteComment = async (id) => {
   }
 };
 
-export const replyComment = async (commentId, content) => {
+export const replyComment = async (productId, parentCommentId, content) => {
   try {
     const token = await getToken();
-    if (!token) {
-      throw new Error("User not logged in");
-    }
-    const response = await replyCommentAPI(commentId, content, token);
+    if (!token) throw new Error("User not logged in");
+
+    const response = await replyCommentAPI(productId, parentCommentId, content, token); 
     return response.data;
   } catch (error) {
     console.error("Error replying to comment:", error);
     throw error;
   }
 };
+

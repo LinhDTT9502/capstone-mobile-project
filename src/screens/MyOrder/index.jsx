@@ -5,7 +5,6 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Image,
   ActivityIndicator,
   Alert,
   Modal,
@@ -17,6 +16,8 @@ import { fetchUserOrders } from "../../services/userOrderService";
 import { Ionicons } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 import { selectUser } from "@/src/redux/slices/authSlice";
+import OrderCard from "../../components/Profile/OrderCard";
+import StatusTabs from "../../components/Profile/StatusTabs";
 
 const MyOrder = () => {
   const user = useSelector(selectUser);
@@ -49,7 +50,6 @@ const MyOrder = () => {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-
       const token = await AsyncStorage.getItem("token");
       if (!token) {
         Alert.alert("Lỗi", "Vui lòng đăng nhập để xem đơn hàng.");
@@ -67,7 +67,6 @@ const MyOrder = () => {
       }
 
       const ordersData = await fetchUserOrders(userId, token);
-
       setOrders(ordersData);
     } catch (err) {
       console.error("Error loading orders:", err);
@@ -101,65 +100,35 @@ const MyOrder = () => {
   };
 
   const renderOrderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.orderCard}
+    <OrderCard
+      order={item}
       onPress={() => openProductModal(item)}
-    >
-      <View style={styles.orderInfo}>
-        <Image
-          source={{
-            uri: item.saleOrderDetailVMs?.$values[0]?.imgAvatarPath || "https://via.placeholder.com/100",
-          }}
-          style={styles.orderImage}
-        />
-        <View style={styles.orderDetails}>
-          <Text style={styles.orderCode}>Mã đơn hàng: {item.orderCode}</Text>
-          <Text style={styles.orderStatus}>Trạng thái: {item.orderStatus}</Text>
-          <Text style={styles.orderTotal}>
-            Tổng tiền: {item.totalAmount.toLocaleString("vi-VN")} ₫
-          </Text>
-        </View>
-      </View>
-      <View>{renderOrderStatusButton(item)}</View>
-    </TouchableOpacity>
+      renderOrderStatusButton={renderOrderStatusButton}
+    />
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Ionicons
-          name="arrow-back"
-          size={24}
-          color="black"
+        <TouchableOpacity 
           onPress={() => navigation.goBack()}
-        />
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Trạng thái đơn hàng</Text>
       </View>
 
-      <View style={styles.statusTabs}>
-        {statusList.map((status) => (
-          <TouchableOpacity
-            key={status.value}
-            style={[
-              styles.statusTab,
-              selectedStatus === status.value && styles.activeTab,
-            ]}
-            onPress={() => setSelectedStatus(status.value)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                selectedStatus === status.value && styles.activeTabText,
-              ]}
-            >
-              {status.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <StatusTabs
+        statusList={statusList}
+        selectedStatus={selectedStatus}
+        setSelectedStatus={setSelectedStatus}
+      />
 
       {isLoading ? (
-        <ActivityIndicator size="large" color="#FF9900" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF9900" />
+        </View>
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
@@ -174,15 +143,13 @@ const MyOrder = () => {
       <Modal visible={isProductModalOpen} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Ionicons
-              name="close"
-              size={24}
-              color="black"
-              onPress={closeProductModal}
-              style={styles.closeIcon}
-            />
+            <TouchableOpacity onPress={closeProductModal} style={styles.closeIcon}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
             <Text style={styles.modalTitle}>Chi tiết sản phẩm</Text>
-            <Text>{selectedProduct?.saleOrderDetailVMs?.$values[0]?.productName}</Text>
+            <Text style={styles.productName}>
+              {selectedProduct?.saleOrderDetailVMs?.$values[0]?.productName}
+            </Text>
           </View>
         </View>
       </Modal>
@@ -191,57 +158,50 @@ const MyOrder = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     paddingTop:30,
-    backgroundColor: "#FFF" },
+    backgroundColor: "#FFFFFF",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomColor: "#EEEEEE",
   },
-  headerTitle: { marginLeft: 8, fontSize: 18, fontWeight: "bold" },
-  statusTabs: {
-    flexDirection: "row",
-    padding: 16,
-    backgroundColor: "#F7F7F7",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+  backButton: {
+    padding: 4,
   },
-  statusTab: {
-    padding: 8,
-    marginRight: 8,
-    borderRadius: 8,
-    backgroundColor: "#E0E0E0",
+  headerTitle: {
+    marginLeft: 12,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333333",
   },
-  activeTab: { backgroundColor: "#FF9900" },
-  tabText: { color: "#333" },
-  activeTabText: { color: "#FFF" },
-  orderList: { padding: 16 },
-  orderCard: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    padding: 16,
-    marginBottom: 8,
-    backgroundColor: "#FFF",
-    borderRadius: 8,
-    elevation: 2,
   },
-  orderInfo: { flexDirection: "row", alignItems: "center" },
-  orderImage: { width: 80, height: 80, borderRadius: 8, marginRight: 16 },
-  orderDetails: { flex: 1 },
-  orderCode: { fontSize: 14, fontWeight: "bold" },
-  orderStatus: { fontSize: 14, color: "#555" },
-  orderTotal: { fontSize: 14, color: "#333", fontWeight: "bold" },
+  orderList: {
+    paddingVertical: 12,
+  },
   checkoutButton: {
-    backgroundColor: "#FFA500",
-    padding: 8,
-    borderRadius: 8,
+    backgroundColor: "#FF9900",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    marginTop: 12,
+    alignSelf: 'flex-start',
   },
-  checkoutText: { color: "#FFF", fontWeight: "bold" },
+  checkoutText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
@@ -250,13 +210,35 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "90%",
-    padding: 16,
-    backgroundColor: "#FFF",
-    borderRadius: 8,
-    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 20,
   },
-  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 8 },
-  closeIcon: { position: "absolute", top: 16, right: 16 },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333333",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  closeIcon: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 1,
+  },
+  productName: {
+    fontSize: 14,
+    color: "#666666",
+    textAlign: "center",
+  },
+  errorText: {
+    fontSize: 14,
+    color: "#FF0000",
+    textAlign: "center",
+    marginTop: 20,
+  },
 });
 
 export default MyOrder;
+
