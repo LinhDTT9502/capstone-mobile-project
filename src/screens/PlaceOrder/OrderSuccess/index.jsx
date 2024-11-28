@@ -7,7 +7,7 @@ const { width } = Dimensions.get('window');
 
 const OrderSuccessScreen = ({ route }) => {
   const navigation = useNavigation();
-  const { orderID, orderCode } = route.params || {};
+  const { id, saleOrderCode } = route.params || {};
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
@@ -35,19 +35,26 @@ const OrderSuccessScreen = ({ route }) => {
         </View>
         <Text style={styles.title}>Đặt hàng thành công!</Text>
         <Text style={styles.message}>Cảm ơn bạn đã đặt hàng.</Text>
-        {orderID && orderCode ? (
+        {id && saleOrderCode ? (
           <View style={styles.detailsContainer}>
             <Text style={styles.detailsText}>
-              <Text style={styles.boldText}>Mã đơn hàng:</Text> {orderCode}
+              <Text style={styles.boldText}>Mã đơn hàng:</Text> {id}
             </Text>
             <Text style={styles.detailsText}>
-              <Text style={styles.boldText}>ID đơn hàng:</Text> {orderID}
+              <Text style={styles.boldText}>ID đơn hàng:</Text> {saleOrderCode}
             </Text>
           </View>
         ) : (
           <Text style={styles.errorText}>Lỗi: Thiếu thông tin đơn hàng.</Text>
         )}
 
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("SelectPayment", {order: {id, saleOrderCode}})}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.buttonText}>Thanh toán</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate("HomeController")}

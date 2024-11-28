@@ -28,6 +28,8 @@ import {
 } from "../../redux/slices/shipmentSlice";
 import OrderMethod from "../../components/Payment/OrderMethod";
 import { useFocusEffect } from "expo-router";
+import { selectUser } from "@/src/redux/slices/authSlice";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const COLORS = {
   primary: "#3366FF",
@@ -42,7 +44,8 @@ export default function PlaceOrderScreen({ route }) {
   const { selectedCartItems } = route.params || { selectedCartItems: [] };
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const cartItems = useSelector(selectCartItems);
+  const cartItems = selectedCartItems || useSelector(selectCartItems);
+  const userLogin = useSelector(selectUser)
   const shipment = useSelector((state) => state.shipment || {});
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [branches, setBranches] = useState([]);
@@ -60,8 +63,9 @@ export default function PlaceOrderScreen({ route }) {
     phoneNumber: "",
     address: "",
     shipmentDetailID: "",
+    userId: userLogin?.UserId || 0
   });
-
+  const [date, setDate] = useState(new Date(1598051730000));
   // useFocusEffect(
   //   React.useCallback(() => {
   //     Alert.alert("Cảnh báo", "Bạn không thể quay lại để đặt hàng lại.", [
@@ -280,31 +284,31 @@ export default function PlaceOrderScreen({ route }) {
         />
       ),
     },
-    {
-      title: "Phương thức thanh toán",
-      data: [{ key: "paymentMethod" }],
-      renderItem: () => (
-        <PaymentMethod
-          selectedOption={selectedPaymentMethod}
-          handleOptionChange={setSelectedPaymentMethod}
-        />
-      ),
-    },
-    {
-      title: "Ưu đãi",
-      data: [{ key: "discountCode" }],
-      renderItem: () => (
-        <View style={styles.sectionContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Nhập mã ưu đãi"
-            value={discountCode}
-            onChangeText={setDiscountCode}
-            placeholderTextColor={COLORS.gray}
-          />
-        </View>
-      ),
-    },
+    // {
+    //   title: "Phương thức thanh toán",
+    //   data: [{ key: "paymentMethod" }],
+    //   renderItem: () => (
+    //     <PaymentMethod
+    //       selectedOption={selectedPaymentMethod}
+    //       handleOptionChange={setSelectedPaymentMethod}
+    //     />
+    //   ),
+    // },
+    // {
+    //   title: "Ưu đãi",
+    //   data: [{ key: "discountCode" }],
+    //   renderItem: () => (
+    //     <View style={styles.sectionContainer}>
+    //       <TextInput
+    //         style={styles.input}
+    //         placeholder="Nhập mã ưu đãi"
+    //         value={discountCode}
+    //         onChangeText={setDiscountCode}
+    //         placeholderTextColor={COLORS.gray}
+    //       />
+    //     </View>
+    //   ),
+    // },
     {
       title: "Ghi chú",
       data: [{ key: "note" }],
@@ -319,6 +323,26 @@ export default function PlaceOrderScreen({ route }) {
             numberOfLines={3}
             placeholderTextColor={COLORS.gray}
           />
+          <View>
+            <View>
+              <Text>Ngày bắt đầu: </Text>
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={date}
+                mode="date"
+                onChange={() => {}}
+              />
+            </View>
+            <View>
+              <Text>Ngày kết thúc: </Text>
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={date}
+                mode="date"
+                onChange={() => {}}
+              />
+            </View>
+          </View>
         </View>
       ),
     },
@@ -363,6 +387,7 @@ export default function PlaceOrderScreen({ route }) {
               note={note}
               selectedCartItems={cartItems}
               userData={userData}
+              type={route.params.type}
             />
           </>
         )}

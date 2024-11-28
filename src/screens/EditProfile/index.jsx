@@ -226,8 +226,7 @@ export default function EditProfile() {
     handleChange("Phone", newPhone);
     setShowPhoneModal(false);
   };
-  
-  
+
   const renderInput = (
     label,
     name,

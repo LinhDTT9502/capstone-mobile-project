@@ -134,7 +134,7 @@ const MyOrder = () => {
       ) : (
         <FlatList
           data={filteredOrders}
-          keyExtractor={(item) => item.saleOrderId.toString()}
+          keyExtractor={(item) => item?.id?.toString()}
           renderItem={renderOrderItem}
           contentContainerStyle={styles.orderList}
         />
@@ -146,10 +146,16 @@ const MyOrder = () => {
             <TouchableOpacity onPress={closeProductModal} style={styles.closeIcon}>
               <Ionicons name="close" size={24} color="#333" />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Chi tiết sản phẩm</Text>
+            <Text style={styles.modalTitle}>Chi tiết đơn hàng</Text>
             <Text style={styles.productName}>
-              {selectedProduct?.saleOrderDetailVMs?.$values[0]?.productName}
+              {selectedProduct?.productName}
             </Text>
+            <TouchableOpacity onPress={() => {
+              navigation.navigate("SelectPayment", { order: selectedProduct })
+              closeProductModal()
+            }} style={styles.closeIcon}>
+              Thanh toán
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
