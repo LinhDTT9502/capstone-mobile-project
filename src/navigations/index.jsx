@@ -30,6 +30,7 @@ import BranchList from "../screens/BranchList/index";
 import PlaceOrderScreen from "../screens/PlaceOrder/index";
 import OrderSuccessScreen from "../screens/PlaceOrder/OrderSuccess/index";
 import Bookmark from "../screens/Bookmark/index";
+import SelectPayment from "../screens/SelectPayment/index"
 
 const Stack = createStackNavigator();
 
@@ -75,7 +76,7 @@ export default function MainContainer() {
       <Stack.Screen name="BrandProduct" component={BrandProduct} />
       <Stack.Screen name="BlogDetail" component={BlogDetail} />
       <Stack.Screen name="VerifyOtpScreen " component={VerifyOtpScreen} />
-
+      <Stack.Screen name="SelectPayment" component={SelectPayment} />
       {/* testing */}
       <Stack.Screen name="PlacedOrder" component={PlaceOrderScreen} />
     </Stack.Navigator>

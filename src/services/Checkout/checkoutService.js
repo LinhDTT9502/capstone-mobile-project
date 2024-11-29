@@ -3,10 +3,6 @@ import { placedOrderAPI } from "../../api/Checkout/apiCheckout";
 export const placedOrder = async (data) => {
   const formattedData = {
     ...data,
-    saleOrderDetailCMs: data.saleOrderDetailCMs.map((item) => ({
-      ...item,
-      unitPrice: parseFloat(item.unitPrice.toFixed(2)),
-    })),
   };
 
   try {

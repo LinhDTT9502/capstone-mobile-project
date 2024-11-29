@@ -96,13 +96,13 @@ export default function Cart() {
 
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
-    setSelectedItems(selectAll ? [] : cartItems.map((item) => item.id));
+    setSelectedItems(selectAll ? [] : cartItems.map((item) => item.cartItemId));
   };
 
   const toggleItemSelection = (itemId) => {
     setSelectedItems((prev) =>
       prev.includes(itemId)
-        ? prev.filter((id) => id !== itemId)
+        ? prev.filter((cartItemId) => cartItemId !== itemId)
         : [...prev, itemId]
     );
   };
@@ -111,7 +111,7 @@ export default function Cart() {
     try {
       if (token) {
         await removeCartItem(itemId, token);
-        setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+        setCartItems((prev) => prev.filter((item) => item.cartItemId !== itemId));
       } else {
         dispatch(removeFromCart(itemId));
       }
@@ -125,13 +125,13 @@ export default function Cart() {
     try {
       if (token) {
         const updatedItem = await updateCartItemQuantity(
-          item.id, 
+          item.cartItemId, 
           item.quantity + 1, 
           token
         );
         setCartItems((prev) =>
           prev.map((i) =>
-            i.id === item.id
+            i.cartItemId === item.cartItemId
               ? { ...i, quantity: updatedItem?.quantity || i.quantity + 1 }
               : i
           )
@@ -150,22 +150,22 @@ export default function Cart() {
       if (item.quantity > 1) {
         if (token) {
           const updatedItem = await updateCartItemQuantity(
-            item.id, 
+            item.cartItemId, 
             item.quantity - 1,
             token
           );
           setCartItems((prev) =>
             prev.map((i) =>
-              i.id === item.id
+              i.cartItemId === item.cartItemId
                 ? { ...i, quantity: updatedItem?.quantity || i.quantity - 1 }
                 : i
             )
           );
         } else {
-          dispatch(decreaseQuantity(item.id));
+          dispatch(decreaseQuantity(item.cartItemId));
         }
       } else {
-        await handleRemoveItem(item.id);
+        await handleRemoveItem(item.cartItemId);
       }
     } catch (error) {
       console.error("Error decreasing quantity:", error.message);
@@ -176,7 +176,7 @@ export default function Cart() {
   const calculateTotal = () => {
     return (
       cartItems
-        .filter((item) => selectedItems.includes(item.id))
+        .filter((item) => selectedItems.includes(item.cartItemId))
         // tính sản phẩm được chọn
         .reduce((sum, item) => {
           const itemTotal = parseFloat(item.price) * item.quantity;
@@ -211,7 +211,7 @@ export default function Cart() {
     }
 
     const selectedCartItems = cartItems.filter((item) =>
-      selectedItems.includes(item.id)
+      selectedItems.includes(item.cartItemId)
     );
 
     navigation.navigate("PlacedOrder", { selectedCartItems });
@@ -264,75 +264,77 @@ export default function Cart() {
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {cartItems.map((item) => (
-            <View key={item.id} style={styles.cartItem}>
-              <TouchableOpacity
-                onPress={() => toggleItemSelection(item.id)}
-                style={styles.checkboxContainer}
-              >
-                <View
-                  style={[
-                    styles.checkbox,
-                    selectedItems.includes(item.id) && styles.checkboxSelected,
-                  ]}
+          {cartItems.map((item) => {
+            return (
+              <View key={item.cartItemId} style={styles.cartItem}>
+                <TouchableOpacity
+                  onPress={() => toggleItemSelection(item.cartItemId)}
+                  style={styles.checkboxContainer}
                 >
-                  {selectedItems.includes(item.id) && (
-                    <Ionicons name="checkmark" size={16} color={COLORS.white} />
-                  )}
-                </View>
-              </TouchableOpacity>
-
-              <Image
-                source={{ uri: item.mainImagePath }}
-                style={styles.productImage}
-              />
-
-              <View style={styles.itemDetails}>
-                <View style={styles.itemHeader}>
-                  <Text style={styles.itemName} numberOfLines={2}>
-                    {item.productName} - {item.color}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleRemoveItem(item.id)}
+                  <View
+                    style={[
+                      styles.checkbox,
+                      selectedItems.includes(item.cartItemId) && styles.checkboxSelected,
+                    ]}
                   >
-                    <Ionicons
-                      name="trash-outline"
-                      size={20}
-                      color={COLORS.danger}
-                    />
-                  </TouchableOpacity>
-                </View>
+                    {selectedItems.includes(item.cartItemId) && (
+                      <Ionicons name="checkmark" size={16} color={COLORS.white} />
+                    )}
+                  </View>
+                </TouchableOpacity>
 
-                <Text style={styles.itemPrice}>
-                  {formatCurrency(parseFloat(item.totalPrice))}
-                </Text>
-                <Text style={styles.itemSize}>Size: {item.size}</Text>
+                <Image
+                  source={{ uri: item.imgAvatarPath }}
+                  style={styles.productImage}
+                />
 
-                <View style={styles.itemFooter}>
-                  <View style={styles.quantityContainer}>
+                <View style={styles.itemDetails}>
+                  <View style={styles.itemHeader}>
+                    <Text style={styles.itemName} numberOfLines={2}>
+                      {item.productName} - {item.color}
+                    </Text>
                     <TouchableOpacity
-                      style={styles.quantityButton}
-                      onPress={() => handleDecreaseQuantity(item)}
+                      style={styles.deleteButton}
+                      onPress={() => handleRemoveItem(item.cartItemId)}
                     >
                       <Ionicons
-                        name="remove"
+                        name="trash-outline"
                         size={20}
-                        color={COLORS.primary}
+                        color={COLORS.danger}
                       />
                     </TouchableOpacity>
-                    <Text style={styles.quantityText}>{item.quantity}</Text>
-                    <TouchableOpacity
-                      style={styles.quantityButton}
-                      onPress={() => handleIncreaseQuantity(item)}
-                    >
-                      <Ionicons name="add" size={20} color={COLORS.primary} />
-                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.itemPrice}>
+                    {formatCurrency((item.price * item.quantity))}
+                  </Text>
+                  <Text style={styles.itemSize}>Size: {item.size}</Text>
+
+                  <View style={styles.itemFooter}>
+                    <View style={styles.quantityContainer}>
+                      <TouchableOpacity
+                        style={styles.quantityButton}
+                        onPress={() => handleDecreaseQuantity(item)}
+                      >
+                        <Ionicons
+                          name="remove"
+                          size={20}
+                          color={COLORS.primary}
+                        />
+                      </TouchableOpacity>
+                      <Text style={styles.quantityText}>{item.quantity}</Text>
+                      <TouchableOpacity
+                        style={styles.quantityButton}
+                        onPress={() => handleIncreaseQuantity(item)}
+                      >
+                        <Ionicons name="add" size={20} color={COLORS.primary} />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-          ))}
+            )
+          })}
         </ScrollView>
 
         {cartItems.length > 0 && (

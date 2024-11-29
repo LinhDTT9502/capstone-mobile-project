@@ -54,6 +54,7 @@ export default function ProductDetail() {
   const { productId } = route.params;
   const [token, setToken] = useState(null);
   const [product, setProduct] = useState({});
+  // console.log("ProductDetail ~ product:", product)
 
   const [quantity, setQuantity] = useState(1);
   const [userComment, setUserComment] = useState("");
@@ -390,6 +391,12 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = (type) => {
+    if (type === 'buy' || type === 'rent') {
+      return navigation.navigate("PlacedOrder", {
+        selectedCartItems: [{ ...product, quantity, size: selectedSize, color: selectedColor }],
+        type
+      });
+    }
     Alert.alert("Thông báo", `Sản phẩm đã được thêm vào giỏ hàng! (${type})`);
   };
 
@@ -474,10 +481,11 @@ export default function ProductDetail() {
               color="#FF9900"
             />
           </View>
-          <Text style={styles.productTag}>For exchange</Text>
+          <Text style={styles.productTag}>Giá</Text>
           <View style={styles.priceContainer}>
             <View>
               <Text style={styles.productPrice}>
+              Giá mua: 
                 {product.price
                   ? `${formatCurrency(product.price)} ₫`
                   : "Giá không có"}
@@ -491,6 +499,13 @@ export default function ProductDetail() {
                 </>
               ) : null}
             </View>
+            {product?.rentPrice ?
+              <View>
+              <Text style={styles.productPrice}>
+                Giá thuê: {product?.rentPrice} ₫
+              </Text>
+            </View>:null}
+            
             <LikeButton
               isLiked={isLiked}
               likes={likes}
@@ -642,7 +657,7 @@ export default function ProductDetail() {
             Tổng giá:{" "}
             {typeof totalPrice === "string"
               ? totalPrice
-              : `${formatCurrency(totalPrice * quantity)} ₫`}
+              : `${formatCurrency(totalPrice)} ₫`}
           </Text>
 
           <View style={styles.addToCartContainer}>
@@ -796,9 +811,11 @@ export default function ProductDetail() {
         <View style={styles.buyNowContainer}>
           <BuyNowButton onPress={() => handleAddToCart("buy")} />
         </View>
-        <View style={styles.rentContainer}>
-          <RentButton/>
-        </View>
+        {product?.isRent ?
+          <View style={styles.rentContainer}>
+          <RentButton onPress={() => handleAddToCart("rent")} />
+        </View> : null}
+        
       </View>
 
       <Modal

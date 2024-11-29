@@ -7,7 +7,7 @@ const OrderCard = ({ order, onPress, renderOrderStatusButton }) => {
       <View style={styles.orderInfo}>
         <Image
           source={{
-            uri: order.saleOrderDetailVMs?.$values[0]?.imgAvatarPath || "https://via.placeholder.com/100",
+            uri: order.saleOrderDetailVMs?.['$values'][0]?.imgAvatarPath || "https://via.placeholder.com/100",
           }}
           style={styles.orderImage}
         />

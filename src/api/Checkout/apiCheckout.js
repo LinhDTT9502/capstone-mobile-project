@@ -11,3 +11,14 @@ export const placedOrderAPI = ( data) => {
   });
 };
 
+const API_BASE_URL_CHECK = 'https://capstone-project-703387227873.asia-southeast1.run.app/api/Checkout';
+
+export const selectCheckout = (data) => {
+  return axios.post(`${API_BASE_URL_CHECK}/checkout-sale-order`, data, {
+    headers: {
+      'Accept': '*/*',
+      // 'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+};
