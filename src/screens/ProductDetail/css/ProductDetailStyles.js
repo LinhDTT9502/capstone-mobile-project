@@ -1,6 +1,6 @@
 // src/styles/ProductDetailStyles.js
-import { StyleSheet } from "react-native";
-
+import { StyleSheet, Dimensions } from "react-native";
+const { width, height } = Dimensions.get("window");
 const COLORS = {
   primary: "#0035FF",
   secondary: "#FA7D0B",
@@ -11,15 +11,30 @@ const COLORS = {
 };
 
 const styles = StyleSheet.create({
+  rowContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  unavailableOption: {
+    opacity: 0.5,
+    backgroundColor: "#F5F5F5",
+  },
+
+  unavailableText: {
+    color: "#A0A0A0",
+  },
+
   container: {
     flex: 1,
     paddingTop: 30,
     backgroundColor: "#F0F2F5",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
@@ -42,10 +57,10 @@ const styles = StyleSheet.create({
   productImage: {
     width: "100%",
     height: 300,
-    resizeMode: "cover",
+    resizeMode: "contain",
   },
   productInfo: {
-    padding: 16,
+    padding: 0,
     backgroundColor: "#FFFFFF",
   },
   productName: {
@@ -114,20 +129,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   colorSelector: {
-    flexDirection: "row",
     marginBottom: 16,
   },
   colorButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 12,
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.light,
+    marginRight: 8,
   },
-  activeColor: {
-    borderColor: "#000000",
+  activeColorButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
+  colorButtonText: {
+    fontSize: 14,
+    color: COLORS.dark,
+  },
+  activeColorButtonText: {
+    color: COLORS.white,
+  },
+
   sizeSelector: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -138,20 +161,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E4E6EB",
+    borderColor: COLORS.light,
     marginRight: 8,
     marginBottom: 8,
   },
-  activeSize: {
-    backgroundColor: "#1877F2",
+  activeSizeButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   sizeButtonText: {
     fontSize: 14,
-    color: "#050505",
+    color: COLORS.dark,
   },
-  activeSizeText: {
-    color: "#FFFFFF",
+  activeSizeButtonText: {
+    color: COLORS.white,
   },
+
   conditionSelector: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -162,20 +187,44 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E4E6EB",
+    borderColor: COLORS.light,
     marginRight: 8,
     marginBottom: 8,
   },
-  activeCondition: {
-    backgroundColor: "#1877F2",
+  activeConditionButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   conditionButtonText: {
     fontSize: 14,
-    color: "#050505",
+    color: COLORS.dark,
   },
-  activeConditionText: {
-    color: "#FFFFFF",
+  activeConditionButtonText: {
+    color: COLORS.white,
   },
+
+  quantitySection: {
+    marginBottom: 16,
+  },
+  quantityContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: COLORS.light,
+    borderRadius: 25,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+  },
+  quantityButton: {
+    padding: 8,
+  },
+  quantityText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginHorizontal: 16,
+  },
+
   addToCartContainer: {
     marginTop: 16,
   },
@@ -300,6 +349,179 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: "#050505",
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  optionSection: {
+    marginBottom: 20,
+  },
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 12,
+    color: "#000",
+  },
+  optionsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  optionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#0035FF",
+    borderRadius: 20,
+  },
+  activeOptionButton: {
+    backgroundColor: "#0035FF",
+  },
+  optionButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  activeOptionButtonText: {
+    color: "#FFFFFF",
+  },
+  circleButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  activeCircleButton: {
+    borderColor: "#0035FF",
+    backgroundColor: "#FFFFFF",
+  },
+  circleButtonText: {
+    fontSize: 14,
+    color: "#000000",
+  },
+  activeCircleButtonText: {
+    color: "#0035FF",
+  },
+  quantityContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+  },
+  quantityButton: {
+    padding: 8,
+  },
+  quantityText: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  addToCartContainer: {
+    marginTop: 16,
+  },
+  totalPriceText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#0035FF",
+    marginTop: 8,
+  },
+
+  thumbnailList: {
+    marginTop: 10,
+  },
+  thumbnailContainer: {
+    marginRight: 10,
+    borderRadius: 8,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  selectedThumbnail: {
+    borderColor: COLORS.primary,
+  },
+  thumbnailImage: {
+    width: 60,
+    height: 60,
+    resizeMode: "contain",
+  },
+  imageModalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 1,
+  },
+  productImage: {
+    width: "100%",
+    height: Dimensions.get("window").width,
+    resizeMode: "contain",
+  },
+  fullscreenImage: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height * 0.8,
+  },
+
+  colorOptionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E4E6EB",
+    marginRight: 8,
+    backgroundColor: "#FFFFFF",
+  },
+
+  activeColorOptionContainer: {
+    borderColor: "#FF5722", // Customize the color as per your design
+  },
+
+  colorOptionImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+
+  colorOptionText: {
+    fontSize: 14,
+    color: "#050505",
+  },
+
+  activeColorOptionText: {
+    color: "#FF5722", // Customize the color for active text
+  },
+  cartIconContainer: {
+    position: "relative",
+    padding: 8,
+  },
+  cartBadge: {
+    position: "absolute",
+    top: -5,
+    right: -10,
+    backgroundColor: COLORS.secondary,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cartBadgeText: {
+    color: COLORS.white,
+    fontSize: 12,
     fontWeight: "bold",
   },
 });

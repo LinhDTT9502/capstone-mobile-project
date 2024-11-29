@@ -3,6 +3,9 @@ import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 
 const LikeButton = ({ isLiked, likes, onPress, disabled }) => {
+
+
+  
   return (
     <TouchableOpacity
       style={styles.likeButton}

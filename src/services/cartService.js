@@ -11,18 +11,32 @@ export const addToCart = async (productId, quantityToAdd, token) => {
     const response = await addToCartAPI(productId, quantityToAdd, token);
     return response.data;
   } catch (error) {
-    console.error("Add to cart failed", error);
-    throw new Error("Chỉ còn 1 sản phẩm!");
+    // console.error("Add to cart failed:", error.response?.data || error);
+
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
   }
 };
 
-export const getUserCart = async (sortBy = "") => {
+
+// export const getUserCart = async (sortBy = "") => {
+//   try {
+//     const response = await getCartAPI(sortBy);
+//     return response.data.data.$values;
+//   } catch (error) {
+//     console.error("Error fetching cart:", error);
+//     throw error;
+//   }
+// };
+
+export const getUserCart = async (token, sortBy = "productName") => {
   try {
-    const response = await getCartAPI(sortBy);
+    const response = await getCartAPI(token, sortBy);
     return response.data.data.$values;
   } catch (error) {
-    console.error("Error fetching cart:", error);
-    throw error;
+    console.error("Error fetching cart:", error.response?.data || error);
+    throw new Error("Failed to fetch user cart");
   }
 };
 
@@ -41,22 +55,21 @@ export const removeCartItem = async (id, token) => {
     const response = await remmoveCartItemAPI(id, token);
     return response;
   } catch (error) {
-    console.error("Error removing cart item:", error);
-    throw new Error("Error removing cart item");
+    console.error("Error removing cart item:", error.response?.data || error);
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    } else {
+      throw new Error("Không thể xóa sản phẩm khỏi giỏ hàng.");
+    }
   }
 };
 
 export const updateCartItemQuantity = async (cartItemId, quantity, token) => {
   try {
-    const response = await updateCartItemQuantityAPI(
-      cartItemId,
-      quantity,
-      token
-    );
-    // console.log("Cart item quantity updated successfully");
+    const response = await updateCartItemQuantityAPI(cartItemId, quantity, token);
     return response.data;
   } catch (error) {
-    console.error("Error updating cart item quantity:", error);
-    throw new Error("Error updating cart item quantity: " + error.message);
+    console.error("Service Error:", error.response?.data || error.message);
+    throw new Error("Không thể cập nhật số lượng sản phẩm.");
   }
 };

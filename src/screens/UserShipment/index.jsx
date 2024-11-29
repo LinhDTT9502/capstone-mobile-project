@@ -12,7 +12,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Ionicons } from '@expo/vector-icons';
 import {
   selectShipment,
-  selectShipments,
+  // selectShipments,
   setShipment,
 } from "../../redux/slices/shipmentSlice";
 import { getUserShipmentDetails } from "../../services/shipmentService";
@@ -28,7 +28,7 @@ export default function UserShipment({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [currentShipment, setCurrentShipment] = useState(null);
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
-  const SM = useSelector(selectShipments);
+  // const SM = useSelector(selectShipments);
 
   // const fetchShipments = async () => {
   //   const token = await AsyncStorage.getItem('token');
@@ -123,6 +123,10 @@ export default function UserShipment({ navigation }) {
           <Ionicons name="location-outline" size={16} color="#666" />
           <Text style={styles.shipmentDetailsText}>{item.address}</Text>
         </View>
+        <View style={styles.shipmentDetails}>
+        <Ionicons name="mail-outline" size={16} color="#666" />
+        <Text style={styles.shipmentDetailsText}>{item.email}</Text>
+      </View>
       </View>
       <View style={styles.buttonContainer}>
         <TouchableOpacity

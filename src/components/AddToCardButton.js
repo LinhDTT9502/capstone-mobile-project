@@ -1,33 +1,64 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { useDispatch } from 'react-redux';
-import { addCusCart } from '../redux/slices/customerCartSlice';
-import { addCart } from '../redux/slices/cartSlice';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React from "react";
+import { TouchableOpacity, Text, StyleSheet, Alert } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
+import { addCusCart } from "../redux/slices/customerCartSlice";
+import { addCart } from "../redux/slices/cartSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { addToCart } from "../services/cartService";
 
-const AddToCartButton = ({ product, quantity }) => {
+const AddToCartButton = ({ product, quantity, color, size, condition , onCartUpdated,}) => {
   const dispatch = useDispatch();
 
   const handleAddToCart = async () => {
-    if (!product) {
-      console.error('Product is undefined');
-      Alert.alert('Lỗi', 'Không thể thêm vào giỏ hàng vì thông tin sản phẩm bị thiếu.');
+    if (!product || !color || !size || !condition) {
+      Alert.alert(
+        "Lỗi",
+        "Vui lòng chọn đầy đủ thông tin màu sắc, kích thước và tình trạng trước khi thêm vào giỏ hàng."
+      );
       return;
     }
 
     try {
-      const token = await AsyncStorage.getItem('token');
-      const payload = { ...product, quantity };
+      const token = await AsyncStorage.getItem("token");
+      const payload = {
+        ...product,
+        quantity,
+        color: color,
+        size: size,
+        condition: condition,
+      };
+
+      const message = `${product.productName} - ${color} - Size: ${size} - Tình trạng: ${condition} với số lượng ${quantity} đã được thêm vào giỏ hàng!`;
+
       if (!token) {
-        dispatch(addCart(payload));        Alert.alert('Thông báo', `Sản phẩm "${product.productName}" với số lượng ${quantity} đã được thêm vào giỏ hàng!`);
+        // Guest user
+        dispatch(addCart(payload));
+        onCartUpdated && onCartUpdated();
+        Alert.alert("Thông báo", message);
       } else {
-        dispatch(addCusCart(payload));
-        Alert.alert('Thông báo', `"${product.productName}" với số lượng ${quantity} đã được thêm vào giỏ hàng!`);
+        // Customer user
+        try {
+          await addToCart(product.id, quantity, token);
+          onCartUpdated && onCartUpdated();
+          Alert.alert("Thông báo", message);
+        } catch (error) {
+          if (error.response) {
+            Alert.alert(
+              "Thông báo",
+              error.response.data.message || "Lỗi không xác định từ API"
+            );
+          }
+          if (error.message) {
+            Alert.alert("Thông báo", error.message);
+          } else {
+            throw error;
+          }
+        }
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      Alert.alert('Lỗi', 'Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
+      console.error("Error adding to cart:", error);
+      Alert.alert("Lỗi", "Không thể thêm vào giỏ hàng. Vui lòng thử lại.");
     }
   };
 
@@ -41,19 +72,19 @@ const AddToCartButton = ({ product, quantity }) => {
 
 const styles = StyleSheet.create({
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FA7D0B',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FA7D0B",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     elevation: 2,
   },
   text: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 8,
   },
 });

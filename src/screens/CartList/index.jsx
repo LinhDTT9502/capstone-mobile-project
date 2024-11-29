@@ -13,22 +13,20 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  loadCartState,
   selectCartItems,
   addCart,
   removeFromCart,
   decreaseQuantity,
 } from "../../redux/slices/cartSlice";
 import {
-  loadCustomerCartState,
-  addCusCart,
-  removeFromCusCart,
-  decreaseCusQuantity,
-  selectCustomerCartItems,
-} from "../../redux/slices/customerCartSlice";
+  getUserCart,
+  reduceCartItem,
+  removeCartItem,
+  updateCartItemQuantity,
+} from "../../services/cartService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const COLORS = {
@@ -46,15 +44,11 @@ const COLORS = {
 export default function Cart() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(loadCartState());
-    dispatch(loadCustomerCartState());
-  }, [dispatch]);
 
   const guestCartItems = useSelector(selectCartItems);
-  const customerCartItems = useSelector(selectCustomerCartItems);
   const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
+
   const [selectAll, setSelectAll] = useState(false);
   const [rentModalVisible, setRentModalVisible] = useState(false);
   const [startDate, setStartDate] = useState(
@@ -67,25 +61,38 @@ export default function Cart() {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [token, setToken] = useState(null);
 
-  useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const storedToken = await AsyncStorage.getItem("token");
-        setToken(storedToken);
-      } catch (error) {
-        // console.log("Error retrieving token:", error);
-      }
-    };
-    fetchToken();
-  }, []);
+  // Lấy token từ AsyncStorage
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchCart = async () => {
+        try {
+          const storedToken = await AsyncStorage.getItem("token");
+          setToken(storedToken);
+  
+          if (storedToken) {
+            const customerCart = await getUserCart(storedToken);
+            setCartItems(customerCart);
+          } else {
+            setCartItems(guestCartItems);
+          }
+        } catch (error) {
+          console.error("Error fetching cart:", error);
+          Alert.alert("Lỗi", "Không thể tải giỏ hàng. Vui lòng thử lại.");
+        }
+      };
+  
+      fetchCart();
+    }, [guestCartItems])
+  );
+  
 
-  useEffect(() => {
-    if (token && customerCartItems) {
-      setCartItems(customerCartItems);
-    } else if (guestCartItems) {
-      setCartItems(guestCartItems);
-    }
-  }, [token, guestCartItems, customerCartItems]);
+  // useEffect(() => {
+  //   if (token && customerCartItems) {
+  //     setCartItems(customerCartItems);
+  //   } else if (guestCartItems) {
+  //     setCartItems(guestCartItems);
+  //   }
+  // }, [token, guestCartItems, customerCartItems]);
 
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
@@ -100,37 +107,86 @@ export default function Cart() {
     );
   };
 
-  const handleRemoveItem = (itemId) => {
-    if (token) {
-      dispatch(removeFromCusCart(itemId));
-    } else {
-      dispatch(removeFromCart(itemId));
+  const handleRemoveItem = async (itemId) => {
+    try {
+      if (token) {
+        await removeCartItem(itemId, token);
+        setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+      } else {
+        dispatch(removeFromCart(itemId));
+      }
+    } catch (error) {
+      console.error("Error removing cart item:", error);
+      Alert.alert("Lỗi", "Không thể xóa sản phẩm.");
     }
   };
 
-  const handleIncreaseQuantity = (item) => {
-    if (token) {
-      dispatch(addCusCart({ ...item, quantity: 1 })); 
-    } else {
-      dispatch(addCart({ ...item, quantity: 1 })); 
+  const handleIncreaseQuantity = async (item) => {
+    try {
+      if (token) {
+        const updatedItem = await updateCartItemQuantity(
+          item.id, 
+          item.quantity + 1, 
+          token
+        );
+        setCartItems((prev) =>
+          prev.map((i) =>
+            i.id === item.id
+              ? { ...i, quantity: updatedItem?.quantity || i.quantity + 1 }
+              : i
+          )
+        );
+      } else {
+        dispatch(addCart({ ...item, quantity: item.quantity + 1 }));
+      }
+    } catch (error) {
+      console.error("Error increasing quantity:", error.message);
+      Alert.alert("Lỗi", "Không thể tăng số lượng sản phẩm.");
     }
   };
 
-  const handleDecreaseQuantity = (item) => {
-    if (token) {
-      dispatch(decreaseCusQuantity(item.id)); 
-    } else {
-      dispatch(decreaseQuantity(item.id)); 
+  const handleDecreaseQuantity = async (item) => {
+    try {
+      if (item.quantity > 1) {
+        if (token) {
+          const updatedItem = await updateCartItemQuantity(
+            item.id, 
+            item.quantity - 1,
+            token
+          );
+          setCartItems((prev) =>
+            prev.map((i) =>
+              i.id === item.id
+                ? { ...i, quantity: updatedItem?.quantity || i.quantity - 1 }
+                : i
+            )
+          );
+        } else {
+          dispatch(decreaseQuantity(item.id));
+        }
+      } else {
+        await handleRemoveItem(item.id);
+      }
+    } catch (error) {
+      console.error("Error decreasing quantity:", error.message);
+      Alert.alert("Lỗi", "Không thể giảm số lượng sản phẩm.");
     }
   };
 
   const calculateTotal = () => {
-    return selectedItems
-      .reduce((sum, itemId) => {
-        const item = cartItems.find((i) => i.id === itemId);
-        return sum + (item ? parseFloat(item.price) * item.quantity : 0);
-      }, 0)
-      .toFixed(0);
+    return (
+      cartItems
+        .filter((item) => selectedItems.includes(item.id))
+        // tính sản phẩm được chọn
+        .reduce((sum, item) => {
+          const itemTotal = parseFloat(item.price) * item.quantity;
+          // Tổng x quali
+
+          return sum + itemTotal;
+        }, 0)
+        .toFixed(0)
+    );
+    // Định dạng số thập phân (không lấy phần lẻ)
   };
 
   const calculateItemTotal = (item) => {
@@ -144,12 +200,21 @@ export default function Cart() {
     }).format(amount);
   };
 
+  useEffect(() => {
+    // console.log("Cart Items:", cartItems);
+  }, [cartItems]);
+
   const handleBuyNow = () => {
     if (selectedItems.length === 0) {
       Alert.alert("Lỗi", "Vui lòng chọn sản phẩm để mua.");
       return;
     }
-    navigation.navigate("Checkout", { selectedItems });
+
+    const selectedCartItems = cartItems.filter((item) =>
+      selectedItems.includes(item.id)
+    );
+
+    navigation.navigate("PlacedOrder", { selectedCartItems });
   };
 
   const handleRent = () => {
@@ -218,14 +283,14 @@ export default function Cart() {
               </TouchableOpacity>
 
               <Image
-                source={{ uri: item.imgAvatarPath }}
+                source={{ uri: item.mainImagePath }}
                 style={styles.productImage}
               />
 
               <View style={styles.itemDetails}>
                 <View style={styles.itemHeader}>
                   <Text style={styles.itemName} numberOfLines={2}>
-                    {item.productName}
+                    {item.productName} - {item.color}
                   </Text>
                   <TouchableOpacity
                     style={styles.deleteButton}
@@ -240,8 +305,9 @@ export default function Cart() {
                 </View>
 
                 <Text style={styles.itemPrice}>
-                  {formatCurrency(parseFloat(item.price))}
+                  {formatCurrency(parseFloat(item.totalPrice))}
                 </Text>
+                <Text style={styles.itemSize}>Size: {item.size}</Text>
 
                 <View style={styles.itemFooter}>
                   <View style={styles.quantityContainer}>
@@ -263,9 +329,6 @@ export default function Cart() {
                       <Ionicons name="add" size={20} color={COLORS.primary} />
                     </TouchableOpacity>
                   </View>
-                  <Text style={styles.itemTotalPrice}>
-                    {formatCurrency(calculateItemTotal(item))}
-                  </Text>
                 </View>
               </View>
             </View>
@@ -278,7 +341,9 @@ export default function Cart() {
               style={styles.selectAllContainer}
               onPress={handleSelectAll}
             >
-              <View style={[styles.checkbox, selectAll && styles.checkboxSelected]}>
+              <View
+                style={[styles.checkbox, selectAll && styles.checkboxSelected]}
+              >
                 {selectAll && (
                   <Ionicons name="checkmark" size={16} color={COLORS.white} />
                 )}
@@ -288,7 +353,7 @@ export default function Cart() {
             <View style={styles.totalContainer}>
               <Text style={styles.totalText}>Tổng cộng:</Text>
               <Text style={styles.totalAmount}>
-                {formatCurrency(calculateTotal())}
+                {formatCurrency(parseFloat(calculateTotal()))}
               </Text>
             </View>
             <View style={styles.actionButtonsContainer}>
@@ -431,7 +496,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 4, 
+    borderRadius: 4,
     borderWidth: 2,
     borderColor: COLORS.primary,
     alignItems: "center",
@@ -629,5 +694,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.secondary,
+  },
+  itemSize: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.gray,
+    marginBottom: 4,
   },
 });

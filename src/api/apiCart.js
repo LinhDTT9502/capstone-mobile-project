@@ -1,20 +1,24 @@
-import axios from 'axios';
-import axiosInstance from './axiosInstance';
+import axios from "axios";
+import axiosInstance from "./axiosInstance";
 
-const API_BASE_URL = 'https://twosportapi-295683427295.asia-southeast2.run.app/api/Cart';
+const API_BASE_URL =
+  "https://capstone-project-703387227873.asia-southeast1.run.app/api/Cart";
 
-export const addToCartAPI = (warehouseId, quantity, token) => {
-
-  return axiosInstance.post(`${API_BASE_URL}/add-to-cart`, {
-    warehouseId,
-    quantity,
-  }, {
-    headers: {
-      'Accept': '*/*',
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json"
+export const addToCartAPI = (productId, quantity, token) => {
+  return axiosInstance.post(
+    `${API_BASE_URL}/add-to-cart`,
+    {
+      productId,
+      quantity,
+    },
+    {
+      headers: {
+        Accept: "*/*",
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     }
-  });
+  );
 };
 
 // export const getCartAPI = (sortBy = '') => {
@@ -34,60 +38,70 @@ export const addToCartAPI = (warehouseId, quantity, token) => {
 //   });
 // };
 
-export const getCartAPI = (sortBy = '') => {
+export const getCartAPI = (token, sortBy = "") => {
   const url = `${API_BASE_URL}/get-cart`;
-  return axios.get(url, {
+  return axiosInstance.get(url, {
     params: {
-      perPage: 2,
+      perPage: 10,
       currentPage: 0,
       sortBy: sortBy,
-      isAscending: true
+      isAscending: true,
     },
     headers: {
-      'Accept': '*/*',
-      'Content-Type': 'application/json'
-    }
+      Accept: "*/*",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
   });
 };
 
-export const getCartItems = (id) => {
-  const url = `${API_BASE_URL}/get-cart-item/${id}`;
-  return axios.get(url, {
+export const getCartItems = (cartItemId, token) => {
+  const url = `${API_BASE_URL}/get-cart-item/${cartItemId}`;
+  return axiosInstance.get(url, {
     headers: {
-      'accept': '*/*'
-    }
+      Accept: "*/*",
+      Authorization: `Bearer ${token}`,
+    },
   });
 };
 
-export const reduceCartItemAPI = (id, token) => {
-  const url = `${API_BASE_URL}/reduce-cart/${id}`;
-  return axiosInstance.put(url, {}, {
-    headers: {
-      'accept': '*/*',
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+export const reduceCartItemAPI = (cartItemId, token) => {
+  const url = `${API_BASE_URL}/reduce-cart/${cartItemId}`;
+  return axiosInstance.put(
+    url,
+    {},
+    {
+      headers: {
+        accept: "*/*",
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     }
-  });
+  );
 };
 
-export const remmoveCartItemAPI = (id, token) => {
-  const url = `${API_BASE_URL}/delete-cart-item/${id}`;
+export const remmoveCartItemAPI = (cartItemId, token) => {
+  const url = `${API_BASE_URL}/delete-cart-item/${cartItemId}`;
   return axiosInstance.delete(url, {
     headers: {
-      'accept': '*/*',
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
+      accept: "*/*",
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
   });
 };
 
 export const updateCartItemQuantityAPI = (cartItemId, quantity, token) => {
   const url = `${API_BASE_URL}/update-quantity-cart-item/${cartItemId}`;
-  return axiosInstance.put(url, { quantity }, {
-    headers: {
-      'accept': '*/*',
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+  return axiosInstance.put(
+    url,
+    { quantity },
+    {
+      headers: {
+        Accept: "*/*",
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     }
-  });
+  );
 };
