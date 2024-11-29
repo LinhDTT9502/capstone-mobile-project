@@ -324,7 +324,7 @@ export default function PlaceOrderScreen({ route }) {
             placeholderTextColor={COLORS.gray}
           />
           <View>
-            <View>
+            {/* <View>
               <Text>Ngày bắt đầu: </Text>
               <DateTimePicker
                 testID="dateTimePicker"
@@ -341,7 +341,7 @@ export default function PlaceOrderScreen({ route }) {
                 mode="date"
                 onChange={() => {}}
               />
-            </View>
+            </View> */}
           </View>
         </View>
       ),

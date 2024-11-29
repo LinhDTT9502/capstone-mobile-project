@@ -86,11 +86,16 @@ const MyOrder = () => {
       : orders.filter((order) => order.orderStatus === selectedStatus);
 
   const renderOrderStatusButton = (order) => {
-    if (order.paymentStatus === "IsWating" && order.deliveryMethod !== "HOME_DELIVERY") {
+    if (
+      order.paymentStatus === "IsWating" &&
+      order.deliveryMethod !== "HOME_DELIVERY"
+    ) {
       return (
         <TouchableOpacity
           style={styles.checkoutButton}
-          onPress={() => navigation.navigate("PlacedOrder", { selectedOrder: order })}
+          onPress={() =>
+            navigation.navigate("PlacedOrder", { selectedOrder: order })
+          }
         >
           <Text style={styles.checkoutText}>Thanh Toán</Text>
         </TouchableOpacity>
@@ -110,7 +115,7 @@ const MyOrder = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
@@ -134,7 +139,9 @@ const MyOrder = () => {
       ) : (
         <FlatList
           data={filteredOrders}
-          keyExtractor={(item) => item?.id?.toString()}
+          keyExtractor={(item) =>
+            item?.orderId?.toString() || item?.cartItemId?.toString()
+          }
           renderItem={renderOrderItem}
           contentContainerStyle={styles.orderList}
         />
@@ -143,17 +150,25 @@ const MyOrder = () => {
       <Modal visible={isProductModalOpen} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <TouchableOpacity onPress={closeProductModal} style={styles.closeIcon}>
+            <TouchableOpacity
+              onPress={closeProductModal}
+              style={styles.closeIcon}
+            >
               <Ionicons name="close" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Chi tiết đơn hàng</Text>
             <Text style={styles.productName}>
               {selectedProduct?.productName}
             </Text>
-            <TouchableOpacity onPress={() => {
-              navigation.navigate("SelectPayment", { order: selectedProduct })
-              closeProductModal()
-            }} style={styles.closeIcon}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate("SelectPayment", {
+                  order: selectedProduct,
+                });
+                closeProductModal();
+              }}
+              style={styles.closeIcon}
+            >
               Thanh toán
             </TouchableOpacity>
           </View>
@@ -166,7 +181,7 @@ const MyOrder = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop:30,
+    paddingTop: 30,
     backgroundColor: "#FFFFFF",
   },
   header: {
@@ -201,7 +216,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 16,
     marginTop: 12,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   checkoutText: {
     color: "#FFFFFF",
@@ -247,4 +262,3 @@ const styles = StyleSheet.create({
 });
 
 export default MyOrder;
-

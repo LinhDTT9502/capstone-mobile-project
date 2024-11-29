@@ -96,13 +96,13 @@ export default function Cart() {
 
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
-    setSelectedItems(selectAll ? [] : cartItems.map((item) => item.id));
+    setSelectedItems(selectAll ? [] : cartItems.map((item) => item.cartItemId));
   };
 
   const toggleItemSelection = (itemId) => {
     setSelectedItems((prev) =>
       prev.includes(itemId)
-        ? prev.filter((id) => id !== itemId)
+        ? prev.filter((cartItemId) => cartItemId !== itemId)
         : [...prev, itemId]
     );
   };
@@ -111,7 +111,7 @@ export default function Cart() {
     try {
       if (token) {
         await removeCartItem(itemId, token);
-        setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+        setCartItems((prev) => prev.filter((item) => item.cartItemId !== itemId));
       } else {
         dispatch(removeFromCart(itemId));
       }
@@ -125,13 +125,13 @@ export default function Cart() {
     try {
       if (token) {
         const updatedItem = await updateCartItemQuantity(
-          item.id, 
+          item.cartItemId, 
           item.quantity + 1, 
           token
         );
         setCartItems((prev) =>
           prev.map((i) =>
-            i.id === item.id
+            i.cartItemId === item.cartItemId
               ? { ...i, quantity: updatedItem?.quantity || i.quantity + 1 }
               : i
           )
@@ -150,22 +150,22 @@ export default function Cart() {
       if (item.quantity > 1) {
         if (token) {
           const updatedItem = await updateCartItemQuantity(
-            item.id, 
+            item.cartItemId, 
             item.quantity - 1,
             token
           );
           setCartItems((prev) =>
             prev.map((i) =>
-              i.id === item.id
+              i.cartItemId === item.cartItemId
                 ? { ...i, quantity: updatedItem?.quantity || i.quantity - 1 }
                 : i
             )
           );
         } else {
-          dispatch(decreaseQuantity(item.id));
+          dispatch(decreaseQuantity(item.cartItemId));
         }
       } else {
-        await handleRemoveItem(item.id);
+        await handleRemoveItem(item.cartItemId);
       }
     } catch (error) {
       console.error("Error decreasing quantity:", error.message);
@@ -176,7 +176,7 @@ export default function Cart() {
   const calculateTotal = () => {
     return (
       cartItems
-        .filter((item) => selectedItems.includes(item.id))
+        .filter((item) => selectedItems.includes(item.cartItemId))
         // tính sản phẩm được chọn
         .reduce((sum, item) => {
           const itemTotal = parseFloat(item.price) * item.quantity;
@@ -211,7 +211,7 @@ export default function Cart() {
     }
 
     const selectedCartItems = cartItems.filter((item) =>
-      selectedItems.includes(item.id)
+      selectedItems.includes(item.cartItemId)
     );
 
     navigation.navigate("PlacedOrder", { selectedCartItems });
@@ -266,18 +266,18 @@ export default function Cart() {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {cartItems.map((item) => {
             return (
-              <View key={item.id} style={styles.cartItem}>
+              <View key={item.cartItemId} style={styles.cartItem}>
                 <TouchableOpacity
-                  onPress={() => toggleItemSelection(item.id)}
+                  onPress={() => toggleItemSelection(item.cartItemId)}
                   style={styles.checkboxContainer}
                 >
                   <View
                     style={[
                       styles.checkbox,
-                      selectedItems.includes(item.id) && styles.checkboxSelected,
+                      selectedItems.includes(item.cartItemId) && styles.checkboxSelected,
                     ]}
                   >
-                    {selectedItems.includes(item.id) && (
+                    {selectedItems.includes(item.cartItemId) && (
                       <Ionicons name="checkmark" size={16} color={COLORS.white} />
                     )}
                   </View>
@@ -295,7 +295,7 @@ export default function Cart() {
                     </Text>
                     <TouchableOpacity
                       style={styles.deleteButton}
-                      onPress={() => handleRemoveItem(item.id)}
+                      onPress={() => handleRemoveItem(item.cartItemId)}
                     >
                       <Ionicons
                         name="trash-outline"

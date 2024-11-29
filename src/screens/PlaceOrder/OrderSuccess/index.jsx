@@ -49,18 +49,18 @@ const OrderSuccessScreen = ({ route }) => {
         )}
 
         <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate("SelectPayment", {order: {id, saleOrderCode}})}
+          style={[styles.button, styles.paymentButton]}
+          onPress={() => navigation.navigate("SelectPayment", {order: {id, saleOrderCode,}})}
           activeOpacity={0.8}
         >
           <Text style={styles.buttonText}>Thanh toán</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, styles.homeButton]}
           onPress={() => navigation.navigate("HomeController")}
           activeOpacity={0.8}
         >
-          <Text style={styles.buttonText}>Quay về trang chủ</Text>
+          <Text style={[styles.buttonText, styles.homeButtonText]}>Quay về trang chủ</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -72,34 +72,42 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#f0f8ff',
   },
   content: {
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 32,
     width: width * 0.9,
     alignItems: 'center',
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 8,
   },
   iconContainer: {
     backgroundColor: '#4CAF50',
     borderRadius: 50,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 8,
+    marginBottom: 12,
     textAlign: 'center',
   },
   message: {
@@ -109,19 +117,20 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   detailsContainer: {
-    backgroundColor: "#f0f0f0",
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: "#f7f7f7",
+    padding: 20,
+    borderRadius: 16,
     width: "100%",
-    marginBottom: 24,
+    marginBottom: 28,
   },
   detailsText: {
     fontSize: 16,
     color: "#333",
-    marginVertical: 4,
+    marginVertical: 6,
   },
   boldText: {
     fontWeight: "bold",
+    color: "#4CAF50",
   },
   errorText: {
     fontSize: 16,
@@ -130,7 +139,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: "#4CAF50",
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 30,
@@ -139,14 +147,28 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 16,
+    width: '100%',
+    alignItems: 'center',
+  },
+  paymentButton: {
+    backgroundColor: "#4CAF50",
+  },
+  homeButton: {
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#4CAF50",
   },
   buttonText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  homeButtonText: {
+    color: "#4CAF50",
   },
 });
 

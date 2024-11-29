@@ -86,10 +86,10 @@ const CheckoutBtn = ({
 
     try {
       const response = type === 'rent' ?  await rental(orderData) : await placedOrder(orderData);
+      console.log("🚀 ~ handleCheckout ~ response:", response.data.data)
 
       if (response) {
         if (!token) {
-          // If the user is a guest, save the order in Redux
           dispatch(addGuestOrder(response.data));
         }
           // console.log(" handleCheckout ~ response:", response)
@@ -97,7 +97,7 @@ const CheckoutBtn = ({
         // Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
         navigation.reset({
           index: 0,
-          routes: [{ name: "OrderSuccess", params: { id: response.data.id, saleOrderCode: response.data.saleOrderCode } }],
+          routes: [{ name: "OrderSuccess", params: { id: response.data.id, saleOrderCode: response.data.saleOrderCode} }],
         });
       }
     } catch (error) {
