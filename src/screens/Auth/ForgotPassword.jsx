@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { requestPasswordReset, performPasswordReset } from '../../services/authService';
 import { Feather } from '@expo/vector-icons';
@@ -20,13 +21,19 @@ const { width } = Dimensions.get('window');
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
-  const [otpCode, setOtpCode] = useState('');
+  const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isOtpModalVisible, setOtpModalVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const navigation = useNavigation();
+  const otpInputs = useRef([]);
 
   const handleSendResetLink = async () => {
+    if (!email) {
+      Alert.alert('Lỗi', 'Vui lòng nhập email của bạn.');
+      return;
+    }
     try {
       await requestPasswordReset(email);
       setOtpModalVisible(true);
@@ -40,9 +47,30 @@ export default function ForgotPasswordScreen() {
     }
   };
 
+  const handleOtpChange = (value, index) => {
+    const newOtp = [...otpCode];
+    newOtp[index] = value;
+    setOtpCode(newOtp);
+
+    if (value && index < 5) {
+      otpInputs.current[index + 1].focus();
+    }
+  };
+
   const handleResetPassword = async () => {
+    const otpString = otpCode.join('');
+    if (!otpString || !newPassword || !confirmPassword) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Lỗi', 'Mật khẩu và xác nhận mật khẩu không khớp.');
+      return;
+    }
+
     try {
-      await performPasswordReset({ otpCode, email, newPassword });
+      await performPasswordReset({ otpCode: otpString, email, newPassword });
       Alert.alert('Thành công', 'Mật khẩu của bạn đã được đặt lại!');
       closeOtpModal();
       navigation.navigate('Login');
@@ -61,28 +89,31 @@ export default function ForgotPasswordScreen() {
 
   return (
     <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "android" ? "padding" : "height"}
       style={styles.container}
     >
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Feather name="lock" size={64} color="#FFA500" style={styles.icon} />
         <Text style={styles.title}>Quên mật khẩu?</Text>
-        <Text style={styles.subtitle}>Đừng lo lắng! Chúng tôi sẽ gửi cho bạn liên kết đặt lại mật khẩu.</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Nhập email của bạn"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+        <Text style={styles.subtitle}>Đừng lo lắng! Chúng tôi sẽ gửi cho bạn mã OTP để đặt lại mật khẩu.</Text>
+        <View style={styles.inputContainer}>
+          <Feather name="mail" size={24} color="#FFA500" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Nhập email của bạn"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
         <TouchableOpacity style={styles.button} onPress={handleSendResetLink}>
-          <Text style={styles.buttonText}>Gửi liên kết đặt lại</Text>
+          <Text style={styles.buttonText}>Gửi mã OTP</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Quay lại đăng nhập</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {/* OTP and Password Modal */}
       <Modal
@@ -107,31 +138,51 @@ export default function ForgotPasswordScreen() {
             },
           ]}
         >
-          <View style={styles.modalContainer}>
-            <Feather name="check-circle" size={64} color="#4CAF50" style={styles.modalIcon} />
-            <Text style={styles.modalText}>Nhập mã OTP và mật khẩu mới</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Mã OTP"
-              value={otpCode}
-              onChangeText={setOtpCode}
-              keyboardType="numeric"
-              maxLength={6}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Mật khẩu mới"
-              secureTextEntry
-              value={newPassword}
-              onChangeText={setNewPassword}
-            />
-            <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
-              <Text style={styles.buttonText}>Đặt lại mật khẩu</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.closeButton} onPress={closeOtpModal}>
-              <Text style={styles.closeButtonText}>Đóng</Text>
-            </TouchableOpacity>
-          </View>
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <View style={styles.modalContainer}>
+              <Feather name="check-circle" size={64} color="#4CAF50" style={styles.modalIcon} />
+              <Text style={styles.modalText}>Nhập mã OTP và mật khẩu mới</Text>
+              <View style={styles.otpContainer}>
+                {otpCode.map((digit, index) => (
+                  <TextInput
+                    key={index}
+                    style={styles.otpInput}
+                    value={digit}
+                    onChangeText={(value) => handleOtpChange(value, index)}
+                    keyboardType="numeric"
+                    maxLength={1}
+                    ref={(input) => (otpInputs.current[index] = input)}
+                  />
+                ))}
+              </View>
+              <View style={styles.inputContainer}>
+                <Feather name="lock" size={24} color="#FFA500" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Mật khẩu mới"
+                  secureTextEntry
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                />
+              </View>
+              <View style={styles.inputContainer}>
+                <Feather name="lock" size={24} color="#FFA500" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Xác nhận mật khẩu mới"
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+              </View>
+              <TouchableOpacity style={styles.modalButton} onPress={handleResetPassword}>
+                <Text style={styles.buttonText}>Đặt lại mật khẩu</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalCloseButton} onPress={closeOtpModal}>
+                <Text style={styles.modalCloseButtonText}>Đóng</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </Animated.View>
       </Modal>
     </KeyboardAvoidingView>
@@ -144,7 +195,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -164,17 +215,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 30,
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     height: 50,
     width: width * 0.9,
     maxWidth: 400,
     borderColor: '#ddd',
     borderWidth: 1,
     borderRadius: 25,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     marginBottom: 20,
-    fontSize: 16,
     backgroundColor: '#FFF',
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
   },
   button: {
     backgroundColor: '#FFA500',
@@ -208,6 +267,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
+  modalScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
   modalContainer: {
     backgroundColor: '#FFF',
     padding: 30,
@@ -233,15 +298,41 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#333',
   },
-  closeButton: {
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    width: '100%',
+  },
+  otpInput: {
+    width: 40,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    fontSize: 24,
+    textAlign: 'center',
+  },
+  modalButton: {
     backgroundColor: '#FFA500',
-    padding: 12,
+    padding: 15,
     borderRadius: 25,
     alignItems: 'center',
     width: '100%',
+    marginTop: 20,
+    marginBottom: 10,
   },
-  closeButtonText: {
-    color: '#FFF',
+  modalCloseButton: {
+    backgroundColor: '#FFF',
+    padding: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#FFA500',
+  },
+  modalCloseButtonText: {
+    color: '#FFA500',
     fontSize: 16,
     fontWeight: 'bold',
   },

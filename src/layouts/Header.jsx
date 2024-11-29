@@ -59,7 +59,8 @@ export default function Header() {
         >
           <Ionicons name="search-outline" size={24} color="#333" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton}>
+        <TouchableOpacity style={styles.iconButton}
+        onPress={() => navigation.navigate("Cart")}>
           <Ionicons name="cart-outline" size={24} color="#333" />
         </TouchableOpacity>
       </View>
@@ -113,6 +114,13 @@ export default function Header() {
               onPress={() => {
                 toggleMenu();
                 navigation.navigate("Policy");
+              }}
+            />
+            <MenuItem
+              title="Hệ thống cửa hàng"
+              onPress={() => {
+                toggleMenu();
+                navigation.navigate("BranchList");
               }}
             />
           </Animated.View>

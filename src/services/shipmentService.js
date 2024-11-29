@@ -10,7 +10,7 @@ export const getUserShipmentDetails = async (token) => {
     const response = await getShipmentDetails(token);
     return response.data.$values;
   } catch (error) {
-    console.error("Error fetching shipments:", error);
+    // console.error("Error fetching shipments:", error);
     throw new Error("Error fetching shipments");
   }
 };

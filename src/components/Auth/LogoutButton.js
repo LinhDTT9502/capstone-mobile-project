@@ -11,57 +11,57 @@ const LogoutButton = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  // const handleLogout = async () => {
-  //   try {
-  //     const token = await AsyncStorage.getItem('token');
-  //     if (!token) {
-  //       throw new Error('Thiếu thông tin đăng xuất');
-  //     }
-  //     navigation.navigate('LandingPage', { initialScreen: 'HomeController' });
-  //     // const response = await signOut({
-  //     //   token,
-  //     //   refreshToken,
-  //     //   userId: parseInt(userId),
-  //     // });
-  //     await AsyncStorage.removeItem("token");
-  //     Alert.alert("Thành công", "Đăng xuất thành công!");
-  //     // if (response.status === 200) {
-  //     //   await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userId']);
-  //     //   navigation.navigate('Login');
-  //     //   Alert.alert('Thành công', 'Đăng xuất thành công!');
-  //     // } else {
-  //     //   throw new Error('Đăng xuất thất bại');
-  //     // }
-  //   } catch (error) {
-  //     console.error("Logout error:", error);
-  //     Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất");
-  //   }
-  // };
-
   const handleLogout = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const refreshToken = await AsyncStorage.getItem('refreshToken');
-      
-      if (!token || !refreshToken) {
-        console.error('Token or RefreshToken is missing!');
-        return;
+      if (!token) {
+        throw new Error('Thiếu thông tin đăng xuất');
       }
-
-      const data = { token, refreshToken };
-
-      // You would send `data` to your API logout endpoint here if needed.
-      const response = await signOut(data);
-
-      Alert.alert("Thành công", "Đăng xuất thành công!");
-      dispatch(logout());
-      await AsyncStorage.clear();
       navigation.navigate('LandingPage', { initialScreen: 'HomeController' });
+      // const response = await signOut({
+      //   token,
+      //   refreshToken,
+      //   userId: parseInt(userId),
+      // });
+      await AsyncStorage.removeItem("token");
+      Alert.alert("Thành công", "Đăng xuất thành công!");
+      // if (response.status === 200) {
+      //   await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userId']);
+      //   navigation.navigate('Login');
+      //   Alert.alert('Thành công', 'Đăng xuất thành công!');
+      // } else {
+      //   throw new Error('Đăng xuất thất bại');
+      // }
     } catch (error) {
       console.error("Logout error:", error);
       Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất");
     }
   };
+
+  // const handleLogout = async () => {
+  //   try {
+  //     const token = await AsyncStorage.getItem('token');
+  //     const refreshToken = await AsyncStorage.getItem('refreshToken');
+      
+  //     if (!token || !refreshToken) {
+  //       console.error('Token or RefreshToken is missing!');
+  //       return;
+  //     }
+
+  //     const data = { token, refreshToken };
+
+  //     // You would send `data` to your API logout endpoint here if needed.
+  //     const response = await signOut(data);
+
+  //     Alert.alert("Thành công", "Đăng xuất thành công!");
+  //     dispatch(logout());
+  //     await AsyncStorage.clear();
+  //     navigation.navigate('LandingPage', { initialScreen: 'HomeController' });
+  //   } catch (error) {
+  //     console.error("Logout error:", error);
+  //     Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất");
+  //   }
+  // };
 
   return (
     <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

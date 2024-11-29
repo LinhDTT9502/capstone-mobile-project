@@ -11,29 +11,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import policy_bg from './images/policies.png';
 import Header from "@/src/layouts/Header";
+import PolicySection from "./PolicySection";
 
 const { width } = Dimensions.get('window');
-
-const PolicySection = ({ title, content }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <View style={styles.section}>
-      <TouchableOpacity
-        style={styles.sectionHeader}
-        onPress={() => setIsExpanded(!isExpanded)}
-      >
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <Ionicons
-          name={isExpanded ? "chevron-up" : "chevron-down"}
-          size={24}
-          color="#333"
-        />
-      </TouchableOpacity>
-      {isExpanded && <Text style={styles.sectionContent}>{content}</Text>}
-    </View>
-  );
-};
 
 const PolicyPage = () => {
     const policies = [

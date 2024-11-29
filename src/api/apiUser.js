@@ -2,7 +2,7 @@ import axios from "axios";
 import axiosInstance from "./axiosInstance";
 
 const API_BASE_URL =
-  "https://twosportapi-295683427295.asia-southeast2.run.app/api/User";
+  "https://capstone-project-703387227873.asia-southeast1.run.app/api/User";
 
 // GET all users
 export const getAllUsers = () => {
@@ -23,6 +23,10 @@ export const searchUsers = (fullName, username) => {
 // GET user profile
 export const getUserProfile = (userId) => {
   return axiosInstance.get(`${API_BASE_URL}/get-profile?userId=${userId}`);
+};
+
+export const getUserDetail = (userId) => {
+  return axiosInstance.get(`${API_BASE_URL}/get-users-detail?userId=${userId}`);
 };
 
 
@@ -59,3 +63,23 @@ export const verifyEmail = (token) => {
     params: { token },
   });
 };
+
+// POST upload avatar
+export const uploadAvatarApi = (userId, avatarFile) => {
+  const formData = new FormData();
+  formData.append("userId", userId);
+  formData.append("Avatar", {
+    uri: avatarFile.uri,
+    name: avatarFile.name || "avatar.jpg",
+    type: avatarFile.type || "image/jpeg",
+  });
+
+  // console.log("Uploading FormData:", formData);
+
+  return axiosInstance.post(`${API_BASE_URL}/upload-avatar`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+

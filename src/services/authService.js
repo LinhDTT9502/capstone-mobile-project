@@ -10,18 +10,32 @@ import {
   mobileSignUp,
   forgotPasswordRequestMobile,
   verifyAccountMobileAPI,
-  resetPasswordMobile
+  resetPasswordMobile,sendOtpRequestMobile,
+  updatePasswordAPI
 } from "../api/apiAuth";
 
 export const authenticateUser = async (username, password) => {
   try {
     const response = await signIn(username, password);
+
+    if (!response.data || response.data.data === null) {
+      const message = response.data?.message || "Đăng nhập thất bại.";
+      if (message === "Your account is not confirmed.") {
+        // Trả về thông tin đặc biệt để xử lý trong màn hình Login
+        return { isUnconfirmed: true, email: response.data?.email };
+      }
+      throw new Error(message); // Nếu lỗi khác
+    }
+
     const decoded = jwtDecode(response.data.data.token);
     await AsyncStorage.setItem("token", response.data.data.token);
     await AsyncStorage.setItem("refreshToken", response.data.data.refreshToken);
+    await AsyncStorage.setItem("currentUserId", response.data.data.userId.toString());
     return decoded;
+
+    
   } catch (error) {
-    console.error("Login failed", error);
+    // console.error("Login failed", error);
     throw error;
   }
 };
@@ -46,9 +60,15 @@ export const requestPasswordReset = async (email) => {
   }
 };
 
-export const verifyAccountMobile = async ({ email, otp }) => {
+export const verifyAccountMobile = async ({ username, email, OtpCode }) => {
+  // console.log("Payload sent to API:", { username, email, otpCode: OtpCode });
   try {
-    const response = await verifyAccountMobileAPI({ email, otpCode: otp });
+    const response = await verifyAccountMobileAPI({
+      username,
+      email,
+      otpCode: OtpCode,
+    });
+    // console.log("API Response in verifyAccountMobile:", response.data);
     return response.data;
   } catch (error) {
     console.error(
@@ -59,15 +79,17 @@ export const verifyAccountMobile = async ({ email, otp }) => {
   }
 };
 
-export const resendOtpRequest = async (data) => {
+export const sendOtpRequest = async ({ userName, email }) => {
   try {
-    const response = await sendOtpRequestMobile(data);
+    const response = await sendOtpRequestMobile({ userName, email });
+    // console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Error resending OTP:", error);
-    throw error.response ? error.response.data : error;
+    console.error("Error in resendOtpRequest:", error.response?.data || error.message);
+    throw error.response?.data || error;
   }
 };
+
 
 
 export const performPasswordReset = async ({ otpCode, email, newPassword }) => {
@@ -75,7 +97,10 @@ export const performPasswordReset = async ({ otpCode, email, newPassword }) => {
     const response = await resetPasswordMobile({ otpCode, email, newPassword });
     return response.data;
   } catch (error) {
-    console.error("Error in performPasswordReset:", error.response?.data || error.message);
+    console.error(
+      "Error in performPasswordReset:",
+      error.response?.data || error.message
+    );
     throw error.response ? error.response.data : error;
   }
 };
@@ -114,7 +139,11 @@ export const checkAndRefreshToken = async () => {
 
     if (decoded.exp < currentTime) {
       try {
-        const response = await refreshTokenAPI(token, refreshToken);
+        const response = await refreshTokenAPI(
+          token,
+          refreshToken,
+          decoded.userId
+        );
         const newToken = response.data.data.token;
         const newRefreshToken = response.data.data.refreshToken;
 
@@ -122,14 +151,14 @@ export const checkAndRefreshToken = async () => {
         await AsyncStorage.setItem("refreshToken", newRefreshToken);
         token = newToken;
       } catch (error) {
-        console.error("Token refresh failed", error);
+        // console.error("Token refresh failed", error);
         throw error;
       }
     }
 
     return token;
   } catch (error) {
-    console.error("Error checking or refreshing token:", error);
+    // console.error("Error checking or refreshing token:", error);
     throw error;
   }
 };
@@ -143,3 +172,40 @@ export const changeUserPassword = async (data) => {
     throw error.response ? error.response.data : error;
   }
 };
+
+export const updatePassword = async (id, newPassword) => {
+  try {
+    const response = await updatePasswordAPI(id, newPassword);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating password:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// POST send OTP to phone number
+export const sendSmsOtp = (phoneNumber) => {
+  return axios.put(
+    `${API_BASE_URL}/send-sms-otp/${phoneNumber}`,
+    null,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};
+
+// POST verify phone number with OTP
+export const verifyPhoneNumber = (otp) => {
+  return axios.post(
+    `${API_BASE_URL}/verify-phone-number/${otp}`,
+    null,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};
+

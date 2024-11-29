@@ -1,156 +1,179 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Image,
-  TextInput,
+  ActivityIndicator,
+  Alert,
+  Modal,
   SafeAreaView,
-  StatusBar,
-} from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { fetchUserOrders } from "../../services/userOrderService";
+import { Ionicons } from "@expo/vector-icons";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/src/redux/slices/authSlice";
+import OrderCard from "../../components/Profile/OrderCard";
+import StatusTabs from "../../components/Profile/StatusTabs";
 
 const MyOrder = () => {
-  const route = useRoute();
+  const user = useSelector(selectUser);
   const navigation = useNavigation();
-  const [selectedStatus, setSelectedStatus] = useState(route.params?.status || 'all');
+  const [selectedStatus, setSelectedStatus] = useState("Tất cả");
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isProductModalOpen, setProductModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const statuses = [
-    { label: 'Tất cả', value: 'all' },
-    { label: 'Chờ xác nhận', value: 'pending' },
-    { label: 'Chờ lấy hàng', value: 'pickup' },
-    { label: 'Đang giao', value: 'shipping' },
-    { label: 'Đã giao', value: 'delivered' },
-    { label: 'Đã hủy', value: 'canceled' },
-    { label: 'Đánh giá', value: 'review' },
+  const statusList = [
+    { label: "Tất cả", value: "Tất cả" },
+    { label: "Đang chờ", value: "PENDING" },
+    { label: "Đã xác nhận", value: "CONFIRMED" },
+    { label: "Đã thanh toán", value: "PAID" },
+    { label: "Đang đóng gói", value: "PACKING" },
+    { label: "Đang vận chuyển", value: "SHIPPING" },
+    { label: "Thành công", value: "SUCCESS" },
+    { label: "Tạm hoãn", value: "ON_HOLD" },
   ];
 
-  const orders = [
-    {
-      id: '1',
-      orderNumber: '#ORD-2023-001',
-      type: 'Thể thao',
-      date: '15/05/2023',
-      status: 'pending',
-      itemsCount: 2,
-      price: '1.500.000 ₫',
-      imageUrl: 'https://via.placeholder.com/100',
-    },
-    {
-      id: '2',
-      orderNumber: '#ORD-2023-002',
-      type: 'Giày',
-      date: '20/05/2023',
-      status: 'shipping',
-      itemsCount: 1,
-      price: '800.000 ₫',
-      imageUrl: 'https://via.placeholder.com/100',
-    },
-    // Add more sample orders as needed
-  ];
+  const openProductModal = (product) => {
+    setSelectedProduct(product);
+    setProductModalOpen(true);
+  };
+
+  const closeProductModal = () => setProductModalOpen(false);
+
+  const fetchOrders = async () => {
+    try {
+      setIsLoading(true);
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Lỗi", "Vui lòng đăng nhập để xem đơn hàng.");
+        navigation.navigate("Login");
+        return;
+      }
+
+      let userId = user?.UserId;
+      if (!userId) {
+        userId = await AsyncStorage.getItem("userId");
+      }
+
+      if (!userId) {
+        throw new Error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
+      }
+
+      const ordersData = await fetchUserOrders(userId, token);
+      setOrders(ordersData);
+    } catch (err) {
+      console.error("Error loading orders:", err);
+      setError(err.message || "Không thể tải đơn hàng");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const filteredOrders =
-    selectedStatus === 'all' ? orders : orders.filter((order) => order.status === selectedStatus);
+    selectedStatus === "Tất cả"
+      ? orders
+      : orders.filter((order) => order.orderStatus === selectedStatus);
+
+  const renderOrderStatusButton = (order) => {
+    if (
+      order.paymentStatus === "IsWating" &&
+      order.deliveryMethod !== "HOME_DELIVERY"
+    ) {
+      return (
+        <TouchableOpacity
+          style={styles.checkoutButton}
+          onPress={() =>
+            navigation.navigate("PlacedOrder", { selectedOrder: order })
+          }
+        >
+          <Text style={styles.checkoutText}>Thanh Toán</Text>
+        </TouchableOpacity>
+      );
+    }
+    return null;
+  };
 
   const renderOrderItem = ({ item }) => (
-    <View style={styles.orderCard}>
-      <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
-      <View style={styles.orderInfo}>
-        <Text style={styles.orderNumber}>{item.orderNumber}</Text>
-        <Text style={styles.orderType}>{item.type}</Text>
-        <Text style={styles.orderDate}>{item.date}</Text>
-        <View style={styles.orderFooter}>
-          <Text style={styles.orderItems}>{item.itemsCount} sản phẩm</Text>
-          <Text style={styles.orderPrice}>{item.price}</Text>
-        </View>
-      </View>
-      <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-        <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
-      </View>
-    </View>
+    <OrderCard
+      order={item}
+      onPress={() => openProductModal(item)}
+      renderOrderStatusButton={renderOrderStatusButton}
+    />
   );
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return '#FFA500';
-      case 'pickup': return '#3498db';
-      case 'shipping': return '#2ecc71';
-      case 'delivered': return '#27ae60';
-      case 'canceled': return '#e74c3c';
-      case 'review': return '#9b59b6';
-      default: return '#95a5a6';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending': return 'Chờ xác nhận';
-      case 'pickup': return 'Chờ lấy hàng';
-      case 'shipping': return 'Đang giao';
-      case 'delivered': return 'Đã giao';
-      case 'canceled': return 'Đã hủy';
-      case 'review': return 'Đánh giá';
-      default: return 'Không xác định';
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Đơn đã mua</Text>
+        <Text style={styles.headerTitle}>Trạng thái đơn hàng</Text>
       </View>
 
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={20} color="#888" />
-        <TextInput style={styles.searchInput} placeholder="Tìm kiếm đơn hàng" />
-        <TouchableOpacity>
-          <Ionicons name="filter" size={20} color="#888" />
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={statuses}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item.value}
-        renderItem={({ item: status }) => (
-          <TouchableOpacity
-            style={[styles.statusTab, selectedStatus === status.value && styles.activeTab]}
-            onPress={() => setSelectedStatus(status.value)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                selectedStatus === status.value && styles.activeTabText,
-              ]}
-            >
-              {status.label}
-            </Text>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.statusTabs}
+      <StatusTabs
+        statusList={statusList}
+        selectedStatus={selectedStatus}
+        setSelectedStatus={setSelectedStatus}
       />
 
-      {filteredOrders.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF9900" />
+        </View>
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : (
         <FlatList
           data={filteredOrders}
+          keyExtractor={(item) =>
+            item?.orderId?.toString() || item?.cartItemId?.toString()
+          }
           renderItem={renderOrderItem}
-          keyExtractor={(item) => item.id}
           contentContainerStyle={styles.orderList}
         />
-      ) : (
-        <View style={styles.noOrdersView}>
-          <Ionicons name="cart-outline" size={64} color="#ccc" />
-          <Text style={styles.noOrdersText}>Không có đơn hàng nào</Text>
-        </View>
       )}
+
+      <Modal visible={isProductModalOpen} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              onPress={closeProductModal}
+              style={styles.closeIcon}
+            >
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Chi tiết đơn hàng</Text>
+            <Text style={styles.productName}>
+              {selectedProduct?.productName}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate("SelectPayment", {
+                  order: selectedProduct,
+                });
+                closeProductModal();
+              }}
+              style={styles.closeIcon}
+            >
+              Thanh toán
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -158,144 +181,84 @@ const MyOrder = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop:30,
-    backgroundColor: '#F5F7FA',
+    paddingTop: 30,
+    backgroundColor: "#FFFFFF",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFF',
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: "#EEEEEE",
   },
   backButton: {
-    marginRight: 16,
+    padding: 4,
   },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    margin: 16,
-    height: 44,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
+  headerTitle: {
+    marginLeft: 12,
     fontSize: 16,
+    fontWeight: "600",
+    color: "#333333",
   },
-  statusTabs: {
-    backgroundColor: '#FFF',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  statusTab: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginRight: 8,
-    borderRadius: 20,
-    backgroundColor: '#F0F0F0',
-  },
-  activeTab: {
-    backgroundColor: '#524FF5',
-  },
-  tabText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  activeTabText: {
-    color: '#FFF',
-    fontWeight: 'bold',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   orderList: {
-    padding: 16,
+    paddingVertical: 12,
   },
-  orderCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  checkoutButton: {
+    backgroundColor: "#FF9900",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    marginTop: 12,
+    alignSelf: "flex-start",
   },
-  productImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 16,
+  checkoutText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
-  orderInfo: {
+  modalOverlay: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  orderNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+  modalContent: {
+    width: "90%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 20,
   },
-  orderType: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333333",
+    marginBottom: 16,
+    textAlign: "center",
   },
-  orderDate: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 8,
-  },
-  orderFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  orderItems: {
-    fontSize: 14,
-    color: '#666',
-  },
-  orderPrice: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#524FF5',
-  },
-  statusBadge: {
-    position: 'absolute',
+  closeIcon: {
+    position: "absolute",
     top: 16,
     right: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    zIndex: 1,
   },
-  statusText: {
-    fontSize: 12,
-    color: '#FFF',
-    fontWeight: 'bold',
+  productName: {
+    fontSize: 14,
+    color: "#666666",
+    textAlign: "center",
   },
-  noOrdersView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noOrdersText: {
-    fontSize: 18,
-    color: '#888',
-    marginTop: 16,
+  errorText: {
+    fontSize: 14,
+    color: "#FF0000",
+    textAlign: "center",
+    marginTop: 20,
   },
 });
 
-export default MyOrder; 
+export default MyOrder;
