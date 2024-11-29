@@ -21,7 +21,7 @@ import PaymentMethod from "../../components/Payment/PaymentMethod";
 import CheckoutButton from "../../components/Payment/CheckoutBtn";
 import { fetchBranchs } from "../../services/branchService";
 import { getUserShipmentDetails } from "../../services/shipmentService";
-import { selectCartItems} from "../../redux/slices/cartSlice";
+import { selectCartItems } from "../../redux/slices/cartSlice";
 import {
   selectedShipment,
   setShipment,
@@ -29,7 +29,7 @@ import {
 import OrderMethod from "../../components/Payment/OrderMethod";
 import { useFocusEffect } from "expo-router";
 import { selectUser } from "@/src/redux/slices/authSlice";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const COLORS = {
   primary: "#3366FF",
@@ -45,7 +45,7 @@ export default function PlaceOrderScreen({ route }) {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const cartItems = selectedCartItems || useSelector(selectCartItems);
-  const userLogin = useSelector(selectUser)
+  const userLogin = useSelector(selectUser);
   const shipment = useSelector((state) => state.shipment || {});
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [branches, setBranches] = useState([]);
@@ -53,7 +53,6 @@ export default function PlaceOrderScreen({ route }) {
   const [selectedOption, setSelectedOption] = useState("HOME_DELIVERY");
   const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
-  const [discountCode, setDiscountCode] = useState("");
   const [note, setNote] = useState("");
   const [isGuest, setIsGuest] = useState(false);
   const [userData, setUserData] = useState({
@@ -63,7 +62,7 @@ export default function PlaceOrderScreen({ route }) {
     phoneNumber: "",
     address: "",
     shipmentDetailID: "",
-    userId: userLogin?.UserId || 0
+    userId: userLogin?.UserId || 0,
   });
   const [date, setDate] = useState(new Date(1598051730000));
   // useFocusEffect(
@@ -105,7 +104,7 @@ export default function PlaceOrderScreen({ route }) {
       Alert.alert("Lỗi", "Không thể chọn địa chỉ giao hàng.");
       return;
     }
-  
+
     dispatch(setShipment(item));
     setUserData((prev) => ({
       ...prev,
@@ -117,7 +116,7 @@ export default function PlaceOrderScreen({ route }) {
     }));
     setIsModalVisible(false);
   };
-  
+
   const handleGuestInput = (field, value) => {
     setUserData((prev) => ({
       ...prev,
@@ -135,8 +134,7 @@ export default function PlaceOrderScreen({ route }) {
   );
 
   useEffect(() => {
-    const loadCart = async () => {
-    };
+    const loadCart = async () => {};
     loadCart();
   }, [dispatch]);
 
@@ -294,21 +292,7 @@ export default function PlaceOrderScreen({ route }) {
     //     />
     //   ),
     // },
-    // {
-    //   title: "Ưu đãi",
-    //   data: [{ key: "discountCode" }],
-    //   renderItem: () => (
-    //     <View style={styles.sectionContainer}>
-    //       <TextInput
-    //         style={styles.input}
-    //         placeholder="Nhập mã ưu đãi"
-    //         value={discountCode}
-    //         onChangeText={setDiscountCode}
-    //         placeholderTextColor={COLORS.gray}
-    //       />
-    //     </View>
-    //   ),
-    // },
+
     {
       title: "Ghi chú",
       data: [{ key: "note" }],
@@ -383,7 +367,6 @@ export default function PlaceOrderScreen({ route }) {
               shipment={shipment}
               selectedBranchId={selectedBranchId}
               selectedPaymentMethod={selectedPaymentMethod}
-              discountCode={discountCode}
               note={note}
               selectedCartItems={cartItems}
               userData={userData}
@@ -441,7 +424,7 @@ export default function PlaceOrderScreen({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop:30,
+    paddingTop: 30,
     backgroundColor: COLORS.lightGray,
   },
   header: {
@@ -458,15 +441,14 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     color: COLORS.dark,
   },
-  sectionListContent:
-{
+  sectionListContent: {
     paddingBottom: 24,
   },
   sectionContainer: {
     backgroundColor: COLORS.white,
     marginBottom: 8,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
     padding: 16,
   },
   sectionHeader: {
@@ -558,7 +540,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     margin: 16,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalTitle: {
     fontSize: 20,

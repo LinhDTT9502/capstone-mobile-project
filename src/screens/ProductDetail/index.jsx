@@ -481,10 +481,11 @@ export default function ProductDetail() {
               color="#FF9900"
             />
           </View>
-          <Text style={styles.productTag}>For exchange</Text>
+          <Text style={styles.productTag}>Giá</Text>
           <View style={styles.priceContainer}>
             <View>
               <Text style={styles.productPrice}>
+              Giá mua: 
                 {product.price
                   ? `${formatCurrency(product.price)} ₫`
                   : "Giá không có"}
