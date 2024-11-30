@@ -11,7 +11,7 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { selectCheckout } from "../../api/Checkout/apiCheckout";
+import { selectCheckout, selectRentalCheckout } from "../../api/Checkout/apiCheckout";
 import PaymentMethod from "../../components/Payment/PaymentMethod";
 import { Feather } from "@expo/vector-icons";
 
@@ -30,6 +30,15 @@ function SelectPayment({ route }) {
       if (selectedOption === "1") {
         // COD
         setPaymentCompleted(true);
+        const data =  order.rentalOrderCode ? await selectRentalCheckout({
+          paymentMethodID: parseInt(selectedOption),
+          orderId: order.id,
+          orderCode: order.rentalOrderCode,
+        }): await selectCheckout({
+          paymentMethodID: parseInt(selectedOption),
+          orderId: order.id,
+          orderCode: order.saleOrderCode,
+        });
         Alert.alert(
           "Thanh toán thành công",
           "Bạn đã chọn thanh toán khi nhận hàng.",
@@ -37,7 +46,11 @@ function SelectPayment({ route }) {
         );
       } else if (selectedOption === "2" || selectedOption === "3") {
         // PayOS or VNPay
-        const data = await selectCheckout({
+        const data =  order.rentalOrderCode ? await selectRentalCheckout({
+          paymentMethodID: parseInt(selectedOption),
+          orderId: order.id,
+          orderCode: order.rentalOrderCode,
+        }): await selectCheckout({
           paymentMethodID: parseInt(selectedOption),
           orderId: order.id,
           orderCode: order.saleOrderCode,
@@ -111,23 +124,30 @@ function SelectPayment({ route }) {
           <View style={styles.card}>
             {(data?.length > 0 ? data : [order]).map((item, index) => {
               const _item = {...item}
-              return <View style={styles.cardItem}>
-                <Image
-                  source={{
-                    uri: _item?.imgAvatarPath || "https://via.placeholder.com/100",
-                  }}
-                  style={{ width: 50, height: 50}}
-                />
-                <View key={index} style={styles.itemRow}>
-                  <Text style={styles.itemName}>{_item.productName}</Text>
-                  <Text style={styles.itemQuantity}>x{_item?.quantity}</Text>
-                  <Text style={styles.itemPrice}>
-                    {formatCurrency(_item.unitPrice || _item.subTotal)}
-                  </Text>
+              return (
+                <View style={{ flexDirection: 'column', gap: 8, paddingBottom: 10, marginBottom: 20, borderBottom: '0.5px solid #e0e0e0'}}>
+                  <View style={styles.cardItem}>
+                    <Image
+                      source={{
+                        uri: _item?.imgAvatarPath || "https://via.placeholder.com/100",
+                      }}
+                      style={{ width: 80, height: 80}}
+                    />
+                    <View key={index} style={styles.itemRow}>
+                      <Text style={styles.itemName}>{_item.productName}</Text>
+                      <Text style={styles.itemQuantity}>x{_item?.quantity}</Text>
+                      <Text style={styles.itemPrice}>
+                        {formatCurrency(_item.unitPrice || _item.subTotal)}
+                      </Text>
+                    </View>
+                  </View>
+                  <View>
+                    {item?.rentalStartDate ? <Text>Ngày bắt đầu thuê: {item?.rentalStartDate}</Text> : null}
+                    {item?.rentalEndDate ? <Text>Ngày bắt đầu thuê: {item?.rentalEndDate}</Text> : null}
+                  </View>
                 </View>
-              </View>
+              )
             })}
-            <View style={styles.divider} />
             <TotalItem
               label="Tổng cộng"
               value={formatCurrency(order.totalAmount)}
@@ -273,11 +293,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 8,
+    flex: 1
   },
   itemName: {
     flex: 1,
     fontSize: 16,
     color: "#333",
+    width: '100%'
   },
   itemQuantity: {
     fontSize: 16,

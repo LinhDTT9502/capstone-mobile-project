@@ -28,10 +28,15 @@ const CheckoutBtn = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCheckout = async () => {
-    // if (type === 'rent' && (!dateSelected?.start || !dateSelected?.end)) {
-    //   Alert.alert("Lỗi", "Chọn ngày giao và ngày kết thúc");
-    //   return;
-    // }
+    if (type === 'rent' && (!selectedCartItems.every(
+      (item) =>
+        item?.dateSelected &&
+        item?.dateSelected?.start &&
+        item?.dateSelected?.end
+    ))) {
+      Alert.alert("Thông tin", "Chọn ngày giao và ngày kết thúc");
+      return;
+    }
     if (selectedOption === "HOME_DELIVERY") {
       // if (!actualShipment || !actualShipment.id) {
       //   Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng.");
@@ -50,7 +55,7 @@ const CheckoutBtn = ({
     tomorrow.setDate(today.getDate() + 1);
 
     const totalAmount = _selectedCartItems.reduce(
-      (acc, item) => acc + (type === 'buy' ? item.price * item.quantity : item.rentPrice * item.quantity * (dateSelected?.count || 1) ) ,
+      (acc, item) => acc + (type === 'buy' ? item.price * item.quantity : item.rentPrice * item.quantity * (item?.dateSelected?.count || 1) ) ,
       0
     )
     const orderData = {
@@ -76,10 +81,10 @@ const CheckoutBtn = ({
               totalAmount: totalAmount + tranSportFee
             },
             rentalDates: {
-              dateOfReceipt: dateSelected?.start,
-              rentalStartDate: dateSelected?.start,
-              rentalEndDate: dateSelected?.end,
-              rentalDays: dateSelected?.count
+              dateOfReceipt: item?.dateSelected?.start,
+              rentalStartDate: item?.dateSelected?.start,
+              rentalEndDate: item?.dateSelected?.end,
+              rentalDays: item?.dateSelected?.count
             },
           } : {}
         )

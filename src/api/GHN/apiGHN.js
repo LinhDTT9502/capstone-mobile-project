@@ -1,10 +1,12 @@
 import axios from 'axios';
+import { GHN_TOKEN, SHOP_ID, API_KEY } from '@env';
+
 
 const API_BASE_URL = 'https://online-gateway.ghn.vn/shiip/public-api/master-data';
 
-const apiToken = process.env.GHN_TOKEN;
-const shopId = process.env.SHOP_ID;
-const apiKey = process.env.API_KEY;
+const apiToken = GHN_TOKEN;
+const shopId = SHOP_ID;
+const apiKey = API_KEY;
 // console.log(GHN_TOKEN, SHOP_ID, API_KEY);
 
 export const getProvince = () => {
@@ -13,7 +15,7 @@ export const getProvince = () => {
   return axios.get(url, {
     headers: {
       'accept': '*/*',
-      'Token': '8ec3bc30-8b38-11ef-9db4-127d7400f642',
+      'Token': process.env.GHN_TOKEN,
       'Content-Type': 'application/json'
 
     }
@@ -30,7 +32,7 @@ export const getProvince = () => {
       {
         headers: {
           'accept': '*/*',
-          'token': '8ec3bc30-8b38-11ef-9db4-127d7400f642',
+          'token': `${apiToken}`,
           'Content-Type': 'application/json',
         },
       }
@@ -47,7 +49,7 @@ export const getProvince = () => {
       {
         headers: {
           'accept': '*/*',
-          'token': '8ec3bc30-8b38-11ef-9db4-127d7400f642',
+          'token': `${apiToken}`,
           'Content-Type': 'application/json',
         },
       }

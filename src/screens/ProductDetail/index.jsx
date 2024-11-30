@@ -206,6 +206,7 @@ export default function ProductDetail() {
         setProduct((prevProduct) => ({
           ...prevProduct,
           imgAvatarPath: matchingProduct.imgAvatarPath,
+          productId: matchingProduct?.id,
         }));
       } else {
         setTotalPrice("Hết hàng");
@@ -238,11 +239,7 @@ export default function ProductDetail() {
     );
 
     if (matchingProduct) {
-      setProduct((prevProduct) => ({
-        ...prevProduct,
-        imgAvatarPath: matchingProduct.imgAvatarPath,
-        price: matchingProduct.price || 0,
-      }));
+      setProduct(matchingProduct);
       setTotalPrice(matchingProduct.price || 0);
       setBasePrice(matchingProduct.price || 0);
     } else {
@@ -391,15 +388,30 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = (type) => {
-    if (type === 'buy' || type === 'rent') {
+    if (!selectedColor) {
+      Alert.alert("Thông báo", `Vui lòng chọn màu sắc!`);
+      return;
+    }
+
+    if (!selectedSize) {
+      Alert.alert("Thông báo", `Vui lòng chọn kích thước!`);
+      return;
+    }
+
+    if (!selectedCondition) {
+      Alert.alert("Thông báo", `Vui lòng chọn tình trạng!`);
+      return;
+    }
+
+    if (type === "buy" || type === "rent") {
       return navigation.navigate("PlacedOrder", {
-        selectedCartItems: [{ ...product, quantity, size: selectedSize, color: selectedColor }],
-        type
+        selectedCartItems: [
+          { ...product, quantity, size: selectedSize, color: selectedColor },
+        ],
+        type,
       });
     }
-    Alert.alert("Thông báo", `Sản phẩm đã được thêm vào giỏ hàng! (${type})`);
   };
-
 
   const handleSubmitReview = () => {
     if (userRating === 0) {
@@ -413,18 +425,6 @@ export default function ProductDetail() {
 
   const formatCurrency = (amount) => {
     return amount.toLocaleString();
-  };
-
-  const updateProductImage = (color) => {
-    const colorSpecificImage = product.images?.find(
-      (img) => img.color === color
-    )?.imgAvatarPath;
-    if (colorSpecificImage) {
-      setProduct((prevProduct) => ({
-        ...prevProduct,
-        imgAvatarPath: colorSpecificImage,
-      }));
-    }
   };
 
   const renderItem = ({ item }) => (
@@ -481,11 +481,10 @@ export default function ProductDetail() {
               color="#FF9900"
             />
           </View>
-          <Text style={styles.productTag}>Giá</Text>
           <View style={styles.priceContainer}>
             <View>
               <Text style={styles.productPrice}>
-              Giá mua: 
+                Giá mua:
                 {product.price
                   ? `${formatCurrency(product.price)} ₫`
                   : "Giá không có"}
@@ -499,19 +498,25 @@ export default function ProductDetail() {
                 </>
               ) : null}
             </View>
-            {product?.rentPrice ?
-              <View>
-              <Text style={styles.productPrice}>
-                Giá thuê: {product?.rentPrice} ₫
-              </Text>
-            </View>:null}
-            
+
+
+
             <LikeButton
               isLiked={isLiked}
               likes={likes}
               onPress={handleLikeToggle}
               disabled={!isLoggedIn}
             />
+          </View>
+
+          <View style={styles.priceContainer}>
+          {product?.rentPrice ? (
+              <View>
+                <Text style={styles.productPrice}>
+                  Giá thuê: {formatCurrency(product.rentPrice)} ₫
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       )}
@@ -653,12 +658,12 @@ export default function ProductDetail() {
               <FontAwesome name="plus" size={16} color={COLORS.dark} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.totalPriceText}>
+          {/* <Text style={styles.totalPriceText}>
             Tổng giá:{" "}
             {typeof totalPrice === "string"
               ? totalPrice
               : `${formatCurrency(totalPrice)} ₫`}
-          </Text>
+          </Text> */}
 
           <View style={styles.addToCartContainer}>
             {typeof totalPrice === "string" ? (
@@ -678,18 +683,7 @@ export default function ProductDetail() {
           </View>
         </View>
       )}
-      {item.type === "specifications" && (
-        <View>
-          <Text style={styles.sectionTitle}>Thông số kỹ thuật</Text>
-          <Text style={styles.specificationText}>
-            Tình trạng: {product.condition}%
-          </Text>
-          <Text style={styles.specificationText}>
-            Kích thước: {product.size}
-          </Text>
-          <Text style={styles.specificationText}>Màu sắc: {product.color}</Text>
-        </View>
-      )}
+
       {item.type === "promotions" && (
         <View>
           <Text style={styles.sectionTitle}>Ưu đãi</Text>
@@ -766,7 +760,6 @@ export default function ProductDetail() {
     { type: "image" },
     { type: "info" },
     { type: "selection" },
-    { type: "specifications" },
     { type: "promotions" },
     { type: "description" },
     // { type: "reviews" },
@@ -795,8 +788,6 @@ export default function ProductDetail() {
               <Text style={styles.cartBadgeText}>{cartItems.length}</Text>
             </View>
           )}
-
-
         </TouchableOpacity>
       </View>
 
@@ -811,11 +802,11 @@ export default function ProductDetail() {
         <View style={styles.buyNowContainer}>
           <BuyNowButton onPress={() => handleAddToCart("buy")} />
         </View>
-        {product?.isRent ?
+        {product?.isRent ? (
           <View style={styles.rentContainer}>
-          <RentButton onPress={() => handleAddToCart("rent")} />
-        </View> : null}
-        
+            <RentButton onPress={() => handleAddToCart("rent")} />
+          </View>
+        ) : null}
       </View>
 
       <Modal

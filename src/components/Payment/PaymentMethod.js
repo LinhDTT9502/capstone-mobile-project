@@ -15,6 +15,7 @@ function PaymentMethod({
   paymentCompleted,
   order,
 }) {
+  console.log("🚀 ~ order:", order)
   const renderPaymentDetails = (value) => {
     switch (value) {
       case "1":
@@ -111,15 +112,15 @@ function PaymentMethod({
                 {item.title}
               </Text>
             </View>
-            <View style={[
+            {!order?.paymentMethodId ? <View style={[
               styles.radioButton,
               selectedOption == item.value && styles.selectedRadioButton,
               paymentCompleted && styles.disabledRadioButton,
             ]}>
               {selectedOption == item.value && <View style={styles.selectedDot} />}
-            </View>
+            </View> : null}
           </TouchableOpacity>
-          {selectedOption == item.value && renderPaymentDetails(item.value)}
+          {(selectedOption == item.value && !order?.paymentMethodId) && renderPaymentDetails(item.value)}
         </View>
       ))}
     </ScrollView>

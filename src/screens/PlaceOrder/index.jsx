@@ -266,14 +266,14 @@ export default function PlaceOrderScreen({ route }) {
         return <View style={styles.productItem}>
           	<Image source={{ uri: item.imgAvatarPath }} style={styles.image} />
           	<View style={styles.productDetails}>
-            	<Text style={styles.productName}>{item.productName}</Text>
+            	<Text style={styles.productName}>{item.productName} - {item.color} - {item.condition}</Text>
             	<Text style={styles.productQuantity}>
               	Số lượng: {item.quantity}
             	</Text>
             	<Text style={styles.productPrice}>
               	{formatCurrency(type === 'buy' ? item.price : item.rentPrice)}
             </Text>
-            <View>
+            {type === 'rent' ? <View>
               <TouchableOpacity onPress={() => setDatePickerVisibility('start' + '-' + index)}>
                 <Text>Ngày bắt đầu: {item?.dateSelected?.start ? dayjs(item?.dateSelected?.start).format('DD/MM/YYYY') : 'Chọn ngày'}</Text>
               </TouchableOpacity>
@@ -281,7 +281,7 @@ export default function PlaceOrderScreen({ route }) {
                 <Text>Ngày kết thúc: {item?.dateSelected?.end ? dayjs(item?.dateSelected?.end).format('DD/MM/YYYY') : 'Chọn ngày'}</Text>
               </TouchableOpacity>
               {item?.dateSelected?.start && item?.dateSelected?.end ? <Text>Tổng số ngày thuê: {item?.dateSelected?.count}</Text>:null }
-            </View>
+            </View>: null}
             <Text style={styles.productTotal}>
               Tổng: {formatCurrency(type === 'buy' ? item.price * item.quantity : item.rentPrice * item.quantity * (item?.dateSelected?.count || 1))}
             </Text>

@@ -89,20 +89,8 @@ const OrderMethod = ({
         </TouchableOpacity>
 
         {selectedOption === "HOME_DELIVERY" && (
-          <View style={styles.deliveryContainer}>
-            {user ? (
-              <View>
-                <AddressForm
-                  address={userData.address}
-                  province={userData.province}
-                  district={userData.district}
-                  ward={userData.ward}
-                  onAddressChange={handleAddressChange}
-                />
-             </View>
-            ) : (
-              <AddressForm onAddressChange={handleAddressChange} />
-            )}
+          user ? <View></View> : <View style={styles.deliveryContainer}>
+          <AddressForm onAddressChange={handleAddressChange} />
           </View>
         )}
 

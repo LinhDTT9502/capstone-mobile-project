@@ -76,8 +76,8 @@ export default function Cart() {
             setCartItems(guestCartItems);
           }
         } catch (error) {
-          console.error("Error fetching cart:", error);
-          Alert.alert("Lỗi", "Không thể tải giỏ hàng. Vui lòng thử lại.");
+          // console.error("Error fetching cart:", error);
+          // Alert.alert("Lỗi", "Không thể tải giỏ hàng. Vui lòng thử lại.");
         }
       };
   
@@ -295,7 +295,7 @@ export default function Cart() {
                 <View style={styles.itemDetails}>
                   <View style={styles.itemHeader}>
                     <Text style={styles.itemName} numberOfLines={2}>
-                      {item.productName} - {item.color}
+                      {item.productName} - {item.color} - {item.condition}
                     </Text>
                     <TouchableOpacity
                       style={styles.deleteButton}
@@ -312,7 +312,7 @@ export default function Cart() {
                   <Text style={styles.itemPrice}>
                     {formatCurrency((item.price * item.quantity))}
                   </Text>
-                  <Text style={styles.itemSize}>Size: {item.size}</Text>
+                  <Text style={styles.itemSize}>Kích thước: {item.size}</Text>
 
                   <View style={styles.itemFooter}>
                     <View style={styles.quantityContainer}>
