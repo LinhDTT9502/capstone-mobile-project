@@ -89,23 +89,23 @@ function PaymentMethod({
 
   return (
     <ScrollView style={styles.container}>
-      {paymentMethods.map((item) => (
+      {paymentMethods?.filter(item => order?.paymentMethodId ? item.value == order?.paymentMethodId : true).map((item) => (
         <View key={item.value}>
           <TouchableOpacity
             onPress={() => setSelectedOption(item.value)}
             style={[
               styles.optionContainer,
-              selectedOption === item.value && styles.selectedOption,
+              selectedOption == item.value && styles.selectedOption,
             ]}
             disabled={paymentCompleted}
           >
             <View style={styles.optionContent}>
               <View style={styles.iconContainer}>
-                <Feather name={item.icon} size={24} color={selectedOption === item.value ? "#FFFFFF" : "#3366FF"} />
+                <Feather name={item.icon} size={24} color={selectedOption == item.value ? "#FFFFFF" : "#3366FF"} />
               </View>
               <Text style={[
                 styles.optionText,
-                selectedOption === item.value && styles.selectedOptionText,
+                selectedOption == item.value && styles.selectedOptionText,
                 paymentCompleted && styles.disabledOptionText,
               ]}>
                 {item.title}
@@ -113,13 +113,13 @@ function PaymentMethod({
             </View>
             <View style={[
               styles.radioButton,
-              selectedOption === item.value && styles.selectedRadioButton,
+              selectedOption == item.value && styles.selectedRadioButton,
               paymentCompleted && styles.disabledRadioButton,
             ]}>
-              {selectedOption === item.value && <View style={styles.selectedDot} />}
+              {selectedOption == item.value && <View style={styles.selectedDot} />}
             </View>
           </TouchableOpacity>
-          {selectedOption === item.value && renderPaymentDetails(item.value)}
+          {selectedOption == item.value && renderPaymentDetails(item.value)}
         </View>
       ))}
     </ScrollView>

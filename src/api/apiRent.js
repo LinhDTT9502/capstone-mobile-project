@@ -9,3 +9,13 @@ export const createRent = (data) => {
     },
   });
 };
+
+export const getListRent = (id, token) => {
+  return axios.get(`${API_BASE_URL}/get-rental-order-by-user?userId=${id}`, {
+    headers: {
+      'Accept': '*/*',
+      'Content-Type': 'application/json',
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+};

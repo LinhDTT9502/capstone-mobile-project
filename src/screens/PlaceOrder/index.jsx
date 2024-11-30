@@ -30,7 +30,7 @@ import OrderMethod from "../../components/Payment/OrderMethod";
 import { useFocusEffect } from "expo-router";
 import { selectUser } from "@/src/redux/slices/authSlice";
 import DateTimePicker from "@react-native-community/datetimepicker";
-
+import dayjs from 'dayjs'
 const COLORS = {
   primary: "#3366FF",
   secondary: "#FF8800",
@@ -41,10 +41,10 @@ const COLORS = {
 };
 
 export default function PlaceOrderScreen({ route }) {
-  const { selectedCartItems } = route.params || { selectedCartItems: [] };
+  const { selectedCartItems, type } = route.params || { selectedCartItems: [] };
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const cartItems = selectedCartItems || useSelector(selectCartItems);
+  const [cartItems, setCartItems] = useState(selectedCartItems || useSelector(selectCartItems))
   const userLogin = useSelector(selectUser);
   const shipment = useSelector((state) => state.shipment || {});
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -53,8 +53,11 @@ export default function PlaceOrderScreen({ route }) {
   const [selectedOption, setSelectedOption] = useState("HOME_DELIVERY");
   const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [dateSelected, setDateSelected] = useState({ start: null, end: null, count: 0})
   const [note, setNote] = useState("");
   const [isGuest, setIsGuest] = useState(false);
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
   const [userData, setUserData] = useState({
     fullName: "",
     gender: "",
@@ -64,7 +67,7 @@ export default function PlaceOrderScreen({ route }) {
     shipmentDetailID: "",
     userId: userLogin?.UserId || 0,
   });
-  const [date, setDate] = useState(new Date(1598051730000));
+  
   // useFocusEffect(
   //   React.useCallback(() => {
   //     Alert.alert("Cảnh báo", "Bạn không thể quay lại để đặt hàng lại.", [
@@ -129,9 +132,9 @@ export default function PlaceOrderScreen({ route }) {
   };
 
   const totalPrice = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item) => acc + (type === 'buy' ? item.price * item.quantity : item.rentPrice * item.quantity * (item?.dateSelected?.count || 1) ) ,
     0
-  );
+  )
 
   useEffect(() => {
     const loadCart = async () => {};
@@ -175,6 +178,21 @@ export default function PlaceOrderScreen({ route }) {
       ...prev,
       address,
     }));
+  };
+  
+  const handleConfirm = (_, val) => {
+    const data = JSON.parse(JSON.stringify(cartItems))
+
+    const [key, index] = isDatePickerVisible.split('-')
+    if (!data?.[index]?.['dateSelected']) {
+      data[index]['dateSelected'] = {}
+    }
+    data[index]['dateSelected'][key] = val
+    if (data?.[index]?.['dateSelected']?.start &&  data?.[index]?.['dateSelected']?.end) {
+      data[index]['dateSelected'].count = dayjs(data?.[index]?.['dateSelected']?.end).diff(dayjs(data?.[index]?.['dateSelected']?.start), 'day')
+    }
+    setCartItems(data)
+    setDatePickerVisibility(false)
   };
 
   const renderCustomerInfo = () => {
@@ -243,24 +261,34 @@ export default function PlaceOrderScreen({ route }) {
   const sections = [
     {
       title: "Tóm tắt đơn hàng",
-      data: selectedCartItems,
-      renderItem: ({ item }) => (
-        <View style={styles.productItem}>
-          <Image source={{ uri: item.imgAvatarPath }} style={styles.image} />
-          <View style={styles.productDetails}>
-            <Text style={styles.productName}>{item.productName}</Text>
-            <Text style={styles.productQuantity}>
-              Số lượng: {item.quantity}
+      data: cartItems,
+      renderItem: ({ item, index }) => {
+        return <View style={styles.productItem}>
+          	<Image source={{ uri: item.imgAvatarPath }} style={styles.image} />
+          	<View style={styles.productDetails}>
+            	<Text style={styles.productName}>{item.productName}</Text>
+            	<Text style={styles.productQuantity}>
+              	Số lượng: {item.quantity}
+            	</Text>
+            	<Text style={styles.productPrice}>
+              	{formatCurrency(type === 'buy' ? item.price : item.rentPrice)}
             </Text>
-            <Text style={styles.productPrice}>
-              {formatCurrency(item.price)}
-            </Text>
+            <View>
+              <TouchableOpacity onPress={() => setDatePickerVisibility('start' + '-' + index)}>
+                <Text>Ngày bắt đầu: {item?.dateSelected?.start ? dayjs(item?.dateSelected?.start).format('DD/MM/YYYY') : 'Chọn ngày'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setDatePickerVisibility('end' + '-' + index)}>
+                <Text>Ngày kết thúc: {item?.dateSelected?.end ? dayjs(item?.dateSelected?.end).format('DD/MM/YYYY') : 'Chọn ngày'}</Text>
+              </TouchableOpacity>
+              {item?.dateSelected?.start && item?.dateSelected?.end ? <Text>Tổng số ngày thuê: {item?.dateSelected?.count}</Text>:null }
+            </View>
             <Text style={styles.productTotal}>
-              Tổng: {formatCurrency(item.price * item.quantity)}
+              Tổng: {formatCurrency(type === 'buy' ? item.price * item.quantity : item.rentPrice * item.quantity * (item?.dateSelected?.count || 1))}
             </Text>
-          </View>
-        </View>
-      ),
+          	</View>
+        	</View>
+      	
+      }
     },
     {
       title: "Thông tin giao hàng",
@@ -307,30 +335,29 @@ export default function PlaceOrderScreen({ route }) {
             numberOfLines={3}
             placeholderTextColor={COLORS.gray}
           />
-          <View>
-            {/* <View>
-              <Text>Ngày bắt đầu: </Text>
-              <DateTimePicker
-                testID="dateTimePicker"
-                value={date}
-                mode="date"
-                onChange={() => {}}
-              />
-            </View>
-            <View>
-              <Text>Ngày kết thúc: </Text>
-              <DateTimePicker
-                testID="dateTimePicker"
-                value={date}
-                mode="date"
-                onChange={() => {}}
-              />
-            </View> */}
-          </View>
         </View>
       ),
     },
   ];
+
+  const renderDataSelect = (show) => {
+    if (show) {
+      const [key, index] = isDatePickerVisible.split('-')
+      const val = cartItems[index]?.dateSelected?.[key]
+      const start = cartItems[index]?.dateSelected?.start ? new Date(cartItems[index]?.dateSelected?.start) : null
+      const today = new Date();
+      const minStart = key === 'end' && start ?  new Date(start.setDate(start.getDate() + 1)) : new Date(today.setDate(today.getDate() + 1))
+      return <DateTimePicker
+        mode={'date'}
+        onChange={handleConfirm}
+        locale={'vi'}
+        headerTextIOS={'Vui lòng chọn ngày'}
+        value={val ? new Date(val) : new Date()}
+        minimumDate={minStart}
+      />
+    }
+    return null
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -340,7 +367,7 @@ export default function PlaceOrderScreen({ route }) {
         </TouchableOpacity>
         <Text style={styles.title}>Thanh toán</Text>
       </View>
-
+      {renderDataSelect(isDatePickerVisible)}
       <SectionList
         sections={sections}
         keyExtractor={(item, index) =>
@@ -370,7 +397,8 @@ export default function PlaceOrderScreen({ route }) {
               note={note}
               selectedCartItems={cartItems}
               userData={userData}
-              type={route.params.type}
+              type={type}
+              dateSelected={dateSelected}
             />
           </>
         )}

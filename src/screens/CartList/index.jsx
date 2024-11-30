@@ -214,7 +214,7 @@ export default function Cart() {
       selectedItems.includes(item.cartItemId)
     );
 
-    navigation.navigate("PlacedOrder", { selectedCartItems });
+    navigation.navigate("PlacedOrder", { selectedCartItems, type: 'buy' });
   };
 
   const handleRent = () => {
@@ -222,7 +222,11 @@ export default function Cart() {
       Alert.alert("Lỗi", "Vui lòng chọn sản phẩm để thuê.");
       return;
     }
-    setRentModalVisible(true);
+    const selectedCartItems = cartItems.filter((item) =>
+      selectedItems.includes(item.cartItemId)
+    );
+
+    navigation.navigate("PlacedOrder", { selectedCartItems, type: 'rent' });
   };
 
   const handleDateChange = (event, selectedDate, dateType) => {

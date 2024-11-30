@@ -1,5 +1,5 @@
 // SelectPayment.js
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Linking,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
   View,
+  Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { selectCheckout } from "../../api/Checkout/apiCheckout";
@@ -16,7 +17,6 @@ import { Feather } from "@expo/vector-icons";
 
 function SelectPayment({ route }) {
   const { order } = route.params;
-  console.log("🚀 ~ SelectPayment ~ order:", order);
   const navigation = useNavigation();
   const [selectedOption, setSelectedOption] = useState("1");
   const [paymentCompleted, setPaymentCompleted] = useState(false);
@@ -75,6 +75,8 @@ function SelectPayment({ route }) {
     }
   };
 
+  const data = order.saleOrderDetailVMs?.['$values'] || order.children
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -107,16 +109,24 @@ function SelectPayment({ route }) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Tóm tắt đơn hàng</Text>
           <View style={styles.card}>
-            {order.productInformations &&
-              order.productInformations.map((item, index) => (
+            {(data?.length > 0 ? data : [order]).map((item, index) => {
+              const _item = {...item}
+              return <View style={styles.cardItem}>
+                <Image
+                  source={{
+                    uri: _item?.imgAvatarPath || "https://via.placeholder.com/100",
+                  }}
+                  style={{ width: 50, height: 50}}
+                />
                 <View key={index} style={styles.itemRow}>
-                  <Text style={styles.itemName}>{item.productName}</Text>
-                  <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+                  <Text style={styles.itemName}>{_item.productName}</Text>
+                  <Text style={styles.itemQuantity}>x{_item?.quantity}</Text>
                   <Text style={styles.itemPrice}>
-                    {formatCurrency(item.unitPrice)}
+                    {formatCurrency(_item.unitPrice || _item.subTotal)}
                   </Text>
                 </View>
-              ))}
+              </View>
+            })}
             <View style={styles.divider} />
             <TotalItem
               label="Tổng cộng"
@@ -138,7 +148,7 @@ function SelectPayment({ route }) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
           <PaymentMethod
-            selectedOption={selectedOption}
+            selectedOption={selectedOption || order.paymentMethodID}
             setSelectedOption={setSelectedOption}
             paymentCompleted={paymentCompleted}
             order={order}
@@ -146,7 +156,7 @@ function SelectPayment({ route }) {
         </View>
       </ScrollView>
 
-      <TouchableOpacity
+      {order?.paymentMethod ? <View></View> : <TouchableOpacity
         style={[
           styles.checkoutButton,
           paymentCompleted && styles.disabledButton,
@@ -155,7 +165,8 @@ function SelectPayment({ route }) {
         disabled={paymentCompleted}
       >
         <Text style={styles.checkoutText}>Xác nhận thanh toán</Text>
-      </TouchableOpacity>
+      </TouchableOpacity>}
+      
     </View>
   );
 }
@@ -235,6 +246,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  cardItem: {
+    flexDirection: "row",
+    gap: 20
   },
   infoItem: {
     flexDirection: "row",

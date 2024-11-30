@@ -1,21 +1,24 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 
-const OrderCard = ({ order, onPress, renderOrderStatusButton }) => {
+const OrderCard = ({ order, onPress, renderOrderStatusButton, type }) => {
+  if (type === 'rent' && order?.parentOrderCode) return <View></View>
+
   return (
     <TouchableOpacity style={styles.orderCard} onPress={onPress}>
       <View style={styles.orderInfo}>
         <Image
           source={{
-            uri: order.saleOrderDetailVMs?.['$values'][0]?.imgAvatarPath || "https://via.placeholder.com/100",
+            uri: order.saleOrderDetailVMs?.['$values'][0]?.imgAvatarPath || order?.imgAvatarPath || "https://via.placeholder.com/100",
           }}
           style={styles.orderImage}
         />
         <View style={styles.orderDetails}>
-          <Text style={styles.orderCode}>Mã đơn hàng: {order.orderCode}</Text>
+          <Text style={styles.orderCode}>Mã đơn hàng: {order?.rentalOrderCode || order.orderCode}</Text>
+          <Text style={styles.orderStatus}>Hình thức nhận hàng: {order?.deliveryMethod}</Text>
           <Text style={styles.orderStatus}>Trạng thái: {order.orderStatus}</Text>
           <Text style={styles.orderTotal}>
-            Tổng tiền: {order.totalAmount.toLocaleString("vi-VN")}đ
+            Tổng tiền: {type === 'rent' ? order.subTotal.toLocaleString("vi-VN") : order.totalAmount.toLocaleString("vi-VN")}đ
           </Text>
         </View>
       </View>
