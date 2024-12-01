@@ -13,6 +13,10 @@ import {
   resetPasswordMobile,sendOtpRequestMobile,
   updatePasswordAPI
 } from "../api/apiAuth";
+import axios from "axios";
+
+const API_BASE_URL =
+  "https://capstone-project-703387227873.asia-southeast1.run.app/api/User";
 
 export const authenticateUser = async (username, password) => {
   try {
@@ -184,13 +188,14 @@ export const updatePassword = async (id, newPassword) => {
 };
 
 // POST send OTP to phone number
-export const sendSmsOtp = (phoneNumber) => {
+export const sendSmsOtp = (phoneNumber,token) => {
   return axios.put(
     `${API_BASE_URL}/send-sms-otp/${phoneNumber}`,
     null,
     {
       headers: {
         "Content-Type": "application/json",
+        'Authorization': `Bearer ${token}`,
       },
     }
   );

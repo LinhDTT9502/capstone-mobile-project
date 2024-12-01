@@ -99,7 +99,7 @@ export default function Cart() {
 
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
-    setSelectedItems(selectAll ? [] : cartItems.map((item) => item.cartItemId));
+    setSelectedItems(selectAll ? [] : cartItems.map((item) => item.cartItemId || item.id));
   };
 
   const toggleItemSelection = (itemId) => {
@@ -132,6 +132,9 @@ export default function Cart() {
           1, 
           token
         );
+        if (!updatedItem?.quantity) {
+          return Alert.alert("Lỗi", updatedItem);
+        }
         setCartItems((prev) =>
           prev.map((i) =>
             i.cartItemId === item.cartItemId
@@ -140,7 +143,7 @@ export default function Cart() {
           )
         );
       } else {
-        dispatch(addCart({ ...item, quantity: item.quantity + 1 }));
+        dispatch(addCart({ ...item, quantity: 1 }));
       }
     } catch (error) {
       console.error("Error increasing quantity:", error.message);
@@ -201,7 +204,7 @@ export default function Cart() {
   const calculateTotal = () => {
     return (
       cartItems
-        .filter((item) => selectedItems.includes(item.cartItemId))
+        .filter((item) => selectedItems.includes(item.cartItemId || item.id))
         // tính sản phẩm được chọn
         .reduce((sum, item) => {
           const itemTotal = parseFloat(item.price) * item.quantity;
@@ -236,7 +239,7 @@ export default function Cart() {
     }
 
     const selectedCartItems = cartItems.filter((item) =>
-      selectedItems.includes(item.cartItemId)
+      selectedItems.includes(item.cartItemId || item.id)
     );
 
     navigation.navigate("PlacedOrder", { selectedCartItems, type: 'buy' });
@@ -248,7 +251,7 @@ export default function Cart() {
       return;
     }
     const selectedCartItems = cartItems.filter((item) =>
-      selectedItems.includes(item.cartItemId)
+      selectedItems.includes(item.cartItemId || item.id)
     );
 
     navigation.navigate("PlacedOrder", { selectedCartItems, type: 'rent' });
@@ -297,34 +300,38 @@ export default function Cart() {
             return (
               <View key={JSON.stringify(item)} style={styles.cartItem}>
                 <TouchableOpacity
-                  onPress={() => toggleItemSelection(item.cartItemId)}
+                  onPress={() => toggleItemSelection(item.cartItemId || item.id)}
                   style={styles.checkboxContainer}
                 >
                   <View
                     style={[
                       styles.checkbox,
-                      selectedItems.includes(item.cartItemId) && styles.checkboxSelected,
+                      selectedItems.includes(item.cartItemId || item.id) && styles.checkboxSelected,
                     ]}
                   >
-                    {selectedItems.includes(item.cartItemId) && (
+                    {selectedItems.includes(item.cartItemId || item.id) && (
                       <Ionicons name="checkmark" size={16} color={COLORS.white} />
                     )}
                   </View>
                 </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate("ProductDetail", { productId: item.productId })}>
+                  <Image
+                    source={{ uri: item.imgAvatarPath }}
+                    style={styles.productImage}
+                  />
+                </TouchableOpacity>
 
-                <Image
-                  source={{ uri: item.imgAvatarPath }}
-                  style={styles.productImage}
-                />
 
                 <View style={styles.itemDetails}>
                   <View style={styles.itemHeader}>
-                    <Text style={styles.itemName} numberOfLines={2}>
-                      {item.productName} - {item.color}
-                    </Text>
+                    <TouchableOpacity  onPress={() => navigation.navigate("ProductDetail", { productId: item.productId })}>
+                      <Text style={styles.itemName} numberOfLines={2}>
+                        {item.productName} - {item.color} - {item.condition}%
+                      </Text>
+                    </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.deleteButton}
-                      onPress={() => handleRemoveItem(item.cartItemId)}
+                      onPress={() => handleRemoveItem(item.cartItemId || item.id)}
                     >
                       <Ionicons
                         name="trash-outline"
@@ -335,38 +342,46 @@ export default function Cart() {
                   </View>
 
                   <Text style={styles.itemPrice}>
-                    {formatCurrency((item.price * item.quantity))}
+                    {formatCurrency((item.price))}
                   </Text>
-                  <Text style={styles.itemSize}>Size: {item.size}</Text>
-                  <Text style={styles.itemSize}>Màu: {item.color}</Text>
-                  <Text style={styles.itemSize}>Tình trạng: {item.condition}%</Text>
-                  <View style={styles.itemFooter}>
-                    <View style={styles.quantityContainer}>
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => handleDecreaseQuantity(item)}
-                      >
-                        <Ionicons
-                          name="remove"
-                          size={20}
-                          color={COLORS.primary}
+                  <Text style={styles.itemSize}>Kích thước: {item.size}</Text>
+                  {/* <Text style={styles.itemSize}>Màu: {item.color}</Text>
+                  <Text style={styles.itemSize}>Tình trạng: {item.condition}%</Text> */}
+                  <View style={{ flexDirection: 'row', gap: 10}}>
+                    <View style={styles.itemFooter}>
+                      <View style={styles.quantityContainer}>
+                        <TouchableOpacity
+                          style={styles.quantityButton}
+                          onPress={() => handleDecreaseQuantity(item)}
+                        >
+                          <Ionicons
+                            name="remove"
+                            size={20}
+                            color={COLORS.primary}
+                          />
+                        </TouchableOpacity>
+                        <TextInput
+                          style={{ backgroundColor: 'white', width: 26, border: 'none', height: 28, borderRadius: 4, paddingHorizontal: 4 }}
+                          onBlur={(e) => handleUpdateQty(item.cartItemId || item.id, e.target.value)}
+                          defaultValue={item.quantity ? JSON.stringify(item.quantity) : '1'}
+                          placeholder="useless placeholder"
+                          keyboardType="numeric"
                         />
-                      </TouchableOpacity>
-                      <TextInput
-                        style={{ backgroundColor: 'white', width: 26, border: 'none', height: 28, borderRadius: 4, paddingHorizontal: 4 }}
-                        onBlur={(e) => handleUpdateQty(item.cartItemId || item.id, e.target.value)}
-                        defaultValue={item.quantity}
-                        placeholder="useless placeholder"
-                        keyboardType="numeric"
-                      />
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => handleIncreaseQuantity(item)}
-                      >
-                        <Ionicons name="add" size={20} color={COLORS.primary} />
-                      </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.quantityButton}
+                          onPress={() => handleIncreaseQuantity(item)}
+                        >
+                          <Ionicons name="add" size={20} color={COLORS.primary} />
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </View>
+                    <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                      <Text>Tổng: </Text>
+                      <Text style={styles.itemPrice}>
+                        {formatCurrency((item.price * item.quantity))}
+                      </Text>
+                    </View>
+                 </View>
                 </View>
               </View>
             )

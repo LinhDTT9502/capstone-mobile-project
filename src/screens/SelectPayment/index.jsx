@@ -20,7 +20,7 @@ function SelectPayment({ route }) {
   const navigation = useNavigation();
   const [selectedOption, setSelectedOption] = useState("1");
   const [paymentCompleted, setPaymentCompleted] = useState(false);
-
+  const [deposit, setDeposit] = useState('DEPOSIT_50')
   const handleCheck = async () => {
     if (paymentCompleted) {
       return;
@@ -34,10 +34,12 @@ function SelectPayment({ route }) {
           paymentMethodID: parseInt(selectedOption),
           orderId: order.id,
           orderCode: order.rentalOrderCode,
+          transactionType: deposit
         }): await selectCheckout({
           paymentMethodID: parseInt(selectedOption),
           orderId: order.id,
           orderCode: order.saleOrderCode,
+          transactionType: deposit
         });
         Alert.alert(
           "Thanh toán thành công",
@@ -50,10 +52,12 @@ function SelectPayment({ route }) {
           paymentMethodID: parseInt(selectedOption),
           orderId: order.id,
           orderCode: order.rentalOrderCode,
+          transactionType: deposit
         }): await selectCheckout({
           paymentMethodID: parseInt(selectedOption),
           orderId: order.id,
           orderCode: order.saleOrderCode,
+          transactionType: deposit
         });
 
         if (data?.data?.data?.paymentLink) {
@@ -88,7 +92,7 @@ function SelectPayment({ route }) {
     }
   };
 
-  const data = order.saleOrderDetailVMs?.['$values'] || order.children
+  const data = order.saleOrderDetailVMs?.['$values'] || order.children || order?.childOrders?.['$values']
 
   return (
     <View style={styles.container}>
@@ -125,7 +129,7 @@ function SelectPayment({ route }) {
             {(data?.length > 0 ? data : [order]).map((item, index) => {
               const _item = {...item}
               return (
-                <View style={{ flexDirection: 'column', gap: 8, paddingBottom: 10, marginBottom: 20, borderBottom: '0.5px solid #e0e0e0'}}>
+                <View key={item?.id} style={{ flexDirection: 'column', gap: 8, paddingBottom: 10, marginBottom: 20, borderBottom: '0.5px solid #e0e0e0'}}>
                   <View style={styles.cardItem}>
                     <Image
                       source={{
@@ -134,7 +138,12 @@ function SelectPayment({ route }) {
                       style={{ width: 80, height: 80}}
                     />
                     <View key={index} style={styles.itemRow}>
-                      <Text style={styles.itemName}>{_item.productName}</Text>
+                      <View>
+                        <Text style={styles.itemName}>{_item.productName}</Text>
+                        <Text style={styles.itemName2}>Màu sắc: {_item.color}</Text>
+                        <Text style={styles.itemName2}>Kích thước: {_item.size}</Text>
+                        <Text style={styles.itemName2}>Tình trạng: {_item.condition}%</Text>
+                      </View>
                       <Text style={styles.itemQuantity}>x{_item?.quantity}</Text>
                       <Text style={styles.itemPrice}>
                         {formatCurrency(_item.unitPrice || _item.subTotal)}
@@ -166,6 +175,38 @@ function SelectPayment({ route }) {
 
         {/* Payment Method */}
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Đặt cọc</Text>  
+          {[{ title: 'Đặt cọc 50%', value: 'DEPOSIT_50' }, { title: 'Trả full 100%', value: 'DEPOSIT_100' }].map(item => {
+            return <View>
+            <TouchableOpacity
+              onPress={() => setDeposit(item.value)}
+              style={[
+                styles.optionContainer,
+                selectedOption == item.value && styles.selectedOption,
+              ]}
+              disabled={paymentCompleted}
+            >
+              <View style={styles.optionContent}>
+                <Text style={[
+                  styles.optionText,
+                  selectedOption == item.value && styles.selectedOptionText,
+                  paymentCompleted && styles.disabledOptionText,
+                ]}>
+                  {item.title}
+                </Text>
+              </View>
+              {!order?.depositStatus || order?.depositStatus === 'N/A' ? <View style={[
+                styles.radioButton,
+                deposit == item.value && styles.selectedRadioButton,
+              ]}>
+                {deposit == item.value && <View style={styles.selectedDot} />}
+              </View> : null}
+            </TouchableOpacity>
+          </View>
+          })}
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
           <PaymentMethod
             selectedOption={selectedOption || order.paymentMethodID}
@@ -176,7 +217,7 @@ function SelectPayment({ route }) {
         </View>
       </ScrollView>
 
-      {order?.paymentMethod ? <View></View> : <TouchableOpacity
+      {order?.paymentMethodId ? <View></View> : <TouchableOpacity
         style={[
           styles.checkoutButton,
           paymentCompleted && styles.disabledButton,
@@ -301,6 +342,12 @@ const styles = StyleSheet.create({
     color: "#333",
     width: '100%'
   },
+  itemName2: {
+    flex: 1,
+    fontSize: 14,
+    color: "#BDC3C7",
+    width: '100%'
+  },
   itemQuantity: {
     fontSize: 16,
     color: "#666",
@@ -359,6 +406,114 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#FFFFFF",
     fontWeight: "bold",
+  },  container: {
+    flex: 1,
+  },
+  optionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    backgroundColor: "#FFFFFF",
+  },
+  selectedOption: {
+    backgroundColor: "#F0F5FF",
+  },
+  optionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F0F5FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#333333",
+    fontWeight: "500",
+  },
+  selectedOptionText: {
+    color: "#3366FF",
+    fontWeight: "600",
+  },
+  disabledOptionText: {
+    color: "#BBBBBB",
+  },
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#3366FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  selectedRadioButton: {
+    borderColor: "#3366FF",
+    backgroundColor: "#3366FF",
+  },
+  selectedDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#FFFFFF",
+  },
+  disabledRadioButton: {
+    borderColor: "#BBBBBB",
+  },
+  detailsContainer: {
+    backgroundColor: "#F9FAFC",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  detailsTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333333",
+    marginBottom: 12,
+  },
+  detailsText: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  qrCode: {
+    width: 200,
+    height: 200,
+    resizeMode: "contain",
+    alignSelf: "center",
+    marginVertical: 20,
+  },
+  bankInfo: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+  },
+  bankInfoItem: {
+    flexDirection: "row",
+    marginBottom: 8,
+  },
+  bankInfoLabel: {
+    fontSize: 14,
+    color: "#666666",
+    width: 120,
+  },
+  bankInfoValue: {
+    fontSize: 14,
+    color: "#333333",
+    fontWeight: "500",
+    flex: 1,
   },
 });
 

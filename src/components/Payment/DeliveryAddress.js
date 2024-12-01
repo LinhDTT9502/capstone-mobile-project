@@ -82,6 +82,7 @@ const DeliveryAddress = ({ userData, setUserData }) => {
             placeholder="Số điện thoại"
             value={newAddress.phoneNumber}
             keyboardType="phone-pad"
+            maxLength={10}
             onChangeText={(text) => setNewAddress((prev) => ({ ...prev, phoneNumber: text }))}
           />
           <View style={styles.buttonContainer}>

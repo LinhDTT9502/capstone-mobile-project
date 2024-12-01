@@ -11,6 +11,7 @@ export const addToCart = async (productId, quantityToAdd, token) => {
     const response = await addToCartAPI(productId, quantityToAdd, token);
     return response.data;
   } catch (error) {
+    return error?.response?.data || ''
     // console.error("Add to cart failed:", error.response?.data || error);
 
     if (error.response?.data?.message) {

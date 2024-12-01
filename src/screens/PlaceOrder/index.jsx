@@ -210,6 +210,7 @@ export default function PlaceOrderScreen({ route }) {
             placeholder="Số điện thoại"
             keyboardType="phone-pad"
             value={userData.phoneNumber}
+            maxLength={10}
             onChangeText={(value) => handleGuestInput("phoneNumber", value)}
           />
           <TextInput
@@ -266,7 +267,10 @@ export default function PlaceOrderScreen({ route }) {
         return <View style={styles.productItem}>
           	<Image source={{ uri: item.imgAvatarPath }} style={styles.image} />
           	<View style={styles.productDetails}>
-            	<Text style={styles.productName}>{item.productName}</Text>
+            	<Text style={styles.productName}>{item.productName} - {item.color} - {item.condition}%</Text>
+              <Text style={styles.productQuantity}>
+              	Kích thước: {item.size}
+            	</Text>
             	<Text style={styles.productQuantity}>
               	Số lượng: {item.quantity}
             	</Text>

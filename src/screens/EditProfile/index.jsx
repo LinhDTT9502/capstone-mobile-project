@@ -16,9 +16,12 @@ import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, updateUser } from "../../redux/slices/authSlice";
-import { fetchUserProfile, saveUserProfile } from "../../services/userService";
+import { fetchUserProfile, saveUserProfile, sendSmsOtpService } from "../../services/userService";
 import { Picker } from "@react-native-picker/picker";
 import { uploadAvatar } from "../../services/userService";
+import { updateProfileApi } from "@/src/api/apiUser";
+import { sendSmsOtp } from "@/src/services/authService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function EditProfile() {
   const navigation = useNavigation();
@@ -30,10 +33,11 @@ export default function EditProfile() {
   const [initialData, setInitialData] = useState({});
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showVerify, setShowVerify] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
-
+  const [otp, setOtp] = useState("")
   const handleAvatarChange = async (file) => {
     if (!file) {
       Alert.alert("Thông báo", "Vui lòng chọn ảnh trước khi tải lên.");
@@ -145,8 +149,23 @@ export default function EditProfile() {
     loadUserProfile();
   }, [user.UserId]);
 
-  const handleChange = (name, value) => {
-    setFormData({ ...formData, [name]: value });
+  const handleChange = async (name, value) => {
+    try {
+      const data =  {
+        "fullName": formData?.FullName,
+        "gender": formData?.Gender || 'male',
+        "phone": formData?.Phone,
+        "address": formData?.Address || '1',
+        "birthDate": "2024-12-01T18:21:18.775Z"
+      }
+      if (name === 'Phone') {
+        data.phone = value
+      }
+      const res = await updateProfileApi(user?.UserId,data)
+      setFormData({ ...formData, [name]: value });
+    } catch (error) {
+      console.log("🚀 ~ handleChange ~ error:", error)
+    }
   };
 
   const handleEdit = () => {
@@ -222,10 +241,28 @@ export default function EditProfile() {
     setShowEmailModal(false);
   };
 
-  const handlePhoneSave = () => {
-    handleChange("Phone", newPhone);
+  const handlePhoneSave = async () => {
+    if (newPhone) {
+      const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
+
+      if (!phoneRegex.test(newPhone)) {
+        Alert.alert("Lỗi", "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.");
+        return;
+      }
+    }
+    await handleChange("Phone", newPhone);
     setShowPhoneModal(false);
   };
+
+  const handleVerify = async (val) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const res = await sendSmsOtp(formData?.Phone, token)
+      setShowVerify(true)
+    } catch (error) {
+      console.log("🚀 ~ handleVerify ~ error:", error)
+    }
+  }
 
   const renderInput = (
     label,
@@ -290,6 +327,16 @@ export default function EditProfile() {
               placeholder={`Nhập ${label.toLowerCase()}`}
               placeholderTextColor="#A0AEC0"
             />
+            {!formData[`Is${name}Verified`] && (
+              <TouchableOpacity
+                style={styles.changeButtonVerify}
+                onPress={
+                  () => handleVerify(name)
+                }
+              >
+                <Text style={styles.changeButtonTextInline}>Verify</Text>
+              </TouchableOpacity>
+            )}
             {(name === "Email" || name === "Phone") && (
               <TouchableOpacity
                 style={styles.changeButtonInline}
@@ -454,6 +501,7 @@ export default function EditProfile() {
               onChangeText={setNewPhone}
               placeholder="Nhập số điện thoại mới"
               keyboardType="phone-pad"
+              maxLength={10}
             />
             <View style={styles.navButtonContainer}>
               <TouchableOpacity
@@ -469,6 +517,27 @@ export default function EditProfile() {
                 <Text style={styles.modalButtonText}>Lưu</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showVerify}
+        onRequestClose={() => setShowVerify(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text>Nhập mã OTP đã gửi tới email của bạn:</Text>
+            <TextInput
+              placeholder="Mã OTP"
+              value={otp}
+              onChangeText={setOtp}
+              keyboardType="numeric"
+            />
+            <TouchableOpacity onPress={() => {}}>
+              <Text>Xác nhận</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -643,6 +712,12 @@ const styles = StyleSheet.create({
   changeButtonInline: {
     position: "absolute",
     right: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  changeButtonVerify: {
+    position: "absolute",
+    right: 80,
     paddingVertical: 4,
     paddingHorizontal: 8,
   },

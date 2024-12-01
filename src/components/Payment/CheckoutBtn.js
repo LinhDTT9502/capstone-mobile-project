@@ -29,6 +29,8 @@ const CheckoutBtn = ({
   const dispatch = useDispatch();
   
   const handleCheckout = async () => {
+    setIsLoading(true)
+    const token = await AsyncStorage.getItem("token");
     if (type === 'rent' && (!selectedCartItems.every(
       (item) =>
         item?.dateSelected &&
@@ -36,21 +38,47 @@ const CheckoutBtn = ({
         item?.dateSelected?.end
     ))) {
       Alert.alert("Thông tin", "Chọn ngày giao và ngày kết thúc");
+      setIsLoading(false)
       return;
     }
+    
     if (selectedOption === "HOME_DELIVERY") {
-      // if (!actualShipment || !actualShipment.id) {
-      //   Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng.");
-      //   return;
-      // }
-      
-      // if (!userData?.shipmentDetailID && selectedOption === "HOME_DELIVERY") {
-      //   Alert.alert("Lỗi", "Dữ liệu địa chỉ giao hàng không đầy đủ.");
-      //   return;
-      // }
+      if (token && !userData?.shipmentDetailID) {
+        Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng.");
+        setIsLoading(false)
+        return;
+      }
+
+      if (!token) {
+        if (!userData?.fullName) {
+          Alert.alert("Lỗi", "Vui lòng nhập tên.");
+          setIsLoading(false)
+          return;
+        }
+
+        if (!userData?.address) {
+          Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng.");
+          setIsLoading(false)
+          return;
+        }
+
+        if (!userData?.phoneNumber) {
+          Alert.alert("Lỗi", "Vui lòng nhập số điện thoại.");
+          setIsLoading(false)
+          return;
+        } else {
+          const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
+
+          if (!phoneRegex.test(userData.phoneNumber)) {
+            Alert.alert("Lỗi", "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.");
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
     }
+
     const _selectedCartItems = JSON.parse(JSON.stringify(selectedCartItems))
-    const token = await AsyncStorage.getItem("token");
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -70,7 +98,7 @@ const CheckoutBtn = ({
         gender: "male",
       },
       deliveryMethod: selectedOption,
-      branchId: null,
+      branchId: selectedBranchId || null,
       dateOfReceipt: dateOfReceipt,
       note: note || '',
       productInformations: selectedCartItems ? selectedCartItems?.map((item) => ({
@@ -115,7 +143,7 @@ const CheckoutBtn = ({
           // console.log(" handleCheckout ~ response:", response)
 
         // Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
-        navigation.navigate("OrderSuccess", { id: response.data.id, saleOrderCode: response.data.saleOrderCode || response.data.rentalOrderCode });
+        navigation.navigate("OrderSuccess", { ...response.data, id: response.data.id, saleOrderCode: response.data.saleOrderCode || response.data.rentalOrderCode });
       }
     } catch (error) {
       console.error("Checkout error:", error);

@@ -30,7 +30,7 @@ const MyOrder = ({ route }) => {
   const [error, setError] = useState(null);
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-
+  const [sort, setSort] = useState('asc')
   const statusList = [
     { label: "Tất cả", value: "Tất cả" },
     { label: "Đang chờ", value: "PENDING" },
@@ -129,7 +129,15 @@ const MyOrder = ({ route }) => {
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Trạng thái đơn hàng</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', flex: 1}}>
+          <Text style={styles.headerTitle}>Trạng thái đơn hàng</Text>
+          <TouchableOpacity
+            onPress={() => setSort(pre => pre === 'asc' ? 'desc' : 'asc')}
+            style={styles.backButton}
+          >
+            <Text style={styles.headerTitle}>{ sort === 'asc' ? 'Mới nhất': 'Cũ nhất'}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <StatusTabs
@@ -146,10 +154,15 @@ const MyOrder = ({ route }) => {
         <Text style={styles.errorText}>{error}</Text>
       ) : (
         <FlatList
-          data={filteredOrders}
+          data={filteredOrders?.sort((a, b) => {
+            if (sort === 'asc') {
+              return new Date(b.createdAt) - new Date(a.createdAt)
+            }
+            return new Date(a.createdAt) - new Date(b.createdAt)
+          })}
           keyExtractor={(item) =>
-            item?.orderId?.toString() || item?.cartItemId?.toString()
-          }
+            item?.orderId?.toString() || item?.cartItemId?.toString() || item?.id
+          } 
           renderItem={renderOrderItem}
           contentContainerStyle={styles.orderList}
         />
