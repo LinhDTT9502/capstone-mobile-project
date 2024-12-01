@@ -266,7 +266,7 @@ export default function PlaceOrderScreen({ route }) {
         return <View style={styles.productItem}>
           	<Image source={{ uri: item.imgAvatarPath }} style={styles.image} />
           	<View style={styles.productDetails}>
-            	<Text style={styles.productName}>{item.productName} - {item.color} - {item.condition}</Text>
+            	<Text style={styles.productName}>{item.productName}</Text>
             	<Text style={styles.productQuantity}>
               	Số lượng: {item.quantity}
             	</Text>

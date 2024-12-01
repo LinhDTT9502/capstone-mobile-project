@@ -50,7 +50,7 @@ const fetchCartCount = async (setCartBadge) => {
       setCartBadge(guestCart.length);
     }
   } catch (error) {
-    // console.error("Error fetching cart count:", error);
+    console.error("Error fetching cart count:", error);
   }
 };
 

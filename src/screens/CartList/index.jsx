@@ -10,6 +10,7 @@ import {
   Modal,
   SafeAreaView,
   StatusBar,
+  TextInput,
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -20,8 +21,10 @@ import {
   addCart,
   removeFromCart,
   decreaseQuantity,
+  updateQuantity,
 } from "../../redux/slices/cartSlice";
 import {
+  addToCart,
   getUserCart,
   reduceCartItem,
   removeCartItem,
@@ -76,8 +79,8 @@ export default function Cart() {
             setCartItems(guestCartItems);
           }
         } catch (error) {
-          // console.error("Error fetching cart:", error);
-          // Alert.alert("Lỗi", "Không thể tải giỏ hàng. Vui lòng thử lại.");
+          console.error("Error fetching cart:", error);
+          Alert.alert("Lỗi", "Không thể tải giỏ hàng. Vui lòng thử lại.");
         }
       };
   
@@ -124,9 +127,9 @@ export default function Cart() {
   const handleIncreaseQuantity = async (item) => {
     try {
       if (token) {
-        const updatedItem = await updateCartItemQuantity(
-          item.cartItemId, 
-          item.quantity + 1, 
+        const updatedItem = await addToCart(
+          item.productId, 
+          1, 
           token
         );
         setCartItems((prev) =>
@@ -149,9 +152,8 @@ export default function Cart() {
     try {
       if (item.quantity > 1) {
         if (token) {
-          const updatedItem = await updateCartItemQuantity(
+          const updatedItem = await reduceCartItem(
             item.cartItemId, 
-            item.quantity - 1,
             token
           );
           setCartItems((prev) =>
@@ -162,16 +164,39 @@ export default function Cart() {
             )
           );
         } else {
-          dispatch(decreaseQuantity(item.cartItemId));
+          dispatch(decreaseQuantity(item.id));
         }
       } else {
-        await handleRemoveItem(item.cartItemId);
+        await handleRemoveItem(item.id);
       }
     } catch (error) {
       console.error("Error decreasing quantity:", error.message);
       Alert.alert("Lỗi", "Không thể giảm số lượng sản phẩm.");
     }
   };
+
+  const handleSetState = (item, val) => {
+    setCartItems((prev) =>
+      prev.map((i) =>
+        i.cartItemId === item.cartItemId
+          ? { ...i, quantity: val }
+          : i
+      )
+    );
+  }
+
+  const handleUpdateQty = async (id, qty) => {
+    try {
+      if (token) {
+        await updateCartItemQuantity(id, parseInt(qty), token)
+      } else {
+        dispatch(updateQuantity({ id, qty: parseInt(qty) }))
+      }
+    } catch (error) {
+      console.log("🚀 ~ handleUpdateQty ~ error:", error)
+      
+    }
+  }
 
   const calculateTotal = () => {
     return (
@@ -270,7 +295,7 @@ export default function Cart() {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {cartItems.map((item) => {
             return (
-              <View key={item.cartItemId} style={styles.cartItem}>
+              <View key={JSON.stringify(item)} style={styles.cartItem}>
                 <TouchableOpacity
                   onPress={() => toggleItemSelection(item.cartItemId)}
                   style={styles.checkboxContainer}
@@ -295,7 +320,7 @@ export default function Cart() {
                 <View style={styles.itemDetails}>
                   <View style={styles.itemHeader}>
                     <Text style={styles.itemName} numberOfLines={2}>
-                      {item.productName} - {item.color} - {item.condition}
+                      {item.productName} - {item.color}
                     </Text>
                     <TouchableOpacity
                       style={styles.deleteButton}
@@ -312,8 +337,9 @@ export default function Cart() {
                   <Text style={styles.itemPrice}>
                     {formatCurrency((item.price * item.quantity))}
                   </Text>
-                  <Text style={styles.itemSize}>Kích thước: {item.size}</Text>
-
+                  <Text style={styles.itemSize}>Size: {item.size}</Text>
+                  <Text style={styles.itemSize}>Màu: {item.color}</Text>
+                  <Text style={styles.itemSize}>Tình trạng: {item.condition}%</Text>
                   <View style={styles.itemFooter}>
                     <View style={styles.quantityContainer}>
                       <TouchableOpacity
@@ -326,7 +352,13 @@ export default function Cart() {
                           color={COLORS.primary}
                         />
                       </TouchableOpacity>
-                      <Text style={styles.quantityText}>{item.quantity}</Text>
+                      <TextInput
+                        style={{ backgroundColor: 'white', width: 26, border: 'none', height: 28, borderRadius: 4, paddingHorizontal: 4 }}
+                        onBlur={(e) => handleUpdateQty(item.cartItemId || item.id, e.target.value)}
+                        defaultValue={item.quantity}
+                        placeholder="useless placeholder"
+                        keyboardType="numeric"
+                      />
                       <TouchableOpacity
                         style={styles.quantityButton}
                         onPress={() => handleIncreaseQuantity(item)}

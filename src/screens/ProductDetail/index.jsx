@@ -233,10 +233,7 @@ export default function ProductDetail() {
 
     // fetchProductSizes(product.productCode, color);
 
-    const matchingProduct = productList.find(
-      (product) =>
-        product.color === color && product.productCode === product.productCode
-    );
+    const matchingProduct = productList.find((p) => p.color === color);
 
     if (matchingProduct) {
       setProduct(matchingProduct);
@@ -252,12 +249,31 @@ export default function ProductDetail() {
   };
 
   const handleSizeSelect = (size) => {
+    const matchingProduct = productList.find(
+      (p) => p.size === size && p.color === product.color
+    );
+
+    if (matchingProduct) {
+      setProduct(matchingProduct);
+    }
+
     setSelectedSize(size);
     setSelectedCondition(null);
     fetchProductConditions(product.productCode, selectedColor, size);
   };
 
   const handleConditionSelect = (condition) => {
+    const matchingProduct = productList.find(
+      (p) =>
+        p.condition == condition &&
+        p.color === product.color &&
+        p.size === product.size
+    );
+
+    if (matchingProduct) {
+      setProduct(matchingProduct);
+    }
+
     setSelectedCondition(condition);
     fetchProductPrice(
       product.productCode,
@@ -499,8 +515,6 @@ export default function ProductDetail() {
               ) : null}
             </View>
 
-
-
             <LikeButton
               isLiked={isLiked}
               likes={likes}
@@ -510,7 +524,7 @@ export default function ProductDetail() {
           </View>
 
           <View style={styles.priceContainer}>
-          {product?.rentPrice ? (
+            {product?.rentPrice ? (
               <View>
                 <Text style={styles.productPrice}>
                   Giá thuê: {formatCurrency(product.rentPrice)} ₫
@@ -658,12 +672,12 @@ export default function ProductDetail() {
               <FontAwesome name="plus" size={16} color={COLORS.dark} />
             </TouchableOpacity>
           </View>
-          {/* <Text style={styles.totalPriceText}>
+          <Text style={styles.totalPriceText}>
             Tổng giá:{" "}
             {typeof totalPrice === "string"
               ? totalPrice
               : `${formatCurrency(totalPrice)} ₫`}
-          </Text> */}
+          </Text>
 
           <View style={styles.addToCartContainer}>
             {typeof totalPrice === "string" ? (

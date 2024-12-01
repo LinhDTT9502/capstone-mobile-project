@@ -5,7 +5,7 @@ import { placedOrder } from "../../services/Checkout/checkoutService";
 import { rental } from "../../services/rentServices";
 import { addGuestOrder } from "../../redux/slices/guestOrderSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { useDispatch } from "react-redux";
 const COLORS = {
   primary: "#3366FF",
   secondary: "#FF8800",
@@ -26,7 +26,8 @@ const CheckoutBtn = ({
   // console.log("selectedCartItems:", selectedCartItems)
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
-
+  const dispatch = useDispatch();
+  
   const handleCheckout = async () => {
     if (type === 'rent' && (!selectedCartItems.every(
       (item) =>
@@ -53,21 +54,24 @@ const CheckoutBtn = ({
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
+    const dateOfReceipt = new Date(today)
+    dateOfReceipt.setDate(today.getDate() + 3);
 
     const totalAmount = _selectedCartItems.reduce(
       (acc, item) => acc + (type === 'buy' ? item.price * item.quantity : item.rentPrice * item.quantity * (item?.dateSelected?.count || 1) ) ,
       0
     )
+    
     const orderData = {
       customerInformation: {
         ...userData,
-        userId: token ? userData.userId ? parseInt(userData.userId): 0 : 0,
+        userId: token ? userData.userId ? parseInt(userData.userId): 0 : null,
         contactPhone: userData.phoneNumber,
         gender: "male",
       },
       deliveryMethod: selectedOption,
-      branchId: 0,
-      dateOfReceipt: '2024-11-29',
+      branchId: null,
+      dateOfReceipt: dateOfReceipt,
       note: note || '',
       productInformations: selectedCartItems ? selectedCartItems?.map((item) => ({
         ...item,
@@ -111,10 +115,7 @@ const CheckoutBtn = ({
           // console.log(" handleCheckout ~ response:", response)
 
         // Alert.alert("Thành công", "Đơn hàng của bạn đã được đặt thành công!");
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "OrderSuccess", params: { id: response.data.id, saleOrderCode: response.data.saleOrderCode || response.data.rentalOrderCode } }],
-        });
+        navigation.navigate("OrderSuccess", { id: response.data.id, saleOrderCode: response.data.saleOrderCode || response.data.rentalOrderCode });
       }
     } catch (error) {
       console.error("Checkout error:", error);
