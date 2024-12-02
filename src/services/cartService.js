@@ -36,8 +36,8 @@ export const getUserCart = async (token, sortBy = "productName") => {
     const response = await getCartAPI(token, sortBy);
     return response.data.data.$values;
   } catch (error) {
-    console.error("Error fetching cart:", error.response?.data || error);
-    throw new Error("Failed to fetch user cart");
+    // console.error("Error fetching cart:", error.response?.data || error);
+    // throw new Error("Failed to fetch user cart");
   }
 };
 

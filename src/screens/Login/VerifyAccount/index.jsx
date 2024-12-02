@@ -80,10 +80,9 @@ const VerifyAccountScreen = ({ navigation }) => {
   
       // console.log("OTP Verification Response:", response);
   
-      // Check the success condition based on the message from the API
-      if (response.message === "Verify successfully") {
+      if (response === 200) {
         setLoading(false);
-        setOtpModalVisible(false); // Close the modal
+        setOtpModalVisible(false);
         Alert.alert("Thành công", "Tài khoản đã được xác minh!");
         navigation.navigate("Login");
       } else {
