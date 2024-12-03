@@ -24,6 +24,7 @@ const LogoutButton = () => {
       //   userId: parseInt(userId),
       // });
       await AsyncStorage.removeItem("token");
+      dispatch(logout())
       Alert.alert("Thành công", "Đăng xuất thành công!");
       // if (response.status === 200) {
       //   await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userId']);

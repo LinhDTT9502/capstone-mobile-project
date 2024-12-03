@@ -206,6 +206,7 @@ export default function ProductDetail() {
         setProduct((prevProduct) => ({
           ...prevProduct,
           imgAvatarPath: matchingProduct.imgAvatarPath,
+          productId: matchingProduct?.id
         }));
       } else {
         setTotalPrice("Hết hàng");
@@ -228,21 +229,16 @@ export default function ProductDetail() {
 
     // const images = fetchImagesByColor(color);
     // setFullscreenImages(images);
-    // setSelectedImage(images[0] || "");
 
     // fetchProductSizes(product.productCode, color);
 
     const matchingProduct = productList.find(
-      (product) =>
-        product.color === color && product.productCode === product.productCode
+      (p) =>
+        p.color === color
     );
-
+    setSelectedImage(matchingProduct?.listImages?.$values?.[0]);
     if (matchingProduct) {
-      setProduct((prevProduct) => ({
-        ...prevProduct,
-        imgAvatarPath: matchingProduct.imgAvatarPath,
-        price: matchingProduct.price || 0,
-      }));
+      setProduct(matchingProduct);
       setTotalPrice(matchingProduct.price || 0);
       setBasePrice(matchingProduct.price || 0);
     } else {
@@ -255,12 +251,30 @@ export default function ProductDetail() {
   };
 
   const handleSizeSelect = (size) => {
+    const matchingProduct = productList.find(
+      (p) =>
+        p.size === size && p.color === product.color
+    );
+
+    if (matchingProduct) {
+      setProduct(matchingProduct);
+    }
+
     setSelectedSize(size);
     setSelectedCondition(null);
     fetchProductConditions(product.productCode, selectedColor, size);
   };
 
   const handleConditionSelect = (condition) => {
+    const matchingProduct = productList.find(
+      (p) =>
+        p.condition == condition && p.color === product.color && p.size === product.size
+    );
+
+    if (matchingProduct) {
+      setProduct(matchingProduct);
+    }
+
     setSelectedCondition(condition);
     fetchProductPrice(
       product.productCode,
@@ -391,13 +405,27 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = (type) => {
+    if (!selectedColor) {
+      Alert.alert("Thông báo", `Vui lòng chọn màu sắc!`);
+      return;
+    }
+
+    if (!selectedSize) {
+      Alert.alert("Thông báo", `Vui lòng chọn kích thước!`);
+      return;
+    }
+
+    if (!selectedCondition) {
+      Alert.alert("Thông báo", `Vui lòng chọn tình trạng!`);
+      return;
+    }
+
     if (type === 'buy' || type === 'rent') {
       return navigation.navigate("PlacedOrder", {
         selectedCartItems: [{ ...product, quantity, size: selectedSize, color: selectedColor }],
         type
       });
     }
-    Alert.alert("Thông báo", `Sản phẩm đã được thêm vào giỏ hàng! (${type})`);
   };
 
 
@@ -415,18 +443,6 @@ export default function ProductDetail() {
     return amount.toLocaleString();
   };
 
-  const updateProductImage = (color) => {
-    const colorSpecificImage = product.images?.find(
-      (img) => img.color === color
-    )?.imgAvatarPath;
-    if (colorSpecificImage) {
-      setProduct((prevProduct) => ({
-        ...prevProduct,
-        imgAvatarPath: colorSpecificImage,
-      }));
-    }
-  };
-
   const renderItem = ({ item }) => (
     <View style={styles.section}>
       {item.type === "image" && (
@@ -441,8 +457,9 @@ export default function ProductDetail() {
             style={styles.productImage}
           />
 
-          {/* <FlatList
-            data={Object.values(imagesByColor)}
+          <FlatList
+            key={product?.id}
+            data={product?.listImages?.$values}
             horizontal
             keyExtractor={(image, index) => `${image}-${index}`}
             style={styles.thumbnailList}
@@ -458,7 +475,7 @@ export default function ProductDetail() {
               </TouchableOpacity>
             )}
             showsHorizontalScrollIndicator={false}
-          /> */}
+          />
         </>
       )}
 
@@ -481,13 +498,12 @@ export default function ProductDetail() {
               color="#FF9900"
             />
           </View>
-          <Text style={styles.productTag}>Giá</Text>
           <View style={styles.priceContainer}>
             <View>
               <Text style={styles.productPrice}>
               Giá mua: 
                 {product.price
-                  ? `${formatCurrency(product.price)} ₫`
+                  ? ` ${formatCurrency(product.price)} ₫`
                   : "Giá không có"}
               </Text>
               {product.discount && product.listedPrice ? (
@@ -499,12 +515,6 @@ export default function ProductDetail() {
                 </>
               ) : null}
             </View>
-            {product?.rentPrice ?
-              <View>
-              <Text style={styles.productPrice}>
-                Giá thuê: {product?.rentPrice} ₫
-              </Text>
-            </View>:null}
             
             <LikeButton
               isLiked={isLiked}
@@ -512,6 +522,15 @@ export default function ProductDetail() {
               onPress={handleLikeToggle}
               disabled={!isLoggedIn}
             />
+          </View>
+
+          <View style={styles.priceContainer}>
+            {product?.rentPrice ?
+              <View>
+              <Text style={styles.productPrice}>
+                Giá thuê: {formatCurrency(product.rentPrice)} ₫
+              </Text>
+            </View>:null}
           </View>
         </View>
       )}
@@ -653,12 +672,12 @@ export default function ProductDetail() {
               <FontAwesome name="plus" size={16} color={COLORS.dark} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.totalPriceText}>
+          {/* <Text style={styles.totalPriceText}>
             Tổng giá:{" "}
             {typeof totalPrice === "string"
               ? totalPrice
               : `${formatCurrency(totalPrice)} ₫`}
-          </Text>
+          </Text> */}
 
           <View style={styles.addToCartContainer}>
             {typeof totalPrice === "string" ? (
@@ -678,7 +697,7 @@ export default function ProductDetail() {
           </View>
         </View>
       )}
-      {item.type === "specifications" && (
+      {/* {item.type === "specifications" && (
         <View>
           <Text style={styles.sectionTitle}>Thông số kỹ thuật</Text>
           <Text style={styles.specificationText}>
@@ -689,7 +708,7 @@ export default function ProductDetail() {
           </Text>
           <Text style={styles.specificationText}>Màu sắc: {product.color}</Text>
         </View>
-      )}
+      )} */}
       {item.type === "promotions" && (
         <View>
           <Text style={styles.sectionTitle}>Ưu đãi</Text>
@@ -766,7 +785,7 @@ export default function ProductDetail() {
     { type: "image" },
     { type: "info" },
     { type: "selection" },
-    { type: "specifications" },
+    // { type: "specifications" },
     { type: "promotions" },
     { type: "description" },
     // { type: "reviews" },

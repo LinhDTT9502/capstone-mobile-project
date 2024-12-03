@@ -108,7 +108,7 @@ export default function AddShipment({ refreshShipments }) {
   };
 
   const validatePhoneNumber = (phoneNumber) => {
-    const phoneRegex = /^[0-9]{10,11}$/;
+    const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
     return phoneRegex.test(phoneNumber);
   };
 
@@ -139,6 +139,7 @@ export default function AddShipment({ refreshShipments }) {
               value={formData.phoneNumber}
               onChangeText={(text) => handleInputChange('phoneNumber', text)}
               keyboardType="phone-pad"
+              maxLength={10}
               style={styles.input}
             />
             <TextInput

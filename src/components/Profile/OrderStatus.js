@@ -42,9 +42,16 @@ const OrderSection = () => {
       </View>
       <TouchableOpacity
         style={styles.viewAllOrders}
-        onPress={() => navigation.navigate("MyOrder", { status: "all" })}
+        onPress={() => navigation.navigate("MyOrder", { status: "all", type: 'buy' })}
       >
         <Text style={styles.viewAllOrdersText}>Xem tất cả đơn hàng</Text>
+        <Ionicons name="chevron-forward" size={20} color="#FF9900" />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.viewAllOrders}
+        onPress={() => navigation.navigate("MyOrder", { status: "all", type: 'rent' })}
+      >
+        <Text style={styles.viewAllOrdersText}>Xem tất cả đơn thuê</Text>
         <Ionicons name="chevron-forward" size={20} color="#FF9900" />
       </TouchableOpacity>
     </View>

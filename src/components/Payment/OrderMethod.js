@@ -65,7 +65,6 @@ const OrderMethod = ({
   };
 
   const handleAddressChange = (address) => {
-    // console.log("Address received from AddressForm:", address);
     setUserData((prev) => ({
       ...prev,
       address: address,
@@ -90,19 +89,8 @@ const OrderMethod = ({
         </TouchableOpacity>
 
         {selectedOption === "HOME_DELIVERY" && (
-          <View style={styles.deliveryContainer}>
-            {user ? (
-              // <AddressForm
-              //   address={userData.address}
-              //   province={userData.province}
-              //   district={userData.district}
-              //   ward={userData.ward}
-              //   onAddressChange={handleAddressChange}
-              // />
-              <></>
-            ) : (
-              <AddressForm onAddressChange={handleAddressChange} />
-            )}
+          user ? <View></View> : <View style={styles.deliveryContainer}>
+          <AddressForm onAddressChange={handleAddressChange} />
           </View>
         )}
 

@@ -10,9 +10,9 @@ import {
   Modal,
   SafeAreaView,
   StatusBar,
+  TextInput,
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -20,8 +20,10 @@ import {
   addCart,
   removeFromCart,
   decreaseQuantity,
+  updateQuantity,
 } from "../../redux/slices/cartSlice";
 import {
+  addToCart,
   getUserCart,
   reduceCartItem,
   removeCartItem,
@@ -50,15 +52,7 @@ export default function Cart() {
   const [selectedItems, setSelectedItems] = useState([]);
 
   const [selectAll, setSelectAll] = useState(false);
-  const [rentModalVisible, setRentModalVisible] = useState(false);
-  const [startDate, setStartDate] = useState(
-    new Date(new Date().setDate(new Date().getDate() + 1))
-  );
-  const [endDate, setEndDate] = useState(
-    new Date(new Date().setDate(new Date().getDate() + 2))
-  );
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
   const [token, setToken] = useState(null);
 
   // Lấy token từ AsyncStorage
@@ -68,7 +62,7 @@ export default function Cart() {
         try {
           const storedToken = await AsyncStorage.getItem("token");
           setToken(storedToken);
-  
+
           if (storedToken) {
             const customerCart = await getUserCart(storedToken);
             setCartItems(customerCart);
@@ -76,27 +70,20 @@ export default function Cart() {
             setCartItems(guestCartItems);
           }
         } catch (error) {
-          console.error("Error fetching cart:", error);
-          Alert.alert("Lỗi", "Không thể tải giỏ hàng. Vui lòng thử lại.");
+          // console.error("Error fetching cart:", error);
+          // Alert.alert("Lỗi", "Không thể tải giỏ hàng. Vui lòng thử lại.");
         }
       };
-  
+
       fetchCart();
     }, [guestCartItems])
   );
-  
-
-  // useEffect(() => {
-  //   if (token && customerCartItems) {
-  //     setCartItems(customerCartItems);
-  //   } else if (guestCartItems) {
-  //     setCartItems(guestCartItems);
-  //   }
-  // }, [token, guestCartItems, customerCartItems]);
 
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
-    setSelectedItems(selectAll ? [] : cartItems.map((item) => item.cartItemId));
+    setSelectedItems(
+      selectAll ? [] : cartItems.map((item) => item.cartItemId || item.id)
+    );
   };
 
   const toggleItemSelection = (itemId) => {
@@ -111,7 +98,9 @@ export default function Cart() {
     try {
       if (token) {
         await removeCartItem(itemId, token);
-        setCartItems((prev) => prev.filter((item) => item.cartItemId !== itemId));
+        setCartItems((prev) =>
+          prev.filter((item) => item.cartItemId !== itemId)
+        );
       } else {
         dispatch(removeFromCart(itemId));
       }
@@ -124,11 +113,10 @@ export default function Cart() {
   const handleIncreaseQuantity = async (item) => {
     try {
       if (token) {
-        const updatedItem = await updateCartItemQuantity(
-          item.cartItemId, 
-          item.quantity + 1, 
-          token
-        );
+        const updatedItem = await addToCart(item.productId, 1, token);
+        if (!updatedItem?.quantity) {
+          return Alert.alert("Lỗi", updatedItem);
+        }
         setCartItems((prev) =>
           prev.map((i) =>
             i.cartItemId === item.cartItemId
@@ -137,7 +125,7 @@ export default function Cart() {
           )
         );
       } else {
-        dispatch(addCart({ ...item, quantity: item.quantity + 1 }));
+        dispatch(addCart({ ...item, quantity: 1 }));
       }
     } catch (error) {
       console.error("Error increasing quantity:", error.message);
@@ -149,11 +137,7 @@ export default function Cart() {
     try {
       if (item.quantity > 1) {
         if (token) {
-          const updatedItem = await updateCartItemQuantity(
-            item.cartItemId, 
-            item.quantity - 1,
-            token
-          );
+          const updatedItem = await reduceCartItem(item.cartItemId, token);
           setCartItems((prev) =>
             prev.map((i) =>
               i.cartItemId === item.cartItemId
@@ -162,10 +146,10 @@ export default function Cart() {
             )
           );
         } else {
-          dispatch(decreaseQuantity(item.cartItemId));
+          dispatch(decreaseQuantity(item.id));
         }
       } else {
-        await handleRemoveItem(item.cartItemId);
+        await handleRemoveItem(item.id);
       }
     } catch (error) {
       console.error("Error decreasing quantity:", error.message);
@@ -173,10 +157,30 @@ export default function Cart() {
     }
   };
 
+  const handleSetState = (item, val) => {
+    setCartItems((prev) =>
+      prev.map((i) =>
+        i.cartItemId === item.cartItemId ? { ...i, quantity: val } : i
+      )
+    );
+  };
+
+  const handleUpdateQty = async (id, qty) => {
+    try {
+      if (token) {
+        await updateCartItemQuantity(id, parseInt(qty), token);
+      } else {
+        dispatch(updateQuantity({ id, qty: parseInt(qty) }));
+      }
+    } catch (error) {
+      console.log("🚀 ~ handleUpdateQty ~ error:", error);
+    }
+  };
+
   const calculateTotal = () => {
     return (
       cartItems
-        .filter((item) => selectedItems.includes(item.cartItemId))
+        .filter((item) => selectedItems.includes(item.cartItemId || item.id))
         // tính sản phẩm được chọn
         .reduce((sum, item) => {
           const itemTotal = parseFloat(item.price) * item.quantity;
@@ -211,10 +215,10 @@ export default function Cart() {
     }
 
     const selectedCartItems = cartItems.filter((item) =>
-      selectedItems.includes(item.cartItemId)
+      selectedItems.includes(item.cartItemId || item.id)
     );
 
-    navigation.navigate("PlacedOrder", { selectedCartItems });
+    navigation.navigate("PlacedOrder", { selectedCartItems, type: "buy" });
   };
 
   const handleRent = () => {
@@ -222,28 +226,11 @@ export default function Cart() {
       Alert.alert("Lỗi", "Vui lòng chọn sản phẩm để thuê.");
       return;
     }
-    setRentModalVisible(true);
-  };
+    const selectedCartItems = cartItems.filter((item) =>
+      selectedItems.includes(item.cartItemId || item.id)
+    );
 
-  const handleDateChange = (event, selectedDate, dateType) => {
-    const currentDate =
-      selectedDate || (dateType === "start" ? startDate : endDate);
-    if (dateType === "start") {
-      setShowStartDatePicker(false);
-      setStartDate(currentDate);
-    } else {
-      setShowEndDatePicker(false);
-      setEndDate(currentDate);
-    }
-  };
-
-  const handleAddRentToCart = () => {
-    if (startDate >= endDate) {
-      Alert.alert("Lỗi", "Ngày kết thúc phải sau ngày bắt đầu.");
-      return;
-    }
-    setRentModalVisible(false);
-    Alert.alert("Thành công", "Đã thêm sản phẩm vào giỏ hàng để thuê!");
+    navigation.navigate("PlacedOrder", { selectedCartItems, type: "rent" });
   };
 
   return (
@@ -266,36 +253,60 @@ export default function Cart() {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {cartItems.map((item) => {
             return (
-              <View key={item.cartItemId} style={styles.cartItem}>
+              <View key={JSON.stringify(item)} style={styles.cartItem}>
                 <TouchableOpacity
-                  onPress={() => toggleItemSelection(item.cartItemId)}
+                  onPress={() =>
+                    toggleItemSelection(item.cartItemId || item.id)
+                  }
                   style={styles.checkboxContainer}
                 >
                   <View
                     style={[
                       styles.checkbox,
-                      selectedItems.includes(item.cartItemId) && styles.checkboxSelected,
+                      selectedItems.includes(item.cartItemId || item.id) &&
+                        styles.checkboxSelected,
                     ]}
                   >
-                    {selectedItems.includes(item.cartItemId) && (
-                      <Ionicons name="checkmark" size={16} color={COLORS.white} />
+                    {selectedItems.includes(item.cartItemId || item.id) && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={COLORS.white}
+                      />
                     )}
                   </View>
                 </TouchableOpacity>
-
-                <Image
-                  source={{ uri: item.imgAvatarPath }}
-                  style={styles.productImage}
-                />
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("ProductDetail", {
+                      productId: item.productId,
+                    })
+                  }
+                >
+                  <Image
+                    source={{ uri: item.imgAvatarPath }}
+                    style={styles.productImage}
+                  />
+                </TouchableOpacity>
 
                 <View style={styles.itemDetails}>
                   <View style={styles.itemHeader}>
-                    <Text style={styles.itemName} numberOfLines={2}>
-                      {item.productName} - {item.color}
-                    </Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        navigation.navigate("ProductDetail", {
+                          productId: item.productId,
+                        })
+                      }
+                    >
+                      <Text style={styles.itemName} numberOfLines={2}>
+                        {item.productName} - {item.color} - {item.condition}%
+                      </Text>
+                    </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.deleteButton}
-                      onPress={() => handleRemoveItem(item.cartItemId)}
+                      onPress={() =>
+                        handleRemoveItem(item.cartItemId || item.id)
+                      }
                     >
                       <Ionicons
                         name="trash-outline"
@@ -306,34 +317,73 @@ export default function Cart() {
                   </View>
 
                   <Text style={styles.itemPrice}>
-                    {formatCurrency((item.price * item.quantity))}
+                    {formatCurrency(item.price)}
                   </Text>
-                  <Text style={styles.itemSize}>Size: {item.size}</Text>
-
-                  <View style={styles.itemFooter}>
-                    <View style={styles.quantityContainer}>
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => handleDecreaseQuantity(item)}
-                      >
-                        <Ionicons
-                          name="remove"
-                          size={20}
-                          color={COLORS.primary}
+                  <Text style={styles.itemSize}>Kích thước: {item.size}</Text>
+                  {/* <Text style={styles.itemSize}>Màu: {item.color}</Text>
+                  <Text style={styles.itemSize}>Tình trạng: {item.condition}%</Text> */}
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <View style={styles.itemFooter}>
+                      <View style={styles.quantityContainer}>
+                        <TouchableOpacity
+                          style={styles.quantityButton}
+                          onPress={() => handleDecreaseQuantity(item)}
+                        >
+                          <Ionicons
+                            name="remove"
+                            size={20}
+                            color={COLORS.primary}
+                          />
+                        </TouchableOpacity>
+                        <TextInput
+                          style={{
+                            backgroundColor: "white",
+                            width: 26,
+                            border: "none",
+                            height: 28,
+                            borderRadius: 4,
+                            paddingHorizontal: 4,
+                          }}
+                          onBlur={(e) =>
+                            handleUpdateQty(
+                              item.cartItemId || item.id,
+                              e.target.value
+                            )
+                          }
+                          defaultValue={
+                            item.quantity ? JSON.stringify(item.quantity) : "1"
+                          }
+                          placeholder="useless placeholder"
+                          keyboardType="numeric"
                         />
-                      </TouchableOpacity>
-                      <Text style={styles.quantityText}>{item.quantity}</Text>
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => handleIncreaseQuantity(item)}
-                      >
-                        <Ionicons name="add" size={20} color={COLORS.primary} />
-                      </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.quantityButton}
+                          onPress={() => handleIncreaseQuantity(item)}
+                        >
+                          <Ionicons
+                            name="add"
+                            size={20}
+                            color={COLORS.primary}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 4,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text>Tổng: </Text>
+                      <Text style={styles.itemPrice}>
+                        {formatCurrency(item.price * item.quantity)}
+                      </Text>
                     </View>
                   </View>
                 </View>
               </View>
-            )
+            );
           })}
         </ScrollView>
 
@@ -380,67 +430,6 @@ export default function Cart() {
             </View>
           </View>
         )}
-
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={rentModalVisible}
-          onRequestClose={() => setRentModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Chọn ngày thuê</Text>
-              <TouchableOpacity
-                style={styles.dateInput}
-                onPress={() => setShowStartDatePicker(true)}
-              >
-                <Text>Ngày bắt đầu: {startDate.toLocaleDateString()}</Text>
-              </TouchableOpacity>
-              {showStartDatePicker && (
-                <DateTimePicker
-                  value={startDate}
-                  mode="date"
-                  display="default"
-                  minimumDate={new Date()}
-                  onChange={(event, selectedDate) =>
-                    handleDateChange(event, selectedDate, "start")
-                  }
-                />
-              )}
-              <TouchableOpacity
-                style={styles.dateInput}
-                onPress={() => setShowEndDatePicker(true)}
-              >
-                <Text>Ngày kết thúc: {endDate.toLocaleDateString()}</Text>
-              </TouchableOpacity>
-              {showEndDatePicker && (
-                <DateTimePicker
-                  value={endDate}
-                  mode="date"
-                  display="default"
-                  minimumDate={new Date(startDate.getTime() + 86400000)}
-                  onChange={(event, selectedDate) =>
-                    handleDateChange(event, selectedDate, "end")
-                  }
-                />
-              )}
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleAddRentToCart}
-              >
-                <Text style={styles.submitButtonText}>
-                  Thêm vào giỏ hàng để thuê
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setRentModalVisible(false)}
-              >
-                <Text style={styles.cancelButtonText}>Hủy</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -457,14 +446,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.light,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 10,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    backgroundColor: COLORS.white,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
+    borderBottomColor: "#E4E6EB",
   },
   backButton: {
     padding: 8,

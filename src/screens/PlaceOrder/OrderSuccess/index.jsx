@@ -7,7 +7,7 @@ const { width } = Dimensions.get('window');
 
 const OrderSuccessScreen = ({ route }) => {
   const navigation = useNavigation();
-  const { id, saleOrderCode } = route.params || {};
+  const { id, saleOrderCode, ...order } = route.params || {};
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
@@ -50,7 +50,7 @@ const OrderSuccessScreen = ({ route }) => {
 
         <TouchableOpacity
           style={[styles.button, styles.paymentButton]}
-          onPress={() => navigation.navigate("SelectPayment", {order: {id, saleOrderCode,}})}
+          onPress={() => navigation.navigate("SelectPayment", {order: {id, saleOrderCode,...order}})}
           activeOpacity={0.8}
         >
           <Text style={styles.buttonText}>Thanh toán</Text>

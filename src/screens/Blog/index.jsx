@@ -60,7 +60,7 @@ export default function Blog() {
       <FlatList
         data={blogs}
         renderItem={renderBlogItem}
-        keyExtractor={(item) => item.blogId.toString()} // Use blogId as the unique key
+        keyExtractor={(item) => item.blogId.toString()} 
         contentContainerStyle={styles.listContainer}
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}

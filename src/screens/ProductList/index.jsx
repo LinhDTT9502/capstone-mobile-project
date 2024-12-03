@@ -446,7 +446,7 @@ export default function ProductListing() {
                 </View>
               </View>
 
-              <View style={styles.filterSection}>
+              {/* <View style={styles.filterSection}>
                 <Text style={styles.filterTitle}>Kích thước</Text>
                 <TextInput
                   style={styles.sizeInput}
@@ -455,7 +455,7 @@ export default function ProductListing() {
                   onChangeText={setSizeInput}
                   keyboardType="numeric"
                 />
-              </View>
+              </View> */}
 
               <View style={styles.filterSection}>
                 <Text style={styles.filterTitle}>Khoảng giá</Text>

@@ -92,10 +92,10 @@ export const remmoveCartItemAPI = (cartItemId, token) => {
 };
 
 export const updateCartItemQuantityAPI = (cartItemId, quantity, token) => {
-  const url = `${API_BASE_URL}/update-quantity-cart-item/${cartItemId}`;
+  const url = `${API_BASE_URL}/update-quantity-cart-item/${cartItemId}?quantity=` + quantity;
   return axiosInstance.put(
     url,
-    { quantity },
+    {},
     {
       headers: {
         Accept: "*/*",

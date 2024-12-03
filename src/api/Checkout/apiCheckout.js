@@ -22,3 +22,13 @@ export const selectCheckout = (data) => {
     }
   });
 };
+
+export const selectRentalCheckout = (data) => {
+  return axios.post(`${API_BASE_URL_CHECK}/checkout-rental-order`, data, {
+    headers: {
+      'Accept': '*/*',
+      // 'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+};

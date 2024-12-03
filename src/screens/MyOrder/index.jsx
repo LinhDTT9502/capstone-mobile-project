@@ -18,8 +18,10 @@ import { useSelector } from "react-redux";
 import { selectUser } from "@/src/redux/slices/authSlice";
 import OrderCard from "../../components/Profile/OrderCard";
 import StatusTabs from "../../components/Profile/StatusTabs";
+import { getListRent } from "@/src/api/apiRent";
 
-const MyOrder = () => {
+const MyOrder = ({ route }) => {
+  const {type} = route.params
   const user = useSelector(selectUser);
   const navigation = useNavigation();
   const [selectedStatus, setSelectedStatus] = useState("Tất cả");
@@ -28,7 +30,7 @@ const MyOrder = () => {
   const [error, setError] = useState(null);
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-
+  const [sort, setSort] = useState('asc')
   const statusList = [
     { label: "Tất cả", value: "Tất cả" },
     { label: "Đang chờ", value: "PENDING" },
@@ -41,8 +43,11 @@ const MyOrder = () => {
   ];
 
   const openProductModal = (product) => {
-    setSelectedProduct(product);
-    setProductModalOpen(true);
+    // setSelectedProduct(product);
+    // setProductModalOpen(true);
+  navigation.navigate("SelectPayment", {
+      order: {...product, children: orders?.filter(item => item?.parentOrderCode === product.rentalOrderCode)},
+    })
   };
 
   const closeProductModal = () => setProductModalOpen(false);
@@ -66,8 +71,10 @@ const MyOrder = () => {
         throw new Error("Không tìm thấy userId. Vui lòng đăng nhập lại.");
       }
 
-      const ordersData = await fetchUserOrders(userId, token);
-      setOrders(ordersData);
+      const ordersData = type === 'rent' ? await getListRent(userId, token) : await fetchUserOrders(userId, token);
+      setOrders(type === 'rent' ? ordersData?.data?.data?.['$values']?.sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }) || [] : ordersData);
     } catch (err) {
       console.error("Error loading orders:", err);
       setError(err.message || "Không thể tải đơn hàng");
@@ -109,6 +116,7 @@ const MyOrder = () => {
       order={item}
       onPress={() => openProductModal(item)}
       renderOrderStatusButton={renderOrderStatusButton}
+      type={type}
     />
   );
 
@@ -121,7 +129,15 @@ const MyOrder = () => {
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Trạng thái đơn hàng</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', flex: 1}}>
+          <Text style={styles.headerTitle}>Trạng thái đơn hàng</Text>
+          <TouchableOpacity
+            onPress={() => setSort(pre => pre === 'asc' ? 'desc' : 'asc')}
+            style={styles.backButton}
+          >
+            <Text style={styles.headerTitle}>{ sort === 'asc' ? 'Mới nhất': 'Cũ nhất'}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <StatusTabs
@@ -138,10 +154,15 @@ const MyOrder = () => {
         <Text style={styles.errorText}>{error}</Text>
       ) : (
         <FlatList
-          data={filteredOrders}
+          data={filteredOrders?.sort((a, b) => {
+            if (sort === 'asc') {
+              return new Date(b.createdAt) - new Date(a.createdAt)
+            }
+            return new Date(a.createdAt) - new Date(b.createdAt)
+          })}
           keyExtractor={(item) =>
-            item?.orderId?.toString() || item?.cartItemId?.toString()
-          }
+            item?.orderId?.toString() || item?.cartItemId?.toString() || item?.id
+          } 
           renderItem={renderOrderItem}
           contentContainerStyle={styles.orderList}
         />

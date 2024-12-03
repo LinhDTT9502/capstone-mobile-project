@@ -4,6 +4,7 @@ import {
   updateProfileApi,
   uploadAvatarApi,
 } from "../api/apiUser";
+import { sendSmsOtp } from "./authService";
 
 export const fetchUserProfile = async (userId) => {
   try {
