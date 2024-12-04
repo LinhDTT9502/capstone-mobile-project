@@ -59,7 +59,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [userComment, setUserComment] = useState("");
   const [userRating, setUserRating] = useState(0);
-
+  const [loadingLike, setLoadingLike] = useState(false)
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -341,7 +341,10 @@ export default function ProductDetail() {
   const loadLikes = async () => {
     try {
       const likesData = await fetchLikes();
-      setLikes(likesData.likes || 0);
+      const userId = await AsyncStorage.getItem("currentUserId");
+      if (userId && likesData?.$values?.findIndex(item => item.userId == userId && item.productId == productId) !== -1) {
+        setIsLiked(true)
+      }
     } catch (error) {
       console.error("Error fetching likes:", error);
     }
@@ -357,12 +360,17 @@ export default function ProductDetail() {
     setIsLiked(!isLiked);
 
     try {
-      await handleToggleLike(productId, navigation);
+      setLoadingLike(true)
+      await handleToggleLike(product?.productCode, navigation);
       await loadProductDetails();
+      setLoadingLike(false)
     } catch (error) {
+      setLoadingLike(false)
       setLikes(likes);
       setIsLiked(!isLiked);
       Alert.alert("Lỗi", "Không thể thực hiện hành động like.");
+    } finally {
+      setLoadingLike(false)
     }
   };
   const loadProductDetails = async () => {
@@ -520,7 +528,7 @@ export default function ProductDetail() {
               isLiked={isLiked}
               likes={likes}
               onPress={handleLikeToggle}
-              disabled={!isLoggedIn}
+              disabled={!isLoggedIn || loadingLike}
             />
           </View>
 
