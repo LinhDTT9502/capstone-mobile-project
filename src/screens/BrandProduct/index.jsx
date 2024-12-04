@@ -129,6 +129,8 @@ export default function BrandProduct() {
     </TouchableOpacity>
   );
 
+  const _sortList = sortOrder === 'default' ? filteredProducts : sortOrder === 'highToLow' ? [...filteredProducts].sort((a, b) => b.price - a.price) : [...filteredProducts].sort((a, b) => a.price - b.price);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -172,7 +174,7 @@ export default function BrandProduct() {
         <Text style={styles.emptyText}>Không tìm thấy sản phẩm</Text>
       ) : (
         <FlatList
-          data={filteredProducts}
+          data={_sortList}
           renderItem={renderProduct}
           keyExtractor={(item) => item.id.toString()}
           numColumns={2}

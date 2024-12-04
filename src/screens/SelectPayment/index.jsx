@@ -46,11 +46,7 @@ function SelectPayment({ route }) {
               orderCode: order.saleOrderCode,
               ..._d,
             });
-        Alert.alert(
-          "Thanh toán thành công",
-          "Bạn đã chọn thanh toán khi nhận hàng.",
-          [{ text: "OK", onPress: () => navigation.navigate("HomeController") }]
-        );
+            navigation.navigate("AfterPayment")
       } else if (selectedOption === "2" || selectedOption === "3") {
         // PayOS or VNPay
         const data = order.rentalOrderCode

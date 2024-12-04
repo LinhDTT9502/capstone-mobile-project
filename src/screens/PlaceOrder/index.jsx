@@ -60,7 +60,7 @@ export default function PlaceOrderScreen({ route }) {
 
   const [userData, setUserData] = useState({
     fullName: "",
-    gender: "",
+    gender: "male",
     email: "",
     phoneNumber: "",
     address: "",
@@ -202,6 +202,46 @@ export default function PlaceOrderScreen({ route }) {
     if (isGuest) {
       return (
         <View style={styles.sectionContainer}>
+          <View style={{ flexDirection: 'row', gap: 16, marginBottom: 12 }}>
+            {[
+              { title: "Anh", value: "male" },
+              { title: "Chị", value: "female" },
+            ].map((item) => {
+              const isSelected = userData?.gender === item.value
+              return (
+                <View>
+                  <TouchableOpacity
+                    onPress={() => setUserData(pre => ({...pre, gender: item.value}))}
+                    style={[
+                      styles.optionContainer,
+                      isSelected && styles.selectedOption,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.radioButton,
+                        isSelected && styles.selectedRadioButton,
+                      ]}
+                    >
+                      {isSelected && (
+                        <View style={styles.selectedDot} />
+                      )}
+                    </View>
+                    <View style={styles.optionContent}>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          isSelected && styles.selectedOptionText,
+                        ]}
+                      >
+                        {item.title}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
           <TextInput
             style={styles.input}
             placeholder="Họ và tên"
@@ -236,6 +276,46 @@ export default function PlaceOrderScreen({ route }) {
     } else {
       return (
         <View style={styles.sectionContainer}>
+          <View style={{ flexDirection: 'row', gap: 16, marginBottom: 12 }}>
+            {[
+              { title: "Anh", value: "male" },
+              { title: "Chị", value: "female" },
+            ].map((item) => {
+              const isSelected = userData?.gender === item.value
+              return (
+                <View>
+                  <TouchableOpacity
+                    onPress={() => setUserData(pre => ({...pre, gender: item.value}))}
+                    style={[
+                      styles.optionContainer,
+                      isSelected && styles.selectedOption,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.radioButton,
+                        isSelected && styles.selectedRadioButton,
+                      ]}
+                    >
+                      {isSelected && (
+                        <View style={styles.selectedDot} />
+                      )}
+                    </View>
+                    <View style={styles.optionContent}>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          isSelected && styles.selectedOptionText,
+                        ]}
+                      >
+                        {item.title}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
           {userData.shipmentDetailID ? (
             <View style={styles.selectedShipment}>
               <Text style={styles.selectedTitle}>Địa chỉ đã chọn:</Text>
@@ -306,15 +386,17 @@ export default function PlaceOrderScreen({ route }) {
       title: "Phương thức giao hàng",
       data: [{ key: "orderMethod" }],
       renderItem: () => (
-        <OrderMethod
-          userData={userData}
-          setUserData={setUserData}
-          selectedOption={selectedOption}
-          handleOptionChange={handleOptionChange}
-          selectedBranchId={selectedBranchId}
-          setSelectedBranchId={setSelectedBranchId}
-          onAddressChange={handleAddressChange}
-        />
+        <View>
+          <OrderMethod
+            userData={userData}
+            setUserData={setUserData}
+            selectedOption={selectedOption}
+            handleOptionChange={handleOptionChange}
+            selectedBranchId={selectedBranchId}
+            setSelectedBranchId={setSelectedBranchId}
+            onAddressChange={handleAddressChange}
+          />
+        </View>
       ),
     },
     // {
@@ -652,5 +734,59 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: "600",
+  },
+  optionContainer: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  selectedOption: {
+  },
+  optionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F0F5FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#333333",
+    fontWeight: "500",
+  },
+  selectedOptionText: {
+    color: "#3366FF",
+    fontWeight: "600",
+  },
+  disabledOptionText: {
+    color: "#BBBBBB",
+  },
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#3366FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  selectedRadioButton: {
+    borderColor: "#3366FF",
+    backgroundColor: "#3366FF",
+  },
+  selectedDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#FFFFFF",
+  },
+  disabledRadioButton: {
+    borderColor: "#BBBBBB",
   },
 });
