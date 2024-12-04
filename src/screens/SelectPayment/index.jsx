@@ -11,7 +11,10 @@ import {
   Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { selectCheckout, selectRentalCheckout } from "../../api/Checkout/apiCheckout";
+import {
+  selectCheckout,
+  selectRentalCheckout,
+} from "../../api/Checkout/apiCheckout";
 import PaymentMethod from "../../components/Payment/PaymentMethod";
 import { Feather } from "@expo/vector-icons";
 
@@ -20,27 +23,29 @@ function SelectPayment({ route }) {
   const navigation = useNavigation();
   const [selectedOption, setSelectedOption] = useState("1");
   const [paymentCompleted, setPaymentCompleted] = useState(false);
-  const [deposit, setDeposit] = useState('DEPOSIT_50')
+  const [deposit, setDeposit] = useState("DEPOSIT_50");
   const handleCheck = async () => {
     if (paymentCompleted) {
       return;
     }
-
+    const _d = order?.saleOrderCode ? {} : { transactionType: deposit };
     try {
       if (selectedOption === "1") {
         // COD
         setPaymentCompleted(true);
-        const data =  order.rentalOrderCode ? await selectRentalCheckout({
-          paymentMethodID: parseInt(selectedOption),
-          orderId: order.id,
-          orderCode: order.rentalOrderCode,
-          transactionType: deposit
-        }): await selectCheckout({
-          paymentMethodID: parseInt(selectedOption),
-          orderId: order.id,
-          orderCode: order.saleOrderCode,
-          transactionType: deposit
-        });
+        const data = order.rentalOrderCode
+          ? await selectRentalCheckout({
+              paymentMethodID: parseInt(selectedOption),
+              orderId: order.id,
+              orderCode: order.rentalOrderCode,
+              ..._d,
+            })
+          : await selectCheckout({
+              paymentMethodID: parseInt(selectedOption),
+              orderId: order.id,
+              orderCode: order.saleOrderCode,
+              ..._d,
+            });
         Alert.alert(
           "Thanh toán thành công",
           "Bạn đã chọn thanh toán khi nhận hàng.",
@@ -48,17 +53,19 @@ function SelectPayment({ route }) {
         );
       } else if (selectedOption === "2" || selectedOption === "3") {
         // PayOS or VNPay
-        const data =  order.rentalOrderCode ? await selectRentalCheckout({
-          paymentMethodID: parseInt(selectedOption),
-          orderId: order.id,
-          orderCode: order.rentalOrderCode,
-          transactionType: deposit
-        }): await selectCheckout({
-          paymentMethodID: parseInt(selectedOption),
-          orderId: order.id,
-          orderCode: order.saleOrderCode,
-          transactionType: deposit
-        });
+        const data = order.rentalOrderCode
+          ? await selectRentalCheckout({
+              paymentMethodID: parseInt(selectedOption),
+              orderId: order.id,
+              orderCode: order.rentalOrderCode,
+              ..._d,
+            })
+          : await selectCheckout({
+              paymentMethodID: parseInt(selectedOption),
+              orderId: order.id,
+              orderCode: order.saleOrderCode,
+              ..._d,
+            });
 
         if (data?.data?.data?.paymentLink) {
           Linking.canOpenURL(data.data.data.paymentLink).then((supported) => {
@@ -92,7 +99,10 @@ function SelectPayment({ route }) {
     }
   };
 
-  const data = order.saleOrderDetailVMs?.['$values'] || order.children || order?.childOrders?.['$values']
+  const data =
+    order.saleOrderDetailVMs?.["$values"] ||
+    order.children ||
+    order?.childOrders?.["$values"];
 
   return (
     <View style={styles.container}>
@@ -127,35 +137,58 @@ function SelectPayment({ route }) {
           <Text style={styles.sectionTitle}>Tóm tắt đơn hàng</Text>
           <View style={styles.card}>
             {(data?.length > 0 ? data : [order]).map((item, index) => {
-              const _item = {...item}
+              const _item = { ...item };
               return (
-                <View key={item?.id} style={{ flexDirection: 'column', gap: 8, paddingBottom: 10, marginBottom: 20, borderBottom: '0.5px solid #e0e0e0'}}>
+                <View
+                  key={item?.id}
+                  style={{
+                    flexDirection: "column",
+                    gap: 8,
+                    paddingBottom: 10,
+                    marginBottom: 20,
+                    borderBottom: "0.5px solid #e0e0e0",
+                  }}
+                >
                   <View style={styles.cardItem}>
                     <Image
                       source={{
-                        uri: _item?.imgAvatarPath || "https://via.placeholder.com/100",
+                        uri:
+                          _item?.imgAvatarPath ||
+                          "https://via.placeholder.com/100",
                       }}
-                      style={{ width: 80, height: 80}}
+                      style={{ width: 80, height: 80 }}
                     />
                     <View key={index} style={styles.itemRow}>
                       <View>
                         <Text style={styles.itemName}>{_item.productName}</Text>
-                        <Text style={styles.itemName2}>Màu sắc: {_item.color}</Text>
-                        <Text style={styles.itemName2}>Kích thước: {_item.size}</Text>
-                        <Text style={styles.itemName2}>Tình trạng: {_item.condition}%</Text>
+                        <Text style={styles.itemName2}>
+                          Màu sắc: {_item.color}
+                        </Text>
+                        <Text style={styles.itemName2}>
+                          Kích thước: {_item.size}
+                        </Text>
+                        <Text style={styles.itemName2}>
+                          Tình trạng: {_item.condition}%
+                        </Text>
                       </View>
-                      <Text style={styles.itemQuantity}>x{_item?.quantity}</Text>
+                      <Text style={styles.itemQuantity}>
+                        x{_item?.quantity}
+                      </Text>
                       <Text style={styles.itemPrice}>
                         {formatCurrency(_item.unitPrice || _item.subTotal)}
                       </Text>
                     </View>
                   </View>
                   <View>
-                    {item?.rentalStartDate ? <Text>Ngày bắt đầu thuê: {item?.rentalStartDate}</Text> : null}
-                    {item?.rentalEndDate ? <Text>Ngày bắt đầu thuê: {item?.rentalEndDate}</Text> : null}
+                    {item?.rentalStartDate ? (
+                      <Text>Ngày bắt đầu thuê: {item?.rentalStartDate}</Text>
+                    ) : null}
+                    {item?.rentalEndDate ? (
+                      <Text>Ngày bắt đầu thuê: {item?.rentalEndDate}</Text>
+                    ) : null}
                   </View>
                 </View>
-              )
+              );
             })}
             <TotalItem
               label="Tổng cộng"
@@ -174,37 +207,56 @@ function SelectPayment({ route }) {
         </View>
 
         {/* Payment Method */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Đặt cọc</Text>  
-          {[{ title: 'Đặt cọc 50%', value: 'DEPOSIT_50' }, { title: 'Trả full 100%', value: 'DEPOSIT_100' }].map(item => {
-            return <View>
-            <TouchableOpacity
-              onPress={() => setDeposit(item.value)}
-              style={[
-                styles.optionContainer,
-                selectedOption == item.value && styles.selectedOption,
-              ]}
-              disabled={paymentCompleted}
-            >
-              <View style={styles.optionContent}>
-                <Text style={[
-                  styles.optionText,
-                  selectedOption == item.value && styles.selectedOptionText,
-                  paymentCompleted && styles.disabledOptionText,
-                ]}>
-                  {item.title}
-                </Text>
-              </View>
-              {!order?.depositStatus || order?.depositStatus === 'N/A' ? <View style={[
-                styles.radioButton,
-                deposit == item.value && styles.selectedRadioButton,
-              ]}>
-                {deposit == item.value && <View style={styles.selectedDot} />}
-              </View> : null}
-            </TouchableOpacity>
+        {order?.saleOrderCode ? (
+          <View></View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Đặt cọc</Text>
+            {[
+              { title: "Đặt cọc 50%", value: "DEPOSIT_50" },
+              { title: "Trả full 100%", value: "DEPOSIT_100" },
+            ].map((item) => {
+              return (
+                <View>
+                  <TouchableOpacity
+                    onPress={() => setDeposit(item.value)}
+                    style={[
+                      styles.optionContainer,
+                      selectedOption == item.value && styles.selectedOption,
+                    ]}
+                    disabled={paymentCompleted}
+                  >
+                    <View style={styles.optionContent}>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          selectedOption == item.value &&
+                            styles.selectedOptionText,
+                          paymentCompleted && styles.disabledOptionText,
+                        ]}
+                      >
+                        {item.title}
+                      </Text>
+                    </View>
+                    {!order?.depositStatus || order?.depositStatus === "N/A" ? (
+                      <View
+                        style={[
+                          styles.radioButton,
+                          deposit == item.value && styles.selectedRadioButton,
+                        ]}
+                      >
+                        {deposit == item.value && (
+                          <View style={styles.selectedDot} />
+                        )}
+                      </View>
+                    ) : null}
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
           </View>
-          })}
-        </View>
+        )}
+
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
@@ -217,17 +269,20 @@ function SelectPayment({ route }) {
         </View>
       </ScrollView>
 
-      {order?.paymentMethodId ? <View></View> : <TouchableOpacity
-        style={[
-          styles.checkoutButton,
-          paymentCompleted && styles.disabledButton,
-        ]}
-        onPress={handleCheck}
-        disabled={paymentCompleted}
-      >
-        <Text style={styles.checkoutText}>Xác nhận thanh toán</Text>
-      </TouchableOpacity>}
-      
+      {order?.paymentMethodId ? (
+        <View></View>
+      ) : (
+        <TouchableOpacity
+          style={[
+            styles.checkoutButton,
+            paymentCompleted && styles.disabledButton,
+          ]}
+          onPress={handleCheck}
+          disabled={paymentCompleted}
+        >
+          <Text style={styles.checkoutText}>Xác nhận thanh toán</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -310,7 +365,7 @@ const styles = StyleSheet.create({
   },
   cardItem: {
     flexDirection: "row",
-    gap: 20
+    gap: 20,
   },
   infoItem: {
     flexDirection: "row",
@@ -334,19 +389,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 8,
-    flex: 1
+    flex: 1,
   },
   itemName: {
     flex: 1,
     fontSize: 16,
     color: "#333",
-    width: '100%'
+    width: "100%",
   },
   itemName2: {
     flex: 1,
     fontSize: 14,
     color: "#BDC3C7",
-    width: '100%'
+    width: "100%",
   },
   itemQuantity: {
     fontSize: 16,
@@ -406,7 +461,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#FFFFFF",
     fontWeight: "bold",
-  },  container: {
+  },
+  container: {
     flex: 1,
   },
   optionContainer: {

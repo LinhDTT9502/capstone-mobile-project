@@ -187,9 +187,12 @@ export default function PlaceOrderScreen({ route }) {
     if (!data?.[index]?.['dateSelected']) {
       data[index]['dateSelected'] = {}
     }
+    if (key === 'start') {
+      data[index]['dateSelected']['end'] = null
+    }
     data[index]['dateSelected'][key] = val
     if (data?.[index]?.['dateSelected']?.start &&  data?.[index]?.['dateSelected']?.end) {
-      data[index]['dateSelected'].count = dayjs(data?.[index]?.['dateSelected']?.end).diff(dayjs(data?.[index]?.['dateSelected']?.start), 'day')
+      data[index]['dateSelected'].count = dayjs(data?.[index]?.['dateSelected']?.end).diff(dayjs(data?.[index]?.['dateSelected']?.start), 'day') + 1
     }
     setCartItems(data)
     setDatePickerVisibility(false)
@@ -349,8 +352,9 @@ export default function PlaceOrderScreen({ route }) {
       const [key, index] = isDatePickerVisible.split('-')
       const val = cartItems[index]?.dateSelected?.[key]
       const start = cartItems[index]?.dateSelected?.start ? new Date(cartItems[index]?.dateSelected?.start) : null
+      const end = cartItems[index]?.dateSelected?.end ? new Date(cartItems[index]?.dateSelected?.end) : null
       const today = new Date();
-      const minStart = key === 'end' && start ?  new Date(start.setDate(start.getDate() + 1)) : new Date(today.setDate(today.getDate() + 1))
+      const minStart = key === 'end' ? start ?  new Date(start.setDate(start.getDate() + 1)) : new Date(today.setDate(today.getDate() + 1)): new Date(today.setDate(today.getDate() + 1))
       return <DateTimePicker
         mode={'date'}
         onChange={handleConfirm}
@@ -358,6 +362,7 @@ export default function PlaceOrderScreen({ route }) {
         headerTextIOS={'Vui lòng chọn ngày'}
         value={val ? new Date(val) : new Date()}
         minimumDate={minStart}
+        maximumDate={key === 'start' && end ? end: null }
       />
     }
     return null

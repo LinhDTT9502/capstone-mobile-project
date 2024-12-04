@@ -380,7 +380,13 @@ export default function Cart() {
                         {formatCurrency(item.price * item.quantity)}
                       </Text>
                     </View>
-                  </View>
+                    <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                      <Text>Tổng: </Text>
+                      <Text style={styles.itemPrice}>
+                        {formatCurrency((item.price * item.quantity))}
+                      </Text>
+                    </View>
+                 </View>
                 </View>
               </View>
             );
