@@ -109,7 +109,7 @@ export default function Account() {
           <Text style={styles.profileName}>{user.FullName}</Text>
           <Text style={styles.profileId}>Mã tài khoản: {user.UserId}</Text>
         </View>
-        {/* <LoyaltyPoints userId={user.UserId} /> */}
+        <LoyaltyPoints userId={user.UserId} />
         <OrderStatus />
 
         <View style={styles.settingsSection}>

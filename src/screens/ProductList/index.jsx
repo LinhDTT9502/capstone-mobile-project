@@ -323,6 +323,8 @@ export default function ProductListing() {
     );
   };
 
+  const _sortList = sortOrder === 'default' ? products : sortOrder === 'highToLow' ? [...products].sort((a, b) => b.price - a.price) : [...products].sort((a, b) => a.price - b.price);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -361,7 +363,7 @@ export default function ProductListing() {
       </TouchableOpacity>
 
       <FlatList
-        data={products}
+        data={_sortList}
         renderItem={renderProduct}
         keyExtractor={(item, index) => `${item.id}-${index}`}
         numColumns={2}

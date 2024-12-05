@@ -29,6 +29,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
   const [loading, setLoading] = useState(false);
   const [displayedComments, setDisplayedComments] = useState([]);
   const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingReplyId, setEditingReplyId] = useState(null);
   const [editingText, setEditingText] = useState("");
   const [error, setError] = useState(null);
   const [replyingCommentId, setReplyingCommentId] = useState(null);
@@ -91,39 +92,51 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
         ...prevDisplayed,
       ]);
       setNewComment("");
+      loadComments()
       ToastAndroid.show("Thêm bình luận thành công!", ToastAndroid.SHORT);
     } catch (error) {
       Alert.alert("Lỗi", "Không thể thêm bình luận. Vui lòng thử lại.");
     }
   };
 
-  const handleEditComment = async (id) => {
+  const handleEditComment = async (id, value, type, reply) => {
     if (!id) {
       Alert.alert("Lỗi", "Không tìm thấy ID bình luận để chỉnh sửa.");
       return;
     }
 
-    if (editingText.trim().length === 0) {
+    if (!value || value.trim().length === 0) {
       Alert.alert("Lỗi", "Vui lòng nhập nội dung bình luận.");
       return;
     }
 
     try {
-      await editComment(id, editingText);
-      setComments((prevComments) =>
-        prevComments.map((comment) =>
-          comment.id === id ? { ...comment, content: editingText } : comment
-        )
-      );
+      await editComment(id, value);
+      if (type === 'child') {
+        const _comments = JSON.parse(JSON.stringify(comments))
+        const cmt = _comments.findIndex(item => item.id === reply.parentCommentId)
+        const child = _comments[cmt].replies?.findIndex(item => item.id === reply.id)
+        _comments[cmt].replies[child].content = replyText
+        setComments(_comments)
+      } else {
+        setComments((prevComments) =>
+          prevComments.map((comment) =>
+            comment.id === id ? { ...comment, content: value } : comment
+          )
+        );
+      }
       setDisplayedComments((prevDisplayed) =>
         prevDisplayed.map((comment) =>
-          comment.id === id ? { ...comment, content: editingText } : comment
+          comment.id === id ? { ...comment, content: value } : comment
         )
       );
       setEditingCommentId(null);
       setEditingText("");
+      setEditingReplyId(null)
+      setReplyText('')
       ToastAndroid.show("Chỉnh sửa bình luận thành công!", ToastAndroid.SHORT);
     } catch (error) {
+      console.log("🚀 ~ handleEditComment ~ error:", error)
       Alert.alert("Lỗi", "Không thể chỉnh sửa bình luận. Vui lòng thử lại.");
     }
   };
@@ -149,7 +162,6 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
       Alert.alert("Lỗi", "Không tìm thấy ID bình luận để xóa.");
       return;
     }
-
     try {
       await deleteComment(id);
       setComments((prevComments) =>
@@ -163,6 +175,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
       console.error("Lỗi xoá bình luận:", error);
       Alert.alert("Lỗi", "Không thể xóa bình luận. Vui lòng thử lại.");
     }
+
   };
 
   const handleReplyComment = async (parentCommentId) => {
@@ -206,17 +219,75 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
     setDisplayedComments(comments.slice(0, newCount));
   };
 
-  const renderReplyItem = (reply) => (
-    <View key={reply.id} style={styles.replyItem}>
+  const renderReplyItem = (reply) => {
+    const isOwner = reply.userId === currentUserId;
+    const isEditing = editingReplyId === reply.id;
+
+    return  <View key={reply.id} style={styles.replyItem}>
       <View style={styles.replyHeader}>
         <Text style={styles.replyAuthor}>{reply.username || "Unknown User"}</Text>
         <Text style={styles.replyDate}>
           {reply.createdAt ? new Date(reply.createdAt).toLocaleString() : "Unknown Date"}
         </Text>
       </View>
-      <Text style={styles.replyContent}>{reply.content}</Text>
+      {isEditing ? (
+          <TextInput
+            style={styles.editInput}
+            value={replyText}
+            onChangeText={setReplyText}
+            multiline
+          />
+        ) : (
+          <Text style={styles.commentContent}>
+            {reply.content || "No content available"}
+          </Text>
+      )}
+      <View style={styles.commentActions}>
+        {isOwner && !isEditing && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                setEditingReplyId(reply.id);
+                setReplyText(reply.content);
+              }}
+              style={styles.actionButton}
+            >
+              <Ionicons name="pencil-outline" size={16} color="#007AFF" />
+              <Text style={styles.actionText}>Sửa</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => confirmDeleteComment(reply.id)}
+              style={styles.actionButton}
+            >
+              <Ionicons name="trash-outline" size={16} color="#007AFF" />
+              <Text style={styles.actionText}>Xóa</Text>
+            </TouchableOpacity>
+          </>
+        )}
+        {isEditing && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                handleEditComment(reply.id, replyText, 'child', reply)
+              }}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionText}>Lưu</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setEditingCommentId(null);
+                setEditingText("");
+              }}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionText}>Hủy</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
     </View>
-  );
+  };
 
   const renderCommentItem = ({ item }) => {
     const isOwner = item.userId === currentUserId;
@@ -272,7 +343,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
             {isEditing && (
               <>
                 <TouchableOpacity
-                  onPress={() => handleEditComment(item.id)}
+                  onPress={() => handleEditComment(item.id, editingText)}
                   style={styles.actionButton}
                 >
                   <Text style={styles.actionText}>Lưu</Text>

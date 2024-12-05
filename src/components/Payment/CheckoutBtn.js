@@ -95,7 +95,7 @@ const CheckoutBtn = ({
         ...userData,
         userId: token ? userData.userId ? parseInt(userData.userId): 0 : null,
         contactPhone: userData.phoneNumber,
-        gender: "male",
+        gender: userData?.gender || 'male',
       },
       deliveryMethod: selectedOption,
       branchId: selectedBranchId || null,
