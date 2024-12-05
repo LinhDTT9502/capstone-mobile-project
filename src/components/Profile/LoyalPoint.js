@@ -12,7 +12,7 @@ export default function LoyalPoint({ userId }) {
           const points = await fetchCustomerLoyalPoints(userId);
           setLoyalPoints(points);
         } catch (error) {
-          console.error("Error fetching loyalty points:", error);
+          // console.error("Error fetching loyalty points:", error);
         }
       }
     };
@@ -21,7 +21,7 @@ export default function LoyalPoint({ userId }) {
   }, [userId]);
 
   if (loyalPoints === null) {
-    return <Text style={styles.loadingText}>Đang tải điểm tích lũy...</Text>;
+    return;
   }
 
   return (

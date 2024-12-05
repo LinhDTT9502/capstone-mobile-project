@@ -31,7 +31,7 @@ import PlaceOrderScreen from "../screens/PlaceOrder/index";
 import OrderSuccessScreen from "../screens/PlaceOrder/OrderSuccess/index";
 import Bookmark from "../screens/Bookmark/index";
 import SelectPayment from "../screens/SelectPayment/index"
-
+import AfterPayment from '../screens/AfterPayment'
 const Stack = createStackNavigator();
 
 export default function MainContainer() {
@@ -57,6 +57,7 @@ export default function MainContainer() {
       <Stack.Screen name="PolicySection" component={PolicySection} />
       <Stack.Screen name="BranchList" component={BranchList} />
       <Stack.Screen name="Bookmark" component={Bookmark} />
+      <Stack.Screen name="AfterPayment" component={AfterPayment} />
       <Stack.Screen
         name="OrderSuccess"
         component={OrderSuccessScreen}

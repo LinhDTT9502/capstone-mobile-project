@@ -22,6 +22,7 @@ import { uploadAvatar } from "../../services/userService";
 import { updateProfileApi } from "@/src/api/apiUser";
 import { sendSmsOtp } from "@/src/services/authService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import dayjs from "dayjs";
 
 export default function EditProfile() {
   const navigation = useNavigation();
@@ -292,7 +293,7 @@ export default function EditProfile() {
             ]}
           >
             <Text style={styles.dateButtonText}>
-              {formatDateForDisplay(formData.BirthDate) || "Chọn ngày"}
+              {formData.BirthDate ? dayjs(formData.BirthDate).format("DD/MM/YYYY") : "Chọn ngày"}
             </Text>
           </TouchableOpacity>
         ) : name === "Gender" ? (

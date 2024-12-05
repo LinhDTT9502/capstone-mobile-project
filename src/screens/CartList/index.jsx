@@ -246,12 +246,12 @@ export default function Cart() {
           </TouchableOpacity>
           <Text style={styles.title}>Giỏ hàng của bạn</Text>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{cartItems.length}</Text>
+            <Text style={styles.badgeText}>{cartItems?.length}</Text>
           </View>
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {cartItems.map((item) => {
+          {cartItems && cartItems?.map((item) => {
             return (
               <View key={JSON.stringify(item)} style={styles.cartItem}>
                 <TouchableOpacity
@@ -380,14 +380,20 @@ export default function Cart() {
                         {formatCurrency(item.price * item.quantity)}
                       </Text>
                     </View>
-                  </View>
+                    <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                      <Text>Tổng: </Text>
+                      <Text style={styles.itemPrice}>
+                        {formatCurrency((item.price * item.quantity))}
+                      </Text>
+                    </View>
+                 </View>
                 </View>
               </View>
             );
           })}
         </ScrollView>
 
-        {cartItems.length > 0 && (
+        {cartItems && cartItems.length > 0 && (
           <View style={styles.bottomNav}>
             <TouchableOpacity
               style={styles.selectAllContainer}

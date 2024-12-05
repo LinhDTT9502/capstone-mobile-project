@@ -15,7 +15,7 @@ export const getProvince = () => {
   return axios.get(url, {
     headers: {
       'accept': '*/*',
-      'Token': process.env.GHN_TOKEN,
+      'Token': `${apiToken}`,
       'Content-Type': 'application/json'
 
     }
