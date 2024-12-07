@@ -32,6 +32,11 @@ import OrderSuccessScreen from "../screens/PlaceOrder/OrderSuccess/index";
 import Bookmark from "../screens/Bookmark/index";
 import SelectPayment from "../screens/SelectPayment/index"
 import AfterPayment from '../screens/AfterPayment'
+import VnPayCancel from '../screens/AfterPayment/VnPayCancel'
+import VnPaySuccess from '../screens/AfterPayment/VnPaySuccess'
+import PayOsCancel from '../screens/AfterPayment/PayOsCancel'
+import PayOsSuccess from '../screens/AfterPayment/PayOsSuccess'
+
 const Stack = createStackNavigator();
 
 export default function MainContainer() {
@@ -80,6 +85,12 @@ export default function MainContainer() {
       <Stack.Screen name="SelectPayment" component={SelectPayment} />
       {/* testing */}
       <Stack.Screen name="PlacedOrder" component={PlaceOrderScreen} />
+
+      {/* after payment only */}
+      <Stack.Screen name="PayOsCancel" component={PayOsCancel} />
+      <Stack.Screen name="PayOsSuccess" component={PayOsSuccess} />
+      <Stack.Screen name="VnPayCancel" component={VnPayCancel} />
+      <Stack.Screen name="VnPaySuccess" component={VnPaySuccess} />
     </Stack.Navigator>
   );
 }
