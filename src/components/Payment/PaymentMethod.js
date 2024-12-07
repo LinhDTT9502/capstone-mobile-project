@@ -15,7 +15,7 @@ function PaymentMethod({
   paymentCompleted,
   order,
 }) {
-  console.log("🚀 ~ order:", order)
+  // console.log("🚀 ~ order:", order)
   const renderPaymentDetails = (value) => {
     switch (value) {
       case "1":
