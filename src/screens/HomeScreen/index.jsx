@@ -202,7 +202,7 @@ const HomePage = () => {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Danh mục</Text>
-            <TouchableOpacity onPress={toggleModal}>
+            <TouchableOpacity onPress={() => navigation.navigate("ProductList")}>
               <Text style={styles.viewAllText}>Xem tất cả</Text>
             </TouchableOpacity>
           </View>
@@ -216,7 +216,12 @@ const HomePage = () => {
           />
         </View>
         <View>
-          <Text style={styles.sectionTitle}>Thương hiệu</Text>
+        <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Thương hiệu</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("ProductList")}>
+              <Text style={styles.viewAllText}>Xem tất cả</Text>
+            </TouchableOpacity>
+          </View>
           <ScrollingLogos />
         </View>
 

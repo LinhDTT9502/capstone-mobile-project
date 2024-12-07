@@ -4,9 +4,9 @@ import { Feather } from "@expo/vector-icons";
 
 const paymentMethods = [
   { title: "COD", value: "1", icon: "truck" },
-  { title: "PayOS", value: "2", icon: "smartphone" },
-  { title: "VNPay", value: "3", icon: "credit-card" },
-  { title: "Bank Transfer", value: "4", icon: "briefcase" },
+  { title: "Quét mã VietQR", value: "2", icon: "smartphone" },
+  { title: "Thanh toán trực tuyến", value: "3", icon: "credit-card" },
+  { title: "Chuyển khoản ngân hàng", value: "4", icon: "briefcase" },
 ];
 
 function PaymentMethod({
@@ -15,7 +15,6 @@ function PaymentMethod({
   paymentCompleted,
   order,
 }) {
-  // console.log("🚀 ~ order:", order)
   const renderPaymentDetails = (value) => {
     switch (value) {
       case "1":

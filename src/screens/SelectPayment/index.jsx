@@ -85,6 +85,19 @@ function SelectPayment({ route }) {
         // ]);
       } else if (selectedOption === "4") {
         // Bank Transfer
+        const data = order.rentalOrderCode
+          ? await selectRentalCheckout({
+              paymentMethodID: parseInt(selectedOption),
+              orderId: order.id,
+              orderCode: order.rentalOrderCode,
+              ..._d,
+            })
+          : await selectCheckout({
+              paymentMethodID: parseInt(selectedOption),
+              orderId: order.id,
+              orderCode: order.saleOrderCode,
+              ..._d,
+            });
         setPaymentCompleted(true);
         Alert.alert(
           "Thanh toán thành công",

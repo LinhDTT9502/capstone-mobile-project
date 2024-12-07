@@ -84,6 +84,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1877F2",
   },
+  productRent: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#be123c",
+  },
   originalPrice: {
     fontSize: 16,
     color: "#65676B",
