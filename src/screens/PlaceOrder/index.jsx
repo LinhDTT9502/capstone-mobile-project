@@ -316,7 +316,8 @@ export default function PlaceOrderScreen({ route }) {
               );
             })}
           </View>
-          {userData.shipmentDetailID ? (
+          {selectedOption !== 'STORE_PICKUP' ? <View>
+            {userData.shipmentDetailID ? (
             <View style={styles.selectedShipment}>
               <Text style={styles.selectedTitle}>Địa chỉ đã chọn:</Text>
               <Text style={styles.selectedText}>{userData.fullName}</Text>
@@ -337,6 +338,9 @@ export default function PlaceOrderScreen({ route }) {
                 : "Chọn địa chỉ giao hàng"}
             </Text>
           </TouchableOpacity>
+          </View> : <View></View>}
+
+          
         </View>
       );
     }

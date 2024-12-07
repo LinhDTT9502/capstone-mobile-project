@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Animated,
   View,
@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getUserCart } from "../services/cartService";
 
 const { width } = Dimensions.get("window");
 
@@ -20,7 +22,7 @@ export default function Header() {
   const navigation = useNavigation();
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuAnimation] = useState(new Animated.Value(-width * 0.7));
-
+  const [cartItems, setCartItems] = useState([])
   const toggleMenu = () => {
     if (menuVisible) {
       Animated.timing(menuAnimation, {
@@ -35,6 +37,26 @@ export default function Header() {
         duration: 300,
         useNativeDriver: true,
       }).start();
+    }
+  };
+
+  useEffect(() => {
+    loadCart()
+  });
+
+  const loadCart = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (token) {
+        const userCart = await getUserCart(token);
+        setCartItems(userCart || []);
+      } else {
+        const guestCart =
+          JSON.parse(await AsyncStorage.getItem("guestCart")) || [];
+        setCartItems(guestCart);
+      }
+    } catch (error) {
+      console.error("Error loading cart:", error);
     }
   };
 
@@ -62,6 +84,11 @@ export default function Header() {
         <TouchableOpacity style={styles.iconButton}
         onPress={() => navigation.navigate("Cart")}>
           <Ionicons name="cart-outline" size={24} color="#333" />
+          <View>
+            {cartItems?.length > 0 && <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{cartItems.length}</Text>
+            </View>}
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -165,6 +192,29 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 5,
     marginLeft: 10,
+    position: 'relative'
+  },
+  iconButton: {
+    padding: 5,
+    marginLeft: 10,
+    position: 'relative'
+  },
+  cartBadge: {
+    position: "absolute",
+    top: -30,
+    right: -10,
+    backgroundColor: "#FA7D0B",
+    borderRadius: 12,
+    width: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  cartBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
   },
   modalOverlay: {
     flex: 1,

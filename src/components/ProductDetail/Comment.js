@@ -245,7 +245,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
       <View style={styles.commentActions}>
         {isOwner && !isEditing && (
           <>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => {
                 setEditingReplyId(reply.id);
                 setReplyText(reply.content);
@@ -254,7 +254,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
             >
               <Ionicons name="pencil-outline" size={16} color="#007AFF" />
               <Text style={styles.actionText}>Sửa</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <TouchableOpacity
               onPress={() => confirmDeleteComment(reply.id)}
               style={styles.actionButton}
@@ -321,7 +321,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
           <View style={styles.commentActions}>
             {isOwner && !isEditing && (
               <>
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   onPress={() => {
                     setEditingCommentId(item.id);
                     setEditingText(item.content);
@@ -330,7 +330,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
                 >
                   <Ionicons name="pencil-outline" size={16} color="#007AFF" />
                   <Text style={styles.actionText}>Sửa</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <TouchableOpacity
                   onPress={() => confirmDeleteComment(item.id)}
                   style={styles.actionButton}
@@ -359,13 +359,13 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
                 </TouchableOpacity>
               </>
             )}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => startReplying(item.id)}
               style={styles.actionButton}
             >
               <Ionicons name="chatbox-outline" size={16} color="#007AFF" />
               <Text style={styles.actionText}>Trả lời</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         )}
         {item.replies && item.replies.length > 0 && (

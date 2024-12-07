@@ -69,9 +69,9 @@ export default function ProductDetail() {
   const [sizes, setSizes] = useState([]);
   const [conditions, setConditions] = useState([]);
 
-  const [selectedColor, setSelectedColor] = useState(null);
-  const [selectedSize, setSelectedSize] = useState(null);
-  const [selectedCondition, setSelectedCondition] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(undefined);
+  const [selectedSize, setSelectedSize] = useState(undefined);
+  const [selectedCondition, setSelectedCondition] = useState(undefined);
   const [totalPrice, setTotalPrice] = useState(0);
   const [basePrice, setBasePrice] = useState(0);
   const [productList, setProductList] = useState([]);
@@ -103,6 +103,24 @@ export default function ProductDetail() {
   );
 
   useEffect(() => {
+    if (sizes?.length > 0 && selectedSize === undefined) {
+      const validSize = sizes.find(item => item.status);
+      if (validSize) {
+        handleSizeSelect(validSize.size);
+      }
+    }
+  }, [sizes, selectedColor]);
+
+  useEffect(() => {
+    if (conditions?.length > 0 && selectedCondition === undefined) {
+      const validCon = conditions.find(item => item.status);
+      if (validCon) {
+        handleConditionSelect(validCon.condition);
+      }
+    }
+  }, [sizes, conditions]);
+
+  useEffect(() => {
     const fetchCurrentUserId = async () => {
       try {
         const userId = await AsyncStorage.getItem("currentUserId");
@@ -129,6 +147,9 @@ export default function ProductDetail() {
           status: item.status,
         }))
       );
+      if (response.data.$values?.[0]?.color && response.data.$values?.[0]?.status) {
+        handleColorSelect(response.data.$values?.[0]?.color)
+      }
     } catch (error) {
       console.error("Error fetching colors:", error);
     }
@@ -166,7 +187,8 @@ export default function ProductDetail() {
     const loadProductList = async () => {
       try {
         const response = await getProductByProductCode(product.productCode);
-        setProductList(response.$values || []);
+        const list = response.$values || []
+        setProductList(list);
 
         const initialImages = {};
         response.$values.forEach((item) => {
@@ -224,8 +246,8 @@ export default function ProductDetail() {
 
   const handleColorSelect = (color) => {
     setSelectedColor(color);
-    setSelectedSize(null);
-    setSelectedCondition(null);
+    if (selectedSize !== undefined) setSelectedSize(null);
+    if (selectedCondition !== undefined) setSelectedCondition(null);
 
     // const images = fetchImagesByColor(color);
     // setFullscreenImages(images);
@@ -261,7 +283,7 @@ export default function ProductDetail() {
     }
 
     setSelectedSize(size);
-    setSelectedCondition(null);
+    if (selectedCondition !== undefined) setSelectedCondition(null);
     fetchProductConditions(product.productCode, selectedColor, size);
   };
 
@@ -306,25 +328,25 @@ export default function ProductDetail() {
     // loadComments();
   }, [productId]);
 
-  useEffect(() => {
-    const loadCart = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
-        setIsLoggedIn(!!token);
+  const loadCart = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      setIsLoggedIn(!!token);
 
-        if (token) {
-          const userCart = await getUserCart(token);
-          setCartItems(userCart || []);
-        } else {
-          const guestCart =
-            JSON.parse(await AsyncStorage.getItem("guestCart")) || [];
-          setCartItems(guestCart);
-        }
-      } catch (error) {
-        console.error("Error loading cart:", error);
+      if (token) {
+        const userCart = await getUserCart(token);
+        setCartItems(userCart || []);
+      } else {
+        const guestCart =
+          JSON.parse(await AsyncStorage.getItem("guestCart")) || [];
+        setCartItems(guestCart);
       }
-    };
+    } catch (error) {
+      console.error("Error loading cart:", error);
+    }
+  };
 
+  useEffect(() => {
     loadCart();
   }, []);
 
@@ -352,6 +374,7 @@ export default function ProductDetail() {
 
   const handleLikeToggle = async () => {
     if (!isLoggedIn) {
+      Alert.alert("Thông báo", "Đăng nhập để like sản phẩm.");
       return;
     }
 
@@ -528,14 +551,14 @@ export default function ProductDetail() {
               isLiked={isLiked}
               likes={likes}
               onPress={handleLikeToggle}
-              disabled={!isLoggedIn || loadingLike}
+              disabled={loadingLike}
             />
           </View>
 
           <View style={styles.priceContainer}>
             {product?.rentPrice ?
               <View>
-              <Text style={styles.productPrice}>
+              <Text style={styles.productRent}>
                 Giá thuê: {formatCurrency(product.rentPrice)} ₫
               </Text>
             </View>:null}
@@ -700,6 +723,7 @@ export default function ProductDetail() {
                 size={selectedSize}
                 condition={selectedCondition}
                 onAddToCart={() => handleAddToCart("add")}
+                onCartUpdated={loadCart}
               />
             )}
           </View>
