@@ -9,7 +9,7 @@ const VerifyOtpScreen = ({ route, navigation }) => {
   const handleVerifyOtp = async () => {
     try {
       const response = await verifyAccountMobileAPI({ userName, email, otpCode });
-      if (response.message === "Verify successfully") {
+      if (response === 200) {
         Alert.alert("Xác nhận thành công", "Tài khoản của bạn đã được xác nhận.");
         navigation.navigate('LoginScreen');
       } else {

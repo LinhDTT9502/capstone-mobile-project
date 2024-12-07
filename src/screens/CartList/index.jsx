@@ -375,10 +375,10 @@ export default function Cart() {
                         alignItems: "center",
                       }}
                     >
-                      <Text>Tổng: </Text>
+                      {/* <Text>Tổng: </Text>
                       <Text style={styles.itemPrice}>
                         {formatCurrency(item.price * item.quantity)}
-                      </Text>
+                      </Text> */}
                     </View>
                     <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
                       <Text>Tổng: </Text>

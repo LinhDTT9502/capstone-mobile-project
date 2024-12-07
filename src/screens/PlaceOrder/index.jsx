@@ -365,13 +365,21 @@ export default function PlaceOrderScreen({ route }) {
               	{formatCurrency(type === 'buy' ? item.price : item.rentPrice)}
             </Text>
             {type === 'rent' ? <View>
-              <TouchableOpacity onPress={() => setDatePickerVisibility('start' + '-' + index)}>
-                <Text>Ngày bắt đầu: {item?.dateSelected?.start ? dayjs(item?.dateSelected?.start).format('DD/MM/YYYY') : 'Chọn ngày'}</Text>
+              <TouchableOpacity style={styles.dateButton} onPress={() => setDatePickerVisibility('start' + '-' + index)}>
+              <Ionicons name="calendar-outline" size={20} color="#3366FF" /><Text style={styles.dateText}>Ngày bắt đầu: {item?.dateSelected?.start ? dayjs(item?.dateSelected?.start).format('DD/MM/YYYY') : 'Chọn ngày'}</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setDatePickerVisibility('end' + '-' + index)}>
-                <Text>Ngày kết thúc: {item?.dateSelected?.end ? dayjs(item?.dateSelected?.end).format('DD/MM/YYYY') : 'Chọn ngày'}</Text>
+              <TouchableOpacity style={styles.dateButton}  onPress={() => setDatePickerVisibility('end' + '-' + index)}>
+              <Ionicons name="calendar-outline" size={20} color="#3366FF" />
+              <Text style={styles.dateText}>Ngày kết thúc: {item?.dateSelected?.end ? dayjs(item?.dateSelected?.end).format('DD/MM/YYYY') : 'Chọn ngày'}</Text>
               </TouchableOpacity>
-              {item?.dateSelected?.start && item?.dateSelected?.end ? <Text>Tổng số ngày thuê: {item?.dateSelected?.count}</Text>:null }
+              {item?.dateSelected?.start && item?.dateSelected?.end && (
+        <View style={styles.totalDaysContainer}>
+          <Ionicons name="time-outline" size={20} color="#4A5568" />
+          <Text style={styles.totalDaysText}>
+            Tổng số ngày thuê: {item?.dateSelected?.count}
+          </Text>
+        </View>
+      )}
             </View>: null}
             <Text style={styles.productTotal}>
               Tổng: {formatCurrency(type === 'buy' ? item.price * item.quantity : item.rentPrice * item.quantity * (item?.dateSelected?.count || 1))}
@@ -792,5 +800,29 @@ const styles = StyleSheet.create({
   },
   disabledRadioButton: {
     borderColor: "#BBBBBB",
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EDF2F7',
+    padding: 10,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  dateText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#4A5568',
+  },
+  totalDaysContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  totalDaysText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2D3748',
   },
 });

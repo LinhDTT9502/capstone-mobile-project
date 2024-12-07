@@ -59,7 +59,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [userComment, setUserComment] = useState("");
   const [userRating, setUserRating] = useState(0);
-  const [loadingLike, setLoadingLike] = useState(false)
+  const [loadingLike, setLoadingLike] = useState(false);
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -104,7 +104,7 @@ export default function ProductDetail() {
 
   useEffect(() => {
     if (sizes?.length > 0 && selectedSize === undefined) {
-      const validSize = sizes.find(item => item.status);
+      const validSize = sizes.find((item) => item.status);
       if (validSize) {
         handleSizeSelect(validSize.size);
       }
@@ -113,7 +113,7 @@ export default function ProductDetail() {
 
   useEffect(() => {
     if (conditions?.length > 0 && selectedCondition === undefined) {
-      const validCon = conditions.find(item => item.status);
+      const validCon = conditions.find((item) => item.status);
       if (validCon) {
         handleConditionSelect(validCon.condition);
       }
@@ -147,8 +147,11 @@ export default function ProductDetail() {
           status: item.status,
         }))
       );
-      if (response.data.$values?.[0]?.color && response.data.$values?.[0]?.status) {
-        handleColorSelect(response.data.$values?.[0]?.color)
+      if (
+        response.data.$values?.[0]?.color &&
+        response.data.$values?.[0]?.status
+      ) {
+        handleColorSelect(response.data.$values?.[0]?.color);
       }
     } catch (error) {
       console.error("Error fetching colors:", error);
@@ -187,7 +190,7 @@ export default function ProductDetail() {
     const loadProductList = async () => {
       try {
         const response = await getProductByProductCode(product.productCode);
-        const list = response.$values || []
+        const list = response.$values || [];
         setProductList(list);
 
         const initialImages = {};
@@ -228,7 +231,7 @@ export default function ProductDetail() {
         setProduct((prevProduct) => ({
           ...prevProduct,
           imgAvatarPath: matchingProduct.imgAvatarPath,
-          productId: matchingProduct?.id
+          productId: matchingProduct?.id,
         }));
       } else {
         setTotalPrice("Hết hàng");
@@ -254,10 +257,7 @@ export default function ProductDetail() {
 
     // fetchProductSizes(product.productCode, color);
 
-    const matchingProduct = productList.find(
-      (p) =>
-        p.color === color
-    );
+    const matchingProduct = productList.find((p) => p.color === color);
     setSelectedImage(matchingProduct?.listImages?.$values?.[0]);
     if (matchingProduct) {
       setProduct(matchingProduct);
@@ -274,8 +274,7 @@ export default function ProductDetail() {
 
   const handleSizeSelect = (size) => {
     const matchingProduct = productList.find(
-      (p) =>
-        p.size === size && p.color === product.color
+      (p) => p.size === size && p.color === product.color
     );
 
     if (matchingProduct) {
@@ -290,7 +289,9 @@ export default function ProductDetail() {
   const handleConditionSelect = (condition) => {
     const matchingProduct = productList.find(
       (p) =>
-        p.condition == condition && p.color === product.color && p.size === product.size
+        p.condition == condition &&
+        p.color === product.color &&
+        p.size === product.size
     );
 
     if (matchingProduct) {
@@ -364,8 +365,13 @@ export default function ProductDetail() {
     try {
       const likesData = await fetchLikes();
       const userId = await AsyncStorage.getItem("currentUserId");
-      if (userId && likesData?.$values?.findIndex(item => item.userId == userId && item.productId == productId) !== -1) {
-        setIsLiked(true)
+      if (
+        userId &&
+        likesData?.$values?.findIndex(
+          (item) => item.userId == userId && item.productId == productId
+        ) !== -1
+      ) {
+        setIsLiked(true);
       }
     } catch (error) {
       console.error("Error fetching likes:", error);
@@ -383,17 +389,17 @@ export default function ProductDetail() {
     setIsLiked(!isLiked);
 
     try {
-      setLoadingLike(true)
+      setLoadingLike(true);
       await handleToggleLike(product?.productCode, navigation);
       await loadProductDetails();
-      setLoadingLike(false)
+      setLoadingLike(false);
     } catch (error) {
-      setLoadingLike(false)
+      setLoadingLike(false);
       setLikes(likes);
       setIsLiked(!isLiked);
       Alert.alert("Lỗi", "Không thể thực hiện hành động like.");
     } finally {
-      setLoadingLike(false)
+      setLoadingLike(false);
     }
   };
   const loadProductDetails = async () => {
@@ -431,8 +437,13 @@ export default function ProductDetail() {
 
   // Update total price based on quantity and base price
   const handleQuantityChange = (newQuantity) => {
-    setQuantity(newQuantity);
-    setTotalPrice(basePrice * newQuantity);
+    if (newQuantity <= 0) {
+      setQuantity(1);
+      setTotalPrice(basePrice * 1);
+    } else {
+      setQuantity(newQuantity);
+      setTotalPrice(basePrice * newQuantity);
+    }
   };
 
   const handleAddToCart = (type) => {
@@ -451,14 +462,15 @@ export default function ProductDetail() {
       return;
     }
 
-    if (type === 'buy' || type === 'rent') {
+    if (type === "buy" || type === "rent") {
       return navigation.navigate("PlacedOrder", {
-        selectedCartItems: [{ ...product, quantity, size: selectedSize, color: selectedColor }],
-        type
+        selectedCartItems: [
+          { ...product, quantity, size: selectedSize, color: selectedColor },
+        ],
+        type,
       });
     }
   };
-
 
   const handleSubmitReview = () => {
     if (userRating === 0) {
@@ -532,7 +544,7 @@ export default function ProductDetail() {
           <View style={styles.priceContainer}>
             <View>
               <Text style={styles.productPrice}>
-              Giá mua: 
+                Giá mua:
                 {product.price
                   ? ` ${formatCurrency(product.price)} ₫`
                   : "Giá không có"}
@@ -546,7 +558,7 @@ export default function ProductDetail() {
                 </>
               ) : null}
             </View>
-            
+
             <LikeButton
               isLiked={isLiked}
               likes={likes}
@@ -556,12 +568,13 @@ export default function ProductDetail() {
           </View>
 
           <View style={styles.priceContainer}>
-            {product?.rentPrice ?
+            {product?.rentPrice ? (
               <View>
-              <Text style={styles.productRent}>
-                Giá thuê: {formatCurrency(product.rentPrice)} ₫
-              </Text>
-            </View>:null}
+                <Text style={styles.productRent}>
+                  Giá thuê: {formatCurrency(product.rentPrice)} ₫
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       )}
@@ -695,7 +708,25 @@ export default function ProductDetail() {
             >
               <FontAwesome name="minus" size={16} color={COLORS.dark} />
             </TouchableOpacity>
-            <Text style={styles.quantityText}>{quantity}</Text>
+            <TextInput
+              style={styles.quantityText}
+              value={String(quantity)}
+              onChangeText={(text) => {
+                if (text === "") {
+                  setQuantity(0);
+                  setTotalPrice(basePrice * 1);
+                } else {
+                  const newQuantity = parseInt(text, 10);
+                  if (!isNaN(newQuantity) && newQuantity > 0) {
+                    handleQuantityChange(newQuantity);
+                  } else {
+                    setQuantity(1);
+                    setTotalPrice(basePrice * 1);
+                  }
+                }
+              }}
+              keyboardType="numeric"
+            />
             <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => handleQuantityChange(quantity + 1)}
@@ -846,8 +877,6 @@ export default function ProductDetail() {
               <Text style={styles.cartBadgeText}>{cartItems.length}</Text>
             </View>
           )}
-
-
         </TouchableOpacity>
       </View>
 
@@ -862,11 +891,11 @@ export default function ProductDetail() {
         <View style={styles.buyNowContainer}>
           <BuyNowButton onPress={() => handleAddToCart("buy")} />
         </View>
-        {product?.isRent ?
+        {product?.isRent ? (
           <View style={styles.rentContainer}>
-          <RentButton onPress={() => handleAddToCart("rent")} />
-        </View> : null}
-        
+            <RentButton onPress={() => handleAddToCart("rent")} />
+          </View>
+        ) : null}
       </View>
 
       <Modal

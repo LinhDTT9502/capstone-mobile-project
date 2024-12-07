@@ -16,13 +16,20 @@ import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, updateUser } from "../../redux/slices/authSlice";
-import { fetchUserProfile, saveUserProfile, sendSmsOtpService } from "../../services/userService";
+import {
+  fetchUserProfile,
+  saveUserProfile,
+  sendSmsOtpService,
+  sendOtpForEmailChangeService,
+  changeEmailService,
+} from "../../services/userService";
 import { Picker } from "@react-native-picker/picker";
 import { uploadAvatar } from "../../services/userService";
 import { updateProfileApi } from "@/src/api/apiUser";
 import { sendSmsOtp } from "@/src/services/authService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import dayjs from "dayjs";
+import * as ImagePicker from 'expo-image-picker';
 
 export default function EditProfile() {
   const navigation = useNavigation();
@@ -38,7 +45,9 @@ export default function EditProfile() {
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
-  const [otp, setOtp] = useState("")
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpError, setOtpError] = useState("");
   const handleAvatarChange = async (file) => {
     if (!file) {
       Alert.alert("Thông báo", "Vui lòng chọn ảnh trước khi tải lên.");
@@ -152,20 +161,20 @@ export default function EditProfile() {
 
   const handleChange = async (name, value) => {
     try {
-      const data =  {
-        "fullName": formData?.FullName,
-        "gender": formData?.Gender || 'male',
-        "phone": formData?.Phone,
-        "address": formData?.Address || '1',
-        "birthDate": "2024-12-01T18:21:18.775Z"
+      const data = {
+        fullName: formData?.FullName,
+        gender: formData?.Gender || "male",
+        phone: formData?.Phone,
+        address: formData?.Address || "1",
+        birthDate: "2024-12-01T18:21:18.775Z",
+      };
+      if (name === "Phone") {
+        data.phone = value;
       }
-      if (name === 'Phone') {
-        data.phone = value
-      }
-      const res = await updateProfileApi(user?.UserId,data)
+      const res = await updateProfileApi(user?.UserId, data);
       setFormData({ ...formData, [name]: value });
     } catch (error) {
-      console.log("🚀 ~ handleChange ~ error:", error)
+      console.log("🚀 ~ handleChange ~ error:", error);
     }
   };
 
@@ -237,23 +246,56 @@ export default function EditProfile() {
     setShowPhoneModal(true);
   };
 
-  const handleEmailSave = () => {
-    if (newEmail) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(newEmail)) {
-        Alert.alert("Lỗi", "Email không hợp lệ. Vui lòng kiểm tra lại.");
-        return;
-      }
+  const handleEmailSave = async () => {
+    if (!newEmail) {
+      Alert.alert("Lỗi", "Vui lòng nhập email mới.");
+      return;
     }
-    handleChange("Email", newEmail);
-    setShowEmailModal(false);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      Alert.alert("Lỗi", "Email không hợp lệ. Vui lòng kiểm tra lại.");
+      return;
+    }
+
+    try {
+      await sendOtpForEmailChangeService(user.UserId, newEmail); 
+      setOtpSent(true);
+      Alert.alert("Thông báo", "Mã OTP đã được gửi đến email mới của bạn.");
+    } catch (error) {
+      Alert.alert("Lỗi", error.message);
+    }
   };
+
+  const handleOtpVerification = async () => {
+    if (!otp) {
+      setOtpError("Vui lòng nhập mã OTP.");
+      return;
+    }
+  
+    try {
+      const response = await changeEmailService(user.UserId, otp, newEmail);
+      if (response.success) {
+        handleChange("Email", newEmail);
+        setShowEmailModal(false);
+        Alert.alert("Thông báo", "Email đã được thay đổi thành công.");
+      } else {
+        setOtpError("Mã OTP không hợp lệ. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", error.message);
+    }
+  };
+  
 
   const handlePhoneSave = async () => {
     if (newPhone) {
       const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
       if (!phoneRegex.test(newPhone)) {
-        Alert.alert("Lỗi", "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.");
+        Alert.alert(
+          "Lỗi",
+          "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại."
+        );
         return;
       }
     }
@@ -263,13 +305,13 @@ export default function EditProfile() {
 
   const handleVerify = async (val) => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      const res = await sendSmsOtp(formData?.Phone, token)
-      setShowVerify(true)
+      const token = await AsyncStorage.getItem("token");
+      const res = await sendSmsOtp(formData?.Phone, token);
+      setShowVerify(true);
     } catch (error) {
-      console.log("🚀 ~ handleVerify ~ error:", error)
+      console.log("🚀 ~ handleVerify ~ error:", error);
     }
-  }
+  };
 
   const renderInput = (
     label,
@@ -278,97 +320,104 @@ export default function EditProfile() {
     editable = isEditing,
     verifiable = false
   ) => {
-    return <View style={styles.inputContainer}>
-    <View style={styles.labelContainer}>
-      <FontAwesome
-        name={icon}
-        size={20}
-        color="#0035FF"
-        style={styles.inputIcon}
-      />
-      <Text style={styles.label}>{label}</Text>
-    </View>
-    <View style={styles.inputWrapper}>
-      {name === "BirthDate" && isEditing ? (
-        <TouchableOpacity
-          onPress={() => isEditing && setShowDatePicker(true)}
-          style={[
-            styles.input,
-            !isEditing && styles.disabledInput,
-            isEditing && styles.editableInput,
-          ]}
-        >
-          <Text style={styles.dateButtonText}>
-            {formData.BirthDate ? dayjs(formData.BirthDate).format("DD/MM/YYYY") : "Chọn ngày"}
-          </Text>
-        </TouchableOpacity>
-      ) : name === "Gender" ? (
-        <Picker
-          selectedValue={formData.Gender}
-          onValueChange={(itemValue) => handleChange("Gender", itemValue)}
-          enabled={isEditing}
-          style={[
-            styles.input,
-            !isEditing && styles.disabledInput,
-            isEditing && styles.editableInput,
-          ]}
-        >
-          <Picker.Item label="Chọn giới tính" value="" />
-          <Picker.Item label="Nam" value="male" />
-          <Picker.Item label="Nữ" value="female" />
-          <Picker.Item label="Khác" value="other" />
-        </Picker>
-      ) : (
-        <View style={styles.inputWithButton}>
-          <TextInput
-            style={[
-              styles.input,
-              !editable && styles.disabledInput,
-              editable && styles.editableInput,
-              (name === "Email" || name === "Phone") &&
-                styles.nonEditableInput,
-            ]}
-            value={name === 'BirthDate' ? dayjs(formData.BirthDate).format("DD/MM/YYYY") : formData[name]}
-            onChangeText={(value) => handleChange(name, value)}
-            editable={editable && name !== "Email" && name !== "Phone"}
-            placeholder={`Nhập ${label.toLowerCase()}`}
-            placeholderTextColor="#A0AEC0"
+    return (
+      <View style={styles.inputContainer}>
+        <View style={styles.labelContainer}>
+          <FontAwesome
+            name={icon}
+            size={20}
+            color="#0035FF"
+            style={styles.inputIcon}
           />
-          {(name === "Email" || name === "Phone") && !formData[`Is${name}Verified`] && (
-            <TouchableOpacity
-              style={styles.changeButtonVerify}
-              onPress={
-                () => handleVerify(name)
-              }
+          <Text style={styles.label}>{label}</Text>
+        </View>
+        <View style={styles.inputWrapper}>
+          {name === "BirthDate" && isEditing ? (
+             <TouchableOpacity
+             onPress={() => isEditing && setShowDatePicker(true)}
+             style={[
+               styles.input,
+               !isEditing && styles.disabledInput,
+               isEditing && styles.editableInput,
+             ]}
+           >
+             <Text style={styles.dateButtonText}>
+               {formData.BirthDate
+                 ? dayjs(formData.BirthDate).format('DD/MM/YYYY')
+                 : 'Chọn ngày'}
+             </Text>
+           </TouchableOpacity>
+          ) : name === "Gender" ? (
+            <Picker
+              selectedValue={formData.Gender}
+              onValueChange={(itemValue) => handleChange("Gender", itemValue)}
+              enabled={isEditing}
+              style={[
+                styles.input,
+                !isEditing && styles.disabledInput,
+                isEditing && styles.editableInput,
+              ]}
             >
-              <Text style={styles.changeButtonTextInline}>Verify</Text>
-            </TouchableOpacity>
+              <Picker.Item label="Chọn giới tính" value="" />
+              <Picker.Item label="Nam" value="male" />
+              <Picker.Item label="Nữ" value="female" />
+              <Picker.Item label="Khác" value="other" />
+            </Picker>
+          ) : (
+            <View style={styles.inputWithButton}>
+              <TextInput
+                style={[
+                  styles.input,
+                  !editable && styles.disabledInput,
+                  editable && styles.editableInput,
+                  (name === "Email" || name === "Phone") &&
+                    styles.nonEditableInput,
+                ]}
+                value={
+                  name === "BirthDate"
+                    ? dayjs(formData.BirthDate).format("DD/MM/YYYY")
+                    : formData[name]
+                }
+                onChangeText={(value) => handleChange(name, value)}
+                editable={editable && name !== "Email" && name !== "Phone"}
+                placeholder={`Nhập ${label.toLowerCase()}`}
+                placeholderTextColor="#A0AEC0"
+              />
+              {(name === "Email" || name === "Phone") &&
+                !formData[`Is${name}Verified`] && (
+                  <TouchableOpacity
+                    style={styles.changeButtonVerify}
+                    onPress={() => handleVerify(name)}
+                  >
+                    <Text style={styles.changeButtonTextInline}>Verify</Text>
+                  </TouchableOpacity>
+                )}
+              {(name === "Email" || name === "Phone") && (
+                <TouchableOpacity
+                  style={styles.changeButtonInline}
+                  onPress={
+                    name === "Email" ? handleEmailChange : handlePhoneChange
+                  }
+                >
+                  <Text style={styles.changeButtonTextInline}>Thay đổi</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           )}
-          {(name === "Email" || name === "Phone") && (
-            <TouchableOpacity
-              style={styles.changeButtonInline}
-              onPress={
-                name === "Email" ? handleEmailChange : handlePhoneChange
+          {verifiable && (
+            <FontAwesome
+              name={
+                formData[`Is${name}Verified`] ? "check-circle" : "times-circle"
               }
-            >
-              <Text style={styles.changeButtonTextInline}>Thay đổi</Text>
-            </TouchableOpacity>
+              size={24}
+              color={formData[`Is${name}Verified`] ? "#4CAF50" : "#FF3B30"}
+              style={styles.verifiedIcon}
+            />
           )}
         </View>
-      )}
-      {verifiable && (
-        <FontAwesome
-          name={
-            formData[`Is${name}Verified`] ? "check-circle" : "times-circle"
-          }
-          size={24}
-          color={formData[`Is${name}Verified`] ? "#4CAF50" : "#FF3B30"}
-          style={styles.verifiedIcon}
-        />
-      )}
-    </View>
-  </View>
-  }
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -384,7 +433,7 @@ export default function EditProfile() {
       </View>
 
       <ScrollView style={styles.content}>
-      <View style={styles.profileImageContainer}>
+        <View style={styles.profileImageContainer}>
           <Image
             source={{
               uri: `${formData.ImgAvatarPath}?t=${new Date().getTime()}`,
@@ -404,7 +453,6 @@ export default function EditProfile() {
             <FontAwesome name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -468,25 +516,48 @@ export default function EditProfile() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Thay đổi Email</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={newEmail}
-              onChangeText={setNewEmail}
-              placeholder="Nhập email mới"
-              keyboardType="email-address"
-            />
+            {!otpSent ? (
+              <>
+                <TextInput
+                  style={styles.modalInput}
+                  value={newEmail}
+                  onChangeText={setNewEmail}
+                  placeholder="Nhập email mới"
+                  keyboardType="email-address"
+                />
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={handleEmailSave}
+                >
+                  <Text style={styles.modalButtonText}>Gửi OTP</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <TextInput
+                  style={styles.modalInput}
+                  value={otp}
+                  onChangeText={setOtp}
+                  placeholder="Nhập mã OTP"
+                  keyboardType="numeric"
+                />
+                {otpError ? (
+                  <Text style={styles.errorText}>{otpError}</Text>
+                ) : null}
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={handleOtpVerification}
+                >
+                  <Text style={styles.modalButtonText}>Xác nhận</Text>
+                </TouchableOpacity>
+              </>
+            )}
             <View style={styles.navButtonContainer}>
               <TouchableOpacity
                 style={styles.modalCancelButton}
                 onPress={() => setShowEmailModal(false)}
               >
                 <Text style={styles.modalButtonText}>Hủy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleEmailSave}
-              >
-                <Text style={styles.modalButtonText}>Lưu</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -674,21 +745,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   input: {
-    flex: 1,
     fontSize: 16,
-    color: "#2D3748",
+    color: '#2D3748',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
   },
   editableInput: {
-    backgroundColor: "#EDF2F7",
+    backgroundColor: '#EDF2F7',
   },
   disabledInput: {
-    backgroundColor: "#F7FAFC",
-    color: "#718096",
+    backgroundColor: '#F7FAFC',
+    color: '#718096',
   },
   inputIcon: {
     marginRight: 8,

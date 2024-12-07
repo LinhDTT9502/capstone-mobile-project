@@ -3,6 +3,8 @@ import {
   getUserProfile as getUserProfile,
   updateProfileApi,
   uploadAvatarApi,
+  sendOtpForEmailChange,
+  changeEmail,
 } from "../api/apiUser";
 import { sendSmsOtp } from "./authService";
 
@@ -74,5 +76,30 @@ export const verifyPhoneNumberService = async (otp) => {
   } catch (error) {
     console.error("Error verifying phone number:", error);
     throw new Error("Lỗi xác thực số điện thoại bằng OTP");
+  }
+};
+
+// Send OTP for email change
+export const sendOtpForEmailChangeService = async (userId, newEmail) => {
+  
+  try {
+    const response = await sendOtpForEmailChange(userId, newEmail);
+    console.log('check', response)
+    return response.data.token;
+  } catch (error) {
+    console.error("Error sending OTP for email change:", error);
+    throw new Error("Lỗi gửi OTP thay đổi email");
+  }
+};
+
+// Change email
+export const changeEmailService = async (userId, otpCode, newEmail) => {
+  try {
+   const token = await sendOtpForEmailChangeService(userId, newEmail);
+    const response = await changeEmail(userId, otpCode, newEmail, token);
+    return response.data;
+  } catch (error) {
+    console.error("Error changing email:", error);
+    throw new Error("Lỗi thay đổi email");
   }
 };

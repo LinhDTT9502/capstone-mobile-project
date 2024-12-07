@@ -83,3 +83,33 @@ export const uploadAvatarApi = (userId, avatarFile) => {
   });
 };
 
+// POST gửi OTP để thay đổi email
+export const sendOtpForEmailChange = (id, newEmail) => {
+  console.log(id)
+  return axios.post(
+    `${API_BASE_URL}/send-otp-to-email/${id}?email=${newEmail}`,
+    {
+      params: { id },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};
+
+// PUT thay đổi email
+export const changeEmail = (id, otpCode, newEmail, token) => {
+  console.log(otpCode, newEmail, token);
+  return axiosInstance.put(
+    `${API_BASE_URL}/update-email/${id}`,
+    {  email: newEmail, otpCode: otpCode, token: token},
+    {
+      headers: {
+        "Content-Type": "application/json",
+       'Accept': '*/*',
+      "Authorization": `Bearer ${token}`,
+      },
+    }
+  );
+};
+
