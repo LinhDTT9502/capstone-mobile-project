@@ -84,8 +84,8 @@ export const sendOtpForEmailChangeService = async (userId, newEmail) => {
   
   try {
     const response = await sendOtpForEmailChange(userId, newEmail);
-    console.log('check', response)
-    return response.data.token;
+    // console.log('check', response)
+    return response.data;
   } catch (error) {
     console.error("Error sending OTP for email change:", error);
     throw new Error("Lỗi gửi OTP thay đổi email");
@@ -93,10 +93,10 @@ export const sendOtpForEmailChangeService = async (userId, newEmail) => {
 };
 
 // Change email
-export const changeEmailService = async (userId, otpCode, newEmail) => {
+export const changeEmailService = async (userId, token, newEmail, otp) => {
+  // console.log(userId, token, newEmail, otp)
   try {
-   const token = await sendOtpForEmailChangeService(userId, newEmail);
-    const response = await changeEmail(userId, otpCode, newEmail, token);
+    const response = await changeEmail(userId, token, newEmail, otp);
     return response.data;
   } catch (error) {
     console.error("Error changing email:", error);

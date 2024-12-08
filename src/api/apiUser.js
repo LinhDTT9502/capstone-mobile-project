@@ -85,7 +85,7 @@ export const uploadAvatarApi = (userId, avatarFile) => {
 
 // POST gửi OTP để thay đổi email
 export const sendOtpForEmailChange = (id, newEmail) => {
-  console.log(id)
+  // console.log(id)
   return axios.post(
     `${API_BASE_URL}/send-otp-to-email/${id}?email=${newEmail}`,
     {
@@ -98,11 +98,11 @@ export const sendOtpForEmailChange = (id, newEmail) => {
 };
 
 // PUT thay đổi email
-export const changeEmail = (id, otpCode, newEmail, token) => {
-  console.log(otpCode, newEmail, token);
+export const changeEmail = (userId, token, email, otpCode) => {
+  // console.log(userId, token, email, otpCode);
   return axiosInstance.put(
-    `${API_BASE_URL}/update-email/${id}`,
-    {  email: newEmail, otpCode: otpCode, token: token},
+    `${API_BASE_URL}/update-email/${userId}`,
+    {  email, otpCode, token}, 
     {
       headers: {
         "Content-Type": "application/json",

@@ -44,10 +44,14 @@ export default function EditProfile() {
   const [showVerify, setShowVerify] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  console.log(newPhone)
   const [avatarFile, setAvatarFile] = useState(null);
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpError, setOtpError] = useState("");
+
+  const [token, setToken] = useState("");
+
   const handleAvatarChange = async (file) => {
     if (!file) {
       Alert.alert("Thông báo", "Vui lòng chọn ảnh trước khi tải lên.");
@@ -174,7 +178,7 @@ export default function EditProfile() {
       const res = await updateProfileApi(user?.UserId, data);
       setFormData({ ...formData, [name]: value });
     } catch (error) {
-      console.log("🚀 ~ handleChange ~ error:", error);
+      // console.log("🚀 ~ handleChange ~ error:", error);
     }
   };
 
@@ -243,6 +247,7 @@ export default function EditProfile() {
 
   const handlePhoneChange = () => {
     setNewPhone(formData.Phone);
+    
     setShowPhoneModal(true);
   };
 
@@ -259,7 +264,10 @@ export default function EditProfile() {
     }
 
     try {
-      await sendOtpForEmailChangeService(user.UserId, newEmail); 
+      const data = await sendOtpForEmailChangeService(user.UserId, newEmail);
+      console.log(data)
+
+      setToken(data.token);
       setOtpSent(true);
       Alert.alert("Thông báo", "Mã OTP đã được gửi đến email mới của bạn.");
     } catch (error) {
@@ -274,9 +282,11 @@ export default function EditProfile() {
     }
   
     try {
-      const response = await changeEmailService(user.UserId, otp, newEmail);
-      if (response.success) {
-        handleChange("Email", newEmail);
+      const response = await changeEmailService(user.UserId, token, newEmail, otp);
+      // console.log(response)
+      if (response.isSuccess === true) {
+        
+        handleChange("Email", newEmail); 
         setShowEmailModal(false);
         Alert.alert("Thông báo", "Email đã được thay đổi thành công.");
       } else {
@@ -291,13 +301,13 @@ export default function EditProfile() {
   const handlePhoneSave = async () => {
     if (newPhone) {
       const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
-      if (!phoneRegex.test(newPhone)) {
-        Alert.alert(
-          "Lỗi",
-          "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại."
-        );
-        return;
-      }
+      // if (!phoneRegex.test(newPhone)) {
+      //   Alert.alert(
+      //     "Lỗi",
+      //     "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại."
+      //   );
+      //   return;
+      // }
     }
     await handleChange("Phone", newPhone);
     setShowPhoneModal(false);
@@ -309,7 +319,7 @@ export default function EditProfile() {
       const res = await sendSmsOtp(formData?.Phone, token);
       setShowVerify(true);
     } catch (error) {
-      console.log("🚀 ~ handleVerify ~ error:", error);
+      // console.log("🚀 ~ handleVerify ~ error:", error);
     }
   };
 
@@ -579,7 +589,7 @@ export default function EditProfile() {
               onChangeText={setNewPhone}
               placeholder="Nhập số điện thoại mới"
               keyboardType="phone-pad"
-              maxLength={10}
+              // maxLength={10}
             />
             <View style={styles.navButtonContainer}>
               <TouchableOpacity

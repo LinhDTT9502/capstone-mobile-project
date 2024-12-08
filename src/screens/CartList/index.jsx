@@ -173,7 +173,7 @@ export default function Cart() {
         dispatch(updateQuantity({ id, qty: parseInt(qty) }));
       }
     } catch (error) {
-      console.log("🚀 ~ handleUpdateQty ~ error:", error);
+      // console.log("🚀 ~ handleUpdateQty ~ error:", error);
     }
   };
 

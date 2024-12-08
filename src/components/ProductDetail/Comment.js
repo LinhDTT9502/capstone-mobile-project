@@ -136,7 +136,7 @@ const Comment = ({ productId, isLoggedIn, currentUserId }) => {
       setReplyText('')
       ToastAndroid.show("Chỉnh sửa bình luận thành công!", ToastAndroid.SHORT);
     } catch (error) {
-      console.log("🚀 ~ handleEditComment ~ error:", error)
+      // console.log("🚀 ~ handleEditComment ~ error:", error)
       Alert.alert("Lỗi", "Không thể chỉnh sửa bình luận. Vui lòng thử lại.");
     }
   };
