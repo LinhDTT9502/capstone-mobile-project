@@ -24,11 +24,15 @@ const ResetPasswordProfile = () => {
   const user = useSelector(selectUser);
   const userId = user?.UserId || "";
   const navigation = useNavigation();
-
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleResetPassword = async () => {
+    if (newPassword === oldPassword) {
+      Alert.alert("Lỗi", "Mật khẩu mới không được giống mật khẩu cũ");
+      return;
+    }
     if (!newPassword || !confirmPassword) {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
       return;
@@ -40,7 +44,7 @@ const ResetPasswordProfile = () => {
     }
 
     try {
-      await updatePassword(userId, newPassword);
+      await updatePassword(userId, oldPassword, newPassword);
       Alert.alert("Thành công", "Mật khẩu của bạn đã được thay đổi!");
       navigation.goBack();
     } catch (error) {
@@ -67,6 +71,15 @@ const ResetPasswordProfile = () => {
           </TouchableOpacity>
           <View style={styles.content}>
             <Text style={styles.title}>Thay đổi mật khẩu</Text>
+            <Text style={styles.subtitle}>Nhập mật khẩu cũ</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Mật khẩu cũ"
+                secureTextEntry
+                value={oldPassword}
+                onChangeText={setOldPassword}
+                placeholderTextColor="#999"
+              />
             <Text style={styles.subtitle}>
               Nhập mật khẩu mới của bạn để cập nhật.
             </Text>

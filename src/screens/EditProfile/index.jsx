@@ -166,11 +166,11 @@ export default function EditProfile() {
   const handleChange = async (name, value) => {
     try {
       const data = {
-        fullName: formData?.FullName,
-        gender: formData?.Gender || "male",
-        phone: formData?.Phone,
-        address: formData?.Address || "1",
-        birthDate: "2024-12-01T18:21:18.775Z",
+        "fullName": formData?.FullName,
+        "gender": formData?.Gender || 'male',
+        "phone": formData?.Phone,
+        "address": formData?.Address || '1',
+        "birthDate": "2024-12-01T18:21:18.775Z"
       };
       if (name === "Phone") {
         data.phone = value;
@@ -330,105 +330,97 @@ export default function EditProfile() {
     editable = isEditing,
     verifiable = false
   ) => {
-    return (
-      <View style={styles.inputContainer}>
-        <View style={styles.labelContainer}>
-          <FontAwesome
-            name={icon}
-            size={20}
-            color="#0035FF"
-            style={styles.inputIcon}
+    return <View style={styles.inputContainer}>
+    <View style={styles.labelContainer}>
+      <FontAwesome
+        name={icon}
+        size={20}
+        color="#0035FF"
+        style={styles.inputIcon}
+      />
+      <Text style={styles.label}>{label}</Text>
+    </View>
+    <View style={styles.inputWrapper}>
+      {name === "BirthDate" && isEditing ? (
+        <TouchableOpacity
+          onPress={() => isEditing && setShowDatePicker(true)}
+          style={[
+            styles.input,
+            !isEditing && styles.disabledInput,
+            isEditing && styles.editableInput,
+          ]}
+        >
+          <Text style={styles.dateButtonText}>
+            {formData.BirthDate ? dayjs(formData.BirthDate).format("DD/MM/YYYY") : "Chọn ngày"}
+          </Text>
+        </TouchableOpacity>
+      ) : name === "Gender" ? (
+        <Picker
+          selectedValue={formData.Gender}
+          onValueChange={(itemValue) => handleChange("Gender", itemValue)}
+          enabled={isEditing}
+          style={[
+            styles.input,
+            !isEditing && styles.disabledInput,
+            isEditing && styles.editableInput,
+          ]}
+        >
+          <Picker.Item label="Chọn giới tính" value="" />
+          <Picker.Item label="Nam" value="male" />
+          <Picker.Item label="Nữ" value="female" />
+          <Picker.Item label="Khác" value="other" />
+        </Picker>
+      ) : (
+        <View style={styles.inputWithButton}>
+          <TextInput
+            style={[
+              styles.input,
+              !editable && styles.disabledInput,
+              editable && styles.editableInput,
+              (name === "Email" || name === "Phone") &&
+                styles.nonEditableInput,
+            ]}
+            value={name === 'BirthDate' ? dayjs(formData.BirthDate).format("DD/MM/YYYY") : formData[name]}
+            onChangeText={(value) => handleChange(name, value)}
+            editable={editable && name !== "Email" && name !== "Phone"}
+            placeholder={`Nhập ${label.toLowerCase()}`}
+            placeholderTextColor="#A0AEC0"
           />
-          <Text style={styles.label}>{label}</Text>
-        </View>
-        <View style={styles.inputWrapper}>
-          {name === "BirthDate" && isEditing ? (
-             <TouchableOpacity
-             onPress={() => isEditing && setShowDatePicker(true)}
-             style={[
-               styles.input,
-               !isEditing && styles.disabledInput,
-               isEditing && styles.editableInput,
-             ]}
-           >
-             <Text style={styles.dateButtonText}>
-               {formData.BirthDate
-                 ? dayjs(formData.BirthDate).format('DD/MM/YYYY')
-                 : 'Chọn ngày'}
-             </Text>
-           </TouchableOpacity>
-          ) : name === "Gender" ? (
-            <Picker
-              selectedValue={formData.Gender}
-              onValueChange={(itemValue) => handleChange("Gender", itemValue)}
-              enabled={isEditing}
-              style={[
-                styles.input,
-                !isEditing && styles.disabledInput,
-                isEditing && styles.editableInput,
-              ]}
-            >
-              <Picker.Item label="Chọn giới tính" value="" />
-              <Picker.Item label="Nam" value="male" />
-              <Picker.Item label="Nữ" value="female" />
-              <Picker.Item label="Khác" value="other" />
-            </Picker>
-          ) : (
-            <View style={styles.inputWithButton}>
-              <TextInput
-                style={[
-                  styles.input,
-                  !editable && styles.disabledInput,
-                  editable && styles.editableInput,
-                  (name === "Email" || name === "Phone") &&
-                    styles.nonEditableInput,
-                ]}
-                value={
-                  name === "BirthDate"
-                    ? dayjs(formData.BirthDate).format("DD/MM/YYYY")
-                    : formData[name]
-                }
-                onChangeText={(value) => handleChange(name, value)}
-                editable={editable && name !== "Email" && name !== "Phone"}
-                placeholder={`Nhập ${label.toLowerCase()}`}
-                placeholderTextColor="#A0AEC0"
-              />
-              {(name === "Email" || name === "Phone") &&
-                !formData[`Is${name}Verified`] && (
-                  <TouchableOpacity
-                    style={styles.changeButtonVerify}
-                    onPress={() => handleVerify(name)}
-                  >
-                    <Text style={styles.changeButtonTextInline}>Verify</Text>
-                  </TouchableOpacity>
-                )}
-              {(name === "Email" || name === "Phone") && (
-                <TouchableOpacity
-                  style={styles.changeButtonInline}
-                  onPress={
-                    name === "Email" ? handleEmailChange : handlePhoneChange
-                  }
-                >
-                  <Text style={styles.changeButtonTextInline}>Thay đổi</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-          {verifiable && (
-            <FontAwesome
-              name={
-                formData[`Is${name}Verified`] ? "check-circle" : "times-circle"
+          {(name === "Email" || name === "Phone") && !formData[`Is${name}Verified`] && (
+            <TouchableOpacity
+              style={styles.changeButtonVerify}
+              onPress={
+                () => handleVerify(name)
               }
-              size={24}
-              color={formData[`Is${name}Verified`] ? "#4CAF50" : "#FF3B30"}
-              style={styles.verifiedIcon}
-            />
+            >
+              <Text style={styles.changeButtonTextInline}>Verify</Text>
+            </TouchableOpacity>
+          )}
+          {(name === "Email" || name === "Phone") && (
+            <TouchableOpacity
+              style={styles.changeButtonInline}
+              onPress={
+                name === "Email" ? handleEmailChange : handlePhoneChange
+              }
+            >
+              <Text style={styles.changeButtonTextInline}>Thay đổi</Text>
+            </TouchableOpacity>
           )}
         </View>
-      </View>
-    );
-  };
-
+      )}
+      {verifiable && (
+        <FontAwesome
+          name={
+            formData[`Is${name}Verified`] ? "check-circle" : "times-circle"
+          }
+          size={24}
+          color={formData[`Is${name}Verified`] ? "#4CAF50" : "#FF3B30"}
+          style={styles.verifiedIcon}
+        />
+      )}
+    </View>
+  </View>
+  }
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -523,7 +515,7 @@ export default function EditProfile() {
         visible={showEmailModal}
         onRequestClose={() => setShowEmailModal(false)}
       >
-        <View style={styles.modalContainer}>
+        <View style={styles.modalContainer}>z
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Thay đổi Email</Text>
             {!otpSent ? (
@@ -755,21 +747,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   input: {
+    flex: 1,
     fontSize: 16,
-    color: '#2D3748',
+    color: "#2D3748",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
+    borderColor: "#E2E8F0",
   },
   editableInput: {
-    backgroundColor: '#EDF2F7',
+    backgroundColor: "#EDF2F7",
   },
   disabledInput: {
-    backgroundColor: '#F7FAFC',
-    color: '#718096',
+    backgroundColor: "#F7FAFC",
+    color: "#718096",
   },
   inputIcon: {
     marginRight: 8,
