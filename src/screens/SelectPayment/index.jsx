@@ -17,12 +17,15 @@ import {
 } from "../../api/Checkout/apiCheckout";
 import PaymentMethod from "../../components/Payment/PaymentMethod";
 import { Feather } from "@expo/vector-icons";
+import { ModalPayment } from "./PaymentSuccess/ModalPayment";
 
 function SelectPayment({ route }) {
   const { order } = route.params;
   const navigation = useNavigation();
   const [selectedOption, setSelectedOption] = useState("1");
   const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [modalVisiblePayment, setModalVisiblePayment] = useState(false);
+  const [linkPayment,setLinkPayment]=useState("")
   const [deposit, setDeposit] = useState("DEPOSIT_50");
   const handleCheck = async () => {
     if (paymentCompleted) {
@@ -64,19 +67,22 @@ function SelectPayment({ route }) {
             });
 
         if (data?.data?.data?.paymentLink) {
-          Linking.canOpenURL(data.data.data.paymentLink).then((supported) => {
-            if (supported) {
-              Linking.openURL(data.data.data.paymentLink);
-            } else {
-              console.log("Can't open URI:", data.data.data.paymentLink);
-            }
-          });
+          setLinkPayment(data.data.data.paymentLink)
+          setModalVisiblePayment(true)
+          // Linking.canOpenURL(data.data.data.paymentLink).then((supported) => {
+          //   if (supported) {
+          //     // Linking.openURL(data.data.data.paymentLink);
+             
+          //   } else {
+          //     console.log("Can't open URI:", data.data.data.paymentLink);
+          //   }
+          // });
         }
 
-        setPaymentCompleted(true);
-        Alert.alert("Thanh toán thành công", "Bạn đã thanh toán thành công.", [
-          { text: "OK", onPress: () => navigation.navigate("HomeController") },
-        ]);
+        // setPaymentCompleted(true);
+        // Alert.alert("Thanh toán thành công", "Bạn đã thanh toán thành công.", [
+        //   { text: "OK", onPress: () => navigation.navigate("HomeController") },
+        // ]);
       } else if (selectedOption === "4") {
         // Bank Transfer
         const data = order.rentalOrderCode
@@ -292,6 +298,20 @@ function SelectPayment({ route }) {
           <Text style={styles.checkoutText}>Xác nhận thanh toán</Text>
         </TouchableOpacity>
       )}
+
+      <ModalPayment isVisible={modalVisiblePayment} onClose={()=>{
+        setLinkPayment('')
+        setModalVisiblePayment(false)
+      }} link={linkPayment} onSuccess={()=>{
+        setLinkPayment('')
+        setModalVisiblePayment(false)
+        setPaymentCompleted(true)
+        Alert.alert(
+          "Thanh toán thành công",
+          "Bạn đã xác nhận thanh toán đơn hàng thành công.",
+          [{ text: "OK", onPress: () => navigation.navigate("HomeController") }]
+        );
+      }}/>
     </View>
   );
 }
