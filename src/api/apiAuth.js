@@ -149,12 +149,11 @@ export const sendOtpRequestMobile = ({ userName, email }) => {
   });
 };
 
-export const updatePasswordAPI = (id, newPassword) => {
+export const updatePasswordAPI = (userId, oldPassword, newPassword) => {
   return axios.put(
-    `https://capstone-project-703387227873.asia-southeast1.run.app/api/User/update-password`,
-    { newPassword },
+    `https://capstone-project-703387227873.asia-southeast1.run.app/api/User/update-password/${userId}?userId=${userId}`,
+    { oldPassword, newPassword },
     {
-      params: { id },
       headers: {
         "Content-Type": "application/json",
       },

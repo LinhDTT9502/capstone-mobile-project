@@ -58,8 +58,24 @@ export default function HomeController() {
   const [cartBadge, setCartBadge] = useState(0);
 
   useEffect(() => {
-    fetchCartCount(setCartBadge);
-  }, []);
+    loadCart()
+  });
+
+  const loadCart = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (token) {
+        const userCart = await getUserCart(token);
+        setCartBadge(userCart?.length);
+      } else {
+        const guestCart =
+          JSON.parse(await AsyncStorage.getItem("guestCart")) || [];
+          setCartBadge(guestCart?.length);
+      }
+    } catch (error) {
+      console.error("Error loading cart:", error);
+    }
+  };
 
   return (
     <Tab.Navigator
@@ -96,7 +112,7 @@ export default function HomeController() {
             {route.name === "LandingPage"
               ? "Trang chủ"
               : route.name === "ProductList"
-              ? "Tìm kiếm"
+              ? "Sản phẩm"
               : route.name === "Cart"
               ? "Giỏ hàng"
               : route.name === "Blog"
