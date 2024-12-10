@@ -212,18 +212,19 @@ const LoginScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.socialLoginContainer}>
+          
           <TouchableOpacity
             style={styles.socialButton}
             onPress={() => handleSocialLogin("Google")}
           >
             <Ionicons name="logo-google" size={24} color="#FFA500" />
           </TouchableOpacity>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.socialButton}
             onPress={() => handleSocialLogin("Facebook")}
           >
             <Ionicons name="logo-facebook" size={24} color="#FFA500" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <TouchableOpacity

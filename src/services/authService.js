@@ -10,8 +10,9 @@ import {
   mobileSignUp,
   forgotPasswordRequestMobile,
   verifyAccountMobileAPI,
-  resetPasswordMobile,sendOtpRequestMobile,
-  updatePasswordAPI
+  resetPasswordMobile,
+  sendOtpRequestMobile,
+  updatePasswordAPI,
 } from "../api/apiAuth";
 import axios from "axios";
 
@@ -34,10 +35,11 @@ export const authenticateUser = async (username, password) => {
     const decoded = jwtDecode(response.data.data.token);
     await AsyncStorage.setItem("token", response.data.data.token);
     await AsyncStorage.setItem("refreshToken", response.data.data.refreshToken);
-    await AsyncStorage.setItem("currentUserId", response.data.data.userId.toString());
+    await AsyncStorage.setItem(
+      "currentUserId",
+      response.data.data.userId.toString()
+    );
     return decoded;
-
-    
   } catch (error) {
     // console.error("Login failed", error);
     throw error;
@@ -89,12 +91,13 @@ export const sendOtpRequest = async ({ userName, email }) => {
     // console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Error in resendOtpRequest:", error.response?.data || error.message);
+    console.error(
+      "Error in resendOtpRequest:",
+      error.response?.data || error.message
+    );
     throw error.response?.data || error;
   }
 };
-
-
 
 export const performPasswordReset = async ({ otpCode, email, newPassword }) => {
   try {
@@ -177,40 +180,36 @@ export const changeUserPassword = async (data) => {
   }
 };
 
-export const updatePassword = async (id, newPassword) => {
-  try {
-    const response = await updatePasswordAPI(id, newPassword);
-    return response.data;
-  } catch (error) {
-    console.error("Error updating password:", error.response?.data || error.message);
-    throw error;
-  }
-};
+export const updatePassword =
+  (userId, oldPassword, newPassword) => async (dispatch) => {
+    try {
+      const response = await updatePasswordAPI(
+        userId,
+        oldPassword,
+        newPassword
+      );
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
 
 // POST send OTP to phone number
-export const sendSmsOtp = (phoneNumber,token) => {
-  return axios.put(
-    `${API_BASE_URL}/send-sms-otp/${phoneNumber}`,
-    null,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        'Authorization': `Bearer ${token}`,
-      },
-    }
-  );
+export const sendSmsOtp = (phoneNumber, token) => {
+  return axios.put(`${API_BASE_URL}/send-sms-otp/${phoneNumber}`, null, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
 // POST verify phone number with OTP
 export const verifyPhoneNumber = (otp) => {
-  return axios.post(
-    `${API_BASE_URL}/verify-phone-number/${otp}`,
-    null,
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  return axios.post(`${API_BASE_URL}/verify-phone-number/${otp}`, null, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 };
-

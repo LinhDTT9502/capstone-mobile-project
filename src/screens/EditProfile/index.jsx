@@ -16,13 +16,20 @@ import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, updateUser } from "../../redux/slices/authSlice";
-import { fetchUserProfile, saveUserProfile, sendSmsOtpService } from "../../services/userService";
+import {
+  fetchUserProfile,
+  saveUserProfile,
+  sendSmsOtpService,
+  sendOtpForEmailChangeService,
+  changeEmailService,
+} from "../../services/userService";
 import { Picker } from "@react-native-picker/picker";
 import { uploadAvatar } from "../../services/userService";
 import { updateProfileApi } from "@/src/api/apiUser";
 import { sendSmsOtp } from "@/src/services/authService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import dayjs from "dayjs";
+import * as ImagePicker from 'expo-image-picker';
 
 export default function EditProfile() {
   const navigation = useNavigation();
@@ -37,8 +44,14 @@ export default function EditProfile() {
   const [showVerify, setShowVerify] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  console.log(newPhone)
   const [avatarFile, setAvatarFile] = useState(null);
-  const [otp, setOtp] = useState("")
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
+  const [token, setToken] = useState("");
+
   const handleAvatarChange = async (file) => {
     if (!file) {
       Alert.alert("Thông báo", "Vui lòng chọn ảnh trước khi tải lên.");
@@ -152,20 +165,20 @@ export default function EditProfile() {
 
   const handleChange = async (name, value) => {
     try {
-      const data =  {
+      const data = {
         "fullName": formData?.FullName,
         "gender": formData?.Gender || 'male',
         "phone": formData?.Phone,
         "address": formData?.Address || '1',
         "birthDate": "2024-12-01T18:21:18.775Z"
+      };
+      if (name === "Phone") {
+        data.phone = value;
       }
-      if (name === 'Phone') {
-        data.phone = value
-      }
-      const res = await updateProfileApi(user?.UserId,data)
+      const res = await updateProfileApi(user?.UserId, data);
       setFormData({ ...formData, [name]: value });
     } catch (error) {
-      console.log("🚀 ~ handleChange ~ error:", error)
+      // console.log("🚀 ~ handleChange ~ error:", error);
     }
   };
 
@@ -234,28 +247,67 @@ export default function EditProfile() {
 
   const handlePhoneChange = () => {
     setNewPhone(formData.Phone);
+    
     setShowPhoneModal(true);
   };
 
-  const handleEmailSave = () => {
-    if (newEmail) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(newEmail)) {
-        Alert.alert("Lỗi", "Email không hợp lệ. Vui lòng kiểm tra lại.");
-        return;
-      }
+  const handleEmailSave = async () => {
+    if (!newEmail) {
+      Alert.alert("Lỗi", "Vui lòng nhập email mới.");
+      return;
     }
-    handleChange("Email", newEmail);
-    setShowEmailModal(false);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      Alert.alert("Lỗi", "Email không hợp lệ. Vui lòng kiểm tra lại.");
+      return;
+    }
+
+    try {
+      const data = await sendOtpForEmailChangeService(user.UserId, newEmail);
+      console.log(data)
+
+      setToken(data.token);
+      setOtpSent(true);
+      Alert.alert("Thông báo", "Mã OTP đã được gửi đến email mới của bạn.");
+    } catch (error) {
+      Alert.alert("Lỗi", error.message);
+    }
   };
+
+  const handleOtpVerification = async () => {
+    if (!otp) {
+      setOtpError("Vui lòng nhập mã OTP.");
+      return;
+    }
+  
+    try {
+      const response = await changeEmailService(user.UserId, token, newEmail, otp);
+      // console.log(response)
+      if (response.isSuccess === true) {
+        
+        handleChange("Email", newEmail); 
+        setShowEmailModal(false);
+        Alert.alert("Thông báo", "Email đã được thay đổi thành công.");
+      } else {
+        setOtpError("Mã OTP không hợp lệ. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", error.message);
+    }
+  };
+  
 
   const handlePhoneSave = async () => {
     if (newPhone) {
       const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
-      if (!phoneRegex.test(newPhone)) {
-        Alert.alert("Lỗi", "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.");
-        return;
-      }
+      // if (!phoneRegex.test(newPhone)) {
+      //   Alert.alert(
+      //     "Lỗi",
+      //     "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại."
+      //   );
+      //   return;
+      // }
     }
     await handleChange("Phone", newPhone);
     setShowPhoneModal(false);
@@ -263,13 +315,13 @@ export default function EditProfile() {
 
   const handleVerify = async (val) => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      const res = await sendSmsOtp(formData?.Phone, token)
-      setShowVerify(true)
+      const token = await AsyncStorage.getItem("token");
+      const res = await sendSmsOtp(formData?.Phone, token);
+      setShowVerify(true);
     } catch (error) {
-      console.log("🚀 ~ handleVerify ~ error:", error)
+      // console.log("🚀 ~ handleVerify ~ error:", error);
     }
-  }
+  };
 
   const renderInput = (
     label,
@@ -369,7 +421,6 @@ export default function EditProfile() {
     </View>
   </View>
   }
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -384,7 +435,7 @@ export default function EditProfile() {
       </View>
 
       <ScrollView style={styles.content}>
-      <View style={styles.profileImageContainer}>
+        <View style={styles.profileImageContainer}>
           <Image
             source={{
               uri: `${formData.ImgAvatarPath}?t=${new Date().getTime()}`,
@@ -404,7 +455,6 @@ export default function EditProfile() {
             <FontAwesome name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -465,28 +515,51 @@ export default function EditProfile() {
         visible={showEmailModal}
         onRequestClose={() => setShowEmailModal(false)}
       >
-        <View style={styles.modalContainer}>
+        <View style={styles.modalContainer}>z
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Thay đổi Email</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={newEmail}
-              onChangeText={setNewEmail}
-              placeholder="Nhập email mới"
-              keyboardType="email-address"
-            />
+            {!otpSent ? (
+              <>
+                <TextInput
+                  style={styles.modalInput}
+                  value={newEmail}
+                  onChangeText={setNewEmail}
+                  placeholder="Nhập email mới"
+                  keyboardType="email-address"
+                />
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={handleEmailSave}
+                >
+                  <Text style={styles.modalButtonText}>Gửi OTP</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <TextInput
+                  style={styles.modalInput}
+                  value={otp}
+                  onChangeText={setOtp}
+                  placeholder="Nhập mã OTP"
+                  keyboardType="numeric"
+                />
+                {otpError ? (
+                  <Text style={styles.errorText}>{otpError}</Text>
+                ) : null}
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={handleOtpVerification}
+                >
+                  <Text style={styles.modalButtonText}>Xác nhận</Text>
+                </TouchableOpacity>
+              </>
+            )}
             <View style={styles.navButtonContainer}>
               <TouchableOpacity
                 style={styles.modalCancelButton}
                 onPress={() => setShowEmailModal(false)}
               >
                 <Text style={styles.modalButtonText}>Hủy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleEmailSave}
-              >
-                <Text style={styles.modalButtonText}>Lưu</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -508,7 +581,7 @@ export default function EditProfile() {
               onChangeText={setNewPhone}
               placeholder="Nhập số điện thoại mới"
               keyboardType="phone-pad"
-              maxLength={10}
+              // maxLength={10}
             />
             <View style={styles.navButtonContainer}>
               <TouchableOpacity
