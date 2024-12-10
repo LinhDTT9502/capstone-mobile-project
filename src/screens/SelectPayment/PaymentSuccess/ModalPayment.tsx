@@ -14,6 +14,10 @@ interface ModalPaymentProps {
 // Define the navigation type for the stack
 type RootStackParamList = {
   HomeController: undefined; // Replace 'undefined' with params if needed
+  PayOsCancel: undefined;
+  PayOsSuccess: undefined
+  VnPayCancel: undefined
+  VnPaySuccess: undefined
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -38,13 +42,14 @@ export const ModalPayment: React.FC<ModalPaymentProps> = ({
               "sale-order-cancel-payos"
             )
           ) {
+            navigation.navigate("PayOsCancel");
             console.log("this is sale order payos cancel")
           } else if (event.url.includes(API_URL + "sale-order-return-payos")) {
 
             console.log("This is sale order payos success");
             // Payment success
             onSucceed?.();
-            navigation.navigate("HomeController");
+            navigation.navigate("PayOsSuccess");
             Alert.alert(
               "Thanh toán thành công",
               "Bạn đã xác nhận thanh toán đơn hàng thành công.",
@@ -61,12 +66,13 @@ export const ModalPayment: React.FC<ModalPaymentProps> = ({
 
             // Check the status value
             if (TransactionStatus === "0") {
+              navigation.navigate("VnPayCancel");
               console.log("This is sale order vnpay cancel");
             } else if (TransactionStatus === "00") {
               console.log("This is sale order vnpay success");
               // Payment success
               onSucceed?.();
-              navigation.navigate("HomeController");
+              navigation.navigate("VnPaySuccess");
               Alert.alert(
                 "Thanh toán thành công",
                 "Bạn đã xác nhận thanh toán đơn hàng thành công.",
@@ -78,13 +84,14 @@ export const ModalPayment: React.FC<ModalPaymentProps> = ({
               "rental-order-cancel-payos"
             )
           ) {
+            navigation.navigate("PayOsCancel");
             console.log("this is rental order payos cancel")
           } else if (event.url.includes(API_URL + "rental-order-return-payos")) {
 
             console.log("This is rental order payos success");
             // Payment success
             onSucceed?.();
-            navigation.navigate("HomeController");
+            navigation.navigate("PayOsSuccess");
             Alert.alert(
               "Thanh toán thành công",
               "Bạn đã xác nhận thanh toán đơn hàng thành công.",
@@ -101,12 +108,13 @@ export const ModalPayment: React.FC<ModalPaymentProps> = ({
 
             // Check the status value
             if (TransactionStatus === "0") {
+              navigation.navigate("VnPayCancel");
               console.log("This is rental vnpay cancel");
             } else if (TransactionStatus === "00") {
               console.log("This is rental vnpay success");
               // Payment success
               onSucceed?.();
-              navigation.navigate("HomeController");
+              navigation.navigate("VnPaySuccess");
               Alert.alert(
                 "Thanh toán thành công",
                 "Bạn đã xác nhận thanh toán đơn hàng thành công.",
